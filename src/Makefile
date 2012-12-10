@@ -145,7 +145,7 @@ clean:
 	rm -rf -- $(EXT_OBJ) $(OBJECTS) *~ *.swp dislocker $(BIN)
 
 snapshot: clean
-	cd .. && git commit -a -m 'Snapshot v$(VERSION)' && git archive --format=tar --prefix=$(BIN)-$(VERSION)/ HEAD | gzip > /tmp/$(BIN)-$(DATE).tar.gz
+	cd .. && (git status | grep -q 'nothing to commit' || git commit -a -m 'Snapshot v$(VERSION)') && git archive --format=tar --prefix=$(BIN)-$(VERSION)/ HEAD | gzip > /tmp/$(BIN)-$(DATE).tar.gz
 
 release: clean
 	cd .. && git commit -a -m 'Release v$(VERSION)' && git archive --format=tar --prefix=$(BIN)-$(VERSION)/ HEAD | gzip > /tmp/$(BIN)-$(VERSION).tar.gz

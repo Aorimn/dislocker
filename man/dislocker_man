@@ -1,0 +1,108 @@
+.\" 
+.\" 
+.TH DISLOCKER 1 2011-09-07 "Linux" "DISLOCKER"
+.SH NAME
+Dislocker - Read BitLocker encrypted volumes under Linux
+.SH SYNOPSIS
+dislocker [-hqrv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -c} -F[\fIN\fR]] [-- \fIARGS\fR...]
+.SH DESCRIPTION
+Given a decryption mean, dislocker is used to read BitLocker encrypted volumes. Note that decryption of USB volumes is not available yet.
+.PP
+Options are described below:
+.PP
+.TP
+.B -c, --clearkey
+decrypt volume using a clear key which is search on the volume
+.TP
+.B -f, --bekfile \fIBEK_FILE\fR
+decrypt volume using the bek file (present on a USB key)
+.TP
+.B -F, --force-block[\fIN\fB]\fR
+force use of metadata block number 
+.B N
+(1, 2 or 3), the first by default
+.TP
+.B -h
+print the help and exit
+.TP
+.B -l, --logfile \fILOG_FILE\fR
+put messages into this file (stdout by default)
+.TP
+.B -o, --offset \fIOFFSET\fR
+BitLocker partition offset (default is 0)
+.TP
+.B -p, --recovery-password[\fIRECOVERY_PASSWORD\fB]\fR
+decrypt volume using the recovery password method. If no password is provided, it will be asked afterward; this has the advantage that the program will validate each block one by one, on the fly, as you type it
+.TP
+.B -q, --quiet
+do NOT display any information. This option has priority on any `\fB-v\fR'. One probably wants to check the return value of the program when using this option
+.TB
+.B -r, --readonly
+do not allow to write on the BitLocker volume (read only mode)
+.TP
+.B -v, --verbosity
+increase verbosity (verbosity to CRITICAL level by default), see also `\fB-q\fR'
+.TP
+.B -V, --volume \fIVOLUME\fR
+volume to get metadata and encrypted keys from
+.TP
+.B --
+mark the end of program's options and the beginning of FUSE's ones (useful if you want to pass something like -d to FUSE)
+.PP
+
+.B ARGS
+are any arguments you want to pass to FUSE. Note that you need to pass at least the mount-point.
+.PP
+A second mode is available besides FUSE: don't use FUSE, decrypt the entire volume into a new file. After using this mode, just mount the resulting file normally afterward. This process may take a very long time, depending on the initial volume size.
+.SH NOTES
+There are two decryption modes available: FILE or FUSE. One of them is \fBchosen during the compilation time\fR.
+.PP
+In FILE mode, the BitLocker volume is decrypted into a file. This mode require a huge amount of time for a huge volume, but the access of the decrypted volume afterward will be faster than with the FUSE mode as the decrypted file can be assimilated as any NTFS volume.
+.PP
+In FUSE mode, the NTFS "file" is decrypted according to the data asked for by a user. So each request for a piece of data will take the time to decrypt these data. There is no impact on the final user if only "small" piece of data are asked.
+.SH EXAMPLES
+These are exemples you can run directly. The programs suffixes are here to indicate in which mode dislocker is running, you may have to remove them yourself.
+First, you may want to copy the BitLocker volume:
+.TP
+.B % dd if=/dev/sda2 of=encrypted.bitlocker
+This will copy the entire volume located into 
+.B /dev/sda2
+to 
+.B encrypted.bitlocker
+.
+.PP
+Then dislock it:
+.PP
+In `file' mode:
+.TP
+.B % dislocker -V encrypted.bitlocker -p563200-557084-108284-218900-019151-415437-694144-239976 -- decrypted.ntfs
+This will decrypt 
+.B encrypted.bitlocker
+into 
+.B decrypted.ntfs
+using the recovery password method.
+.PP
+In `FUSE' mode:
+.TP
+.B % dislocker -V encrypted.bitlocker -f /path/to/usb/file.BEK -- /mnt/ntfs
+This will create a file into 
+.B /mnt/ntfs
+named dislocker-file if the encrypted volume has a clear key enabled.
+.TP
+To mount partitions once decrypted, use this sort of line on Linux:
+.B % mount -o loop ntfs/dislocker-file /mnt/clear
+.TP
+On MacOSX, you first need to create the block device:
+.B % hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount ntfs/dislocker-file
+.TP
+Then mount it on a file into /Volumes for instance:
+.B % mkdir /Volumes/blah && mount -t ntfs /dev/disk1 /Volumes/blah
+.TP
+It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour. In order to do so, you may run these commands (replacing your mount points):
+.B % umount /mnt/clear && umount ntfs/dislocker-file
+.SH AUTHOR
+This tool is developped by Romain Coltel on behalf of HSC (
+.B http://www.hsc.fr/
+)
+.PP
+Feel free to send bugs report to <Romain __DOT__ Coltel __AT__ hsc __DOT__ fr>

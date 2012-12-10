@@ -1,0 +1,78 @@
+/* -*- coding: utf-8 -*- */
+/* -*- mode: c -*- */
+/*
+ * Dislocker -- enables to read/write on BitLocker encrypted partitions under
+ * Linux
+ * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ */
+#ifndef XSTDIO_H
+#define XSTDIO_H
+
+
+#include <stdio.h>
+#include <stdarg.h>
+
+
+/* Mode in which the log file is opened */
+#define LOG_MODE "a"
+
+
+/* An error string */
+#define ERROR_STR "\n\e[31m***\e[0m ERROR::"
+
+
+/* The exit which return from a xperror call */
+#define PERROR_EXIT 2
+
+
+
+
+/** Messages debug level */
+typedef enum {
+	L_QUIET    = -1,
+	L_CRITICAL = 0,
+	L_ERROR,
+	L_WARNING,
+	L_INFO,
+	L_DEBUG
+} LEVELS;
+
+/* Do NOT count the L_QUIET level */
+#define NB_LEVELS 5
+
+
+
+
+
+/*
+ * Prototypes of functions from xstdio.c
+ */
+void xstdio_init(int verbosity, const char* logfile);
+void xstdio_end();
+int  get_input_fd();
+void close_input_fd();
+
+int xprintf(LEVELS level, const char* format, ...);
+int xvprintf(LEVELS level, const char* format, va_list ap);
+
+void xperror(char* append);
+
+
+
+
+#endif /* XSTDIO_H */

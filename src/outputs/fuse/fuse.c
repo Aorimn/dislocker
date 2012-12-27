@@ -328,11 +328,8 @@ static int fs_write(const char *path, const char *buf, size_t size,
 		   offset + (off_t)size >= metadata_offset)
 		{
 			xprintf(L_INFO, "Denying write request on the metadata (2:%#"
-			        F_OFF_T ")\n", offset);
-			if(errno < 0)
-				return errno;
-			else
-				return -EFAULT;
+			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
+			return -EFAULT;
 		}
 	}
 	

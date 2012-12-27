@@ -243,9 +243,11 @@ int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size,
 	}
 	
 	/* Go where we need to write data */
-	if(lseek(fd, sector_start + disk_op_data.part_off, SEEK_SET) < 0)
+	off_t off = sector_start + disk_op_data.part_off;
+	if(lseek(fd, off, SEEK_SET) < 0)
 	{
 		free(output);
+		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", off);
 		return FALSE;
 	}
 	
@@ -280,8 +282,6 @@ static void* thread_decrypt(void* params)
 	
 	thread_arg_t* args = (thread_arg_t*)params;
 	
-	int   inloop             = 0;
-	int     skip             = 0;
 	off_t   loop             = 0;
 	off_t offset             = args->sector_start;
 	
@@ -318,23 +318,29 @@ static void* thread_decrypt(void* params)
 		off_t sector_offset = args->sector_start / args->sector_size + loop;
 		
 		/* Check for zero out areas */
-		skip = 0;
-		for(inloop = 0; inloop < 3; inloop++)
+		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[0];
+		if(offset >= metadata_offset &&
+			offset <= metadata_offset + size)
 		{
-			metadata_offset =
-				(off_t)disk_op_data.metadata->offset_bl_header[inloop];
-			
-			if(offset >= metadata_offset &&
-			   offset <= metadata_offset + size)
-			{
-				memset(loop_output, 0, args->sector_size);
-				skip = 1;
-				break;
-			}
+			memset(loop_output, 0, args->sector_size);
+			continue;
 		}
 		
-		if(skip)
+		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[1];
+		if(offset >= metadata_offset &&
+			offset <= metadata_offset + size)
+		{
+			memset(loop_output, 0, args->sector_size);
 			continue;
+		}
+		
+		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[2];
+		if(offset >= metadata_offset &&
+			offset <= metadata_offset + size)
+		{
+			memset(loop_output, 0, args->sector_size);
+			continue;
+		}
 		
 		if(version == V_SEVEN)
 		{
@@ -487,12 +493,11 @@ static void fix_read_sector_seven(data_t* disk_op_data,
 	
 	/* 
 	 * NTFS's boot sectors are saved into the field "boot_sectors_backup" into
-	 * metadata
-	 * So we can use them here to give a good partition's beginning
+	 * metadata.
+	 * So we can use them here to give a good NTFS partition's beginning.
 	 */
 	off_t from = sector_address;
-	off_t to   = sector_address +
-		(off_t)disk_op_data->metadata->boot_sectors_backup;
+	off_t to   = from + (off_t)disk_op_data->metadata->boot_sectors_backup;
 	
 	xprintf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
 	                 "\n", from, to);
@@ -542,6 +547,7 @@ static void fix_read_sector_seven(data_t* disk_op_data,
 	}
 	
 	
+	to -= disk_op_data->part_off;
 	decrypt_sector(
 		disk_op_data,
 		input,

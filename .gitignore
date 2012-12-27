@@ -1,0 +1,5 @@
+*.o
+*.kate-swp
+*~
+*.swp
+dislocker

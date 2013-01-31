@@ -9,7 +9,6 @@ REQUIREMENTS
 `------------
 
 You need:
- - Package libssl-dev (debian) or openssl-devel (fedora);
  - Package libfuse-dev (debian), fuse-devel (fedora) or osxfuse (OSX), if you
    want to use FUSE;
  - A partition encrypted with BitLocker, from Windows Vista or 7.

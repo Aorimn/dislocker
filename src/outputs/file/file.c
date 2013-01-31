@@ -50,10 +50,15 @@ int file_main(char* ntfs_file)
 	
 	/** @see encommon.h */
 	uint8_t* buffer = xmalloc((size_t)(NB_READ_SECTOR * disk_op_data.sector_size));
-	int fd_ntfs = xopen2(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, S_IRWXU);
+	
+	mode_t mode = S_IRUSR|S_IWUSR;
+	if(disk_op_data.cfg->is_ro & READ_ONLY)
+		mode = S_IRUSR;
+	
+	int fd_ntfs = xopen2(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
 	
 	
-	off_t offset = disk_op_data.part_off;
+	off_t offset          = 0;
 	long long int percent = 0;
 	
 	xprintf(L_INFO, "File size: %llu bytes\n", disk_op_data.metadata->volume_size);
@@ -62,7 +67,7 @@ int file_main(char* ntfs_file)
 	xprintf(L_INFO, "\rDecrypting... 0%%");
 	fflush(stdout);
 	
-	off_t decrypting_size = (off_t)disk_op_data.metadata->volume_size - disk_op_data.part_off;
+	off_t decrypting_size = (off_t)disk_op_data.metadata->volume_size;
 	
 	while(offset < decrypting_size)
 	{
@@ -71,7 +76,7 @@ int file_main(char* ntfs_file)
 			disk_op_data.volume_fd, 
 			NB_READ_SECTOR,
 			disk_op_data.sector_size, 
-			offset - disk_op_data.part_off,
+			offset,
 			buffer
 		);
 		
@@ -85,12 +90,12 @@ int file_main(char* ntfs_file)
 		if(percent != (offset*100)/decrypting_size)
 		{
 			percent = (offset*100)/decrypting_size;
-			xprintf(L_INFO, "\rDecrypting... %lld%%                                      ", percent);
+			xprintf(L_INFO, "\rDecrypting... %lld%%", percent);
 			fflush(stdout);
 		}
 	}
 	
-	xprintf(L_INFO, "\rDecrypting... Done.                                      \n");
+	xprintf(L_INFO, "\rDecrypting... Done.\n");
 	
 	xfree(buffer);
 	xclose(fd_ntfs);

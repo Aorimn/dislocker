@@ -22,10 +22,11 @@
  */
 
 
-#include <openssl/sha.h>
 #include <errno.h>
 
 #include "recovery_password.h"
+#include "polarssl/sha2.h"
+#include "ssl_bindings.h"
 
 
 /**

@@ -1,10 +1,9 @@
 
 CC		=	gcc
 INC		=	-I/usr/include -I../
-WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(INC)
+CFLAGS		=	$(INC)
 
-SOURCES		=	guid.c clock.c
+SOURCES		=	aes.c sha2.c
 OBJECTS		=	$(SOURCES:.c=.o)
 
 
@@ -14,10 +13,10 @@ OBJECTS		=	$(SOURCES:.c=.o)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 
-all: $(OBJECTS)
+all : $(OBJECTS)
 
-library: all
+library : all
 	@echo -n "" # He wants a rule here... Do not ask me why :D
 
-clean:
-	rm $(OBJECTS)
+clean :
+	rm -rf -- *.o *~ *.swp

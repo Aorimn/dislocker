@@ -4,11 +4,11 @@ ARCH		=	$(shell uname)
 # DEBUG		=	1
 
 CC		=	gcc
-DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D__OPENSSL -D_FILE_OFFSET_BITS=64
+DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-LDFLAGS		=	-lcrypto
+# LDFLAGS		=	-lcrypto
 SOURCES		=	*.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
@@ -42,8 +42,9 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
+	@make -C ../../polarssl library
 	@make DEBUG=$(DEBUG) -C ../../ common
-	$(CC) $(CFLAGS) -o $@ $^ ../../common.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ ../../common.o ../../polarssl/sha2.o $(LDFLAGS)
 
 library : recovery_password.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
@@ -51,4 +52,5 @@ library : recovery_password.o
 clean :
 	rm -rf -- *.o $(BIN) *~ *.swp
 	@make -C ../../ clean
+	@make -C ../../polarssl clean
 

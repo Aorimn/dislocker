@@ -79,7 +79,7 @@
  * Prototypes of functions from common.c
  */
 int xopen(const char *file, int mode);
-int xopen2(const char* file, int flags, int mode);
+int xopen2(const char* file, int flags, mode_t mode);
 int xclose(int fd);
 ssize_t xread(int fd, void* buf, size_t count);
 ssize_t xwrite(int fd, void* buf, size_t count);

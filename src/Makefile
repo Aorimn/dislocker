@@ -7,27 +7,28 @@ DATE		=	$(shell date +%Y-%m-%d)
 # DEBUG		=	1
 
 
-# Choose between one of them (done by using `make fuse' or `make file')
+# Choose between one of them (done automatically by using `make fuse' or `make file')
 __RUN_FUSE	=	0
 __RUN_FILE	=	0
 # NOTE: __RUN_FILE can be a veeeeeeeery long process to complete
 
 
 CC		=	gcc
-DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D__OPENSSL -D_FILE_OFFSET_BITS=64
+DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I.
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
 SOURCES		=	dislocker.c common.c sectors.c \
 			config.c xstd/xstdio.c xstd/xstdlib.c
 OBJECTS		=	$(SOURCES:.c=.o)
-LDFLAGS		=	-lcrypto -lpthread
+LDFLAGS		=	-lpthread
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/vmk.o metadata/fvek.o \
 			accesses/rp/recovery_password.o accesses/bek/read_bekfile.o \
 			encryption/decrypt.o encryption/encrypt.o encryption/diffuser.o encryption/crc32.o \
-			ntfs/guid.o ntfs/clock.o
+			ntfs/guid.o ntfs/clock.o \
+			polarssl/aes.o polarssl/sha2.o
 
 
 INSTALL_PATH	=	/usr/bin/
@@ -78,6 +79,7 @@ endif
 all : fuse
 
 libs: $(OBJECTS)
+	@make DEBUG=$(DEBUG) -C polarssl/   library
 	@make DEBUG=$(DEBUG) -C accesses/   library
 	@make DEBUG=$(DEBUG) -C metadata/   library
 	@make DEBUG=$(DEBUG) -C ntfs/       library
@@ -143,6 +145,9 @@ clean:
 	$(eval SOURCES += $(FILE_ROOT).c)
 	$(eval SOURCES += $(FUSE_ROOT).c)
 	rm -rf -- $(EXT_OBJ) $(OBJECTS) *~ *.swp dislocker $(BIN)
+
+valgrind: clean $(BIN)
+	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)
 
 snapshot: clean
 	cd .. && (git status | grep -q 'nothing to commit' || git commit -a -m 'Snapshot v$(VERSION)') && git archive --format=tar --prefix=$(BIN)-$(VERSION)/ HEAD | gzip > /tmp/$(BIN)-$(DATE).tar.gz

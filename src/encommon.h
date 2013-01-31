@@ -29,15 +29,9 @@
 #include "metadata/metadata.h"
 
 
-/* Include for OpenSSL */
-#include <openssl/aes.h>
+#include "polarssl/aes.h"
+#include "ssl_bindings.h"
 
-/* Make it generic */
-#define AES_CONTEXT            AES_KEY
-#define AES_SETENC_KEY(a,b,c)  AES_set_encrypt_key(b,c,a)
-#define AES_SETDEC_KEY(a,b,c)  AES_set_decrypt_key(b,c,a)
-#define AES_ECB_ENC(a,b,c,d)   AES_ecb_encrypt(c, d, a, b)
-#define AES_CBC(a,b,c,d,e,f)   AES_cbc_encrypt(e, f, c, a, d, b);
 
 #define AES_CTX_LENGTH 256
 

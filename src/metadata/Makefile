@@ -4,11 +4,11 @@ ARCH		=	$(shell uname)
 # DEBUG		=	1
 
 CC		=	gcc
-DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D__OPENSSL -D_FILE_OFFSET_BITS=64
+DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I..
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-LDFLAGS		=	-lcrypto
+# LDFLAGS		=	-lcrypto
 SOURCES		=	main.c metadata.c datums.c vmk.c
 OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)
@@ -16,7 +16,8 @@ BIN		=	$(PROGNAME)
 EXT_OBJ		=	../common.o ../encryption/crc32.o ../encryption/decrypt.o ../encryption/diffuser.o \
 			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o \
 			../ntfs/guid.o ../ntfs/clock.o \
-			../xstd/xstdio.o ../xstd/xstdlib.o
+			../xstd/xstdio.o ../xstd/xstdlib.o \
+			../polarssl/aes.o ../polarssl/sha2.o
 
 
 ifeq ($(shell uname -m), x86_64)
@@ -50,6 +51,7 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
+	@make -C ../polarssl/ library
 	@make DEBUG=$(DEBUG) -C .. common
 	@make DEBUG=$(DEBUG) -C ../encryption library
 	@make DEBUG=$(DEBUG) -C ../accesses library
@@ -59,6 +61,7 @@ library: metadata.o vmk.o fvek.o datums.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
+	@make -C ../polarssl/ clean
 	@make -C ../ clean
 	rm -rf -- *.o $(BIN) *~ *.swp
 

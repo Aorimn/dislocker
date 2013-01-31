@@ -49,8 +49,8 @@ int main(int argc, char **argv)
 	uint8_t *recovery_password = NULL;
 	uint8_t *recovery_key = NULL;
 	uint8_t salt[16] = {
-		'\x3b', '\x36', '\xd9', '\x30', '\x72', '\xa2', '\x2e', '\x03',
-		'\xf2', '\xed', '\xfe', '\x6f', '\xcd', '\x14', '\xb4', '\x58'
+		(uint8_t)'\x3b', (uint8_t)'\x36', (uint8_t)'\xd9', (uint8_t)'\x30', (uint8_t)'\x72', (uint8_t)'\xa2', (uint8_t)'\x2e', (uint8_t)'\x03',
+		(uint8_t)'\xf2', (uint8_t)'\xed', (uint8_t)'\xfe', (uint8_t)'\x6f', (uint8_t)'\xcd', (uint8_t)'\x14', (uint8_t)'\xb4', (uint8_t)'\x58'
 	};
 	
 	while((optchar = getopt(argc, argv, "p:h")) != -1)

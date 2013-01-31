@@ -10,7 +10,7 @@ DEFINES		=	-D PROGNAME=\"$(PROGNAME)\" -D __XYSSL
 INC		=	-I/usr/include -I../..
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-LDFLAGS		=	-lcrypto
+# LDFLAGS		=	-lcrypto
 SOURCES		=	main.c
 OBJECTS		=	$(SOURCES:.c=.o) ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)

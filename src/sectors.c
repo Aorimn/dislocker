@@ -295,6 +295,7 @@ static void* thread_decrypt(void* params)
 	off_t size = disk_op_data.metafiles_size;
 	
 	
+	// TODO see to be more intelligent on these loops
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
 	                               offset      += args->sector_size,
 	                               loop_input  += args->sector_size,

@@ -105,9 +105,7 @@ int main(int argc, char** argv)
 	memset(&cfg, 0, sizeof(cfg));
 	
 	
-	/*
-	 * Get command line options
-	 */
+	/* Get command line options */
 	param_idx = parse_args(&cfg, argc, argv);
 	
 	/* Initialize outputs */
@@ -273,8 +271,8 @@ int main(int argc, char** argv)
 	
 	if(!cfg.decryption_mean)
 	{
-		xprintf(L_CRITICAL, "No provided decryption mean is decrypting "
-		                    "the keys. Abort.\n");
+		xprintf(L_CRITICAL, "None of the provided decryption mean is "
+		                    "decrypting the keys. Abort.\n");
 		ret = EXIT_FAILURE;
 		goto FIRST_CLEAN;
 	}

@@ -82,7 +82,7 @@ int xopen(const char* file, int flags)
  * @param mode The mode(s) a file will have if created
  * @return The file descriptor returned by the actual open
  */
-int xopen2(const char* file, int flags, int mode)
+int xopen2(const char* file, int flags, mode_t mode)
 {
 	int fd = -1;
 	

@@ -33,7 +33,7 @@ Thus, make your choice of the use you'll have.
 
 Type: `make` or `make file` according to your needs, then `sudo make install`
 (or just the last one if you're lazy, but I don't recommend that). Note that the
-`-Werror' flag on the `WFLAGS' line int he Makefile may break the compilation,
+`-Werror' flag on the `WFLAGS' line in the Makefile may break the compilation,
 so you can remove it, but it is as your own risks.
 
 The binary will be installed into `/usr/bin/' by default, edit the INSTALL_PATH

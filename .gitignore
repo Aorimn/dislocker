@@ -3,3 +3,8 @@
 *~
 *.swp
 dislocker
+recovery_password
+read_bekfile
+encryption
+getmetadata
+fuse

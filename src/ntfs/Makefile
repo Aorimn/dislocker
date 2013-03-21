@@ -4,7 +4,7 @@ INC		=	-I/usr/include -I../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(INC)
 
-SOURCES		=	guid.c clock.c
+SOURCES		=	guid.c clock.c encoding.c
 OBJECTS		=	$(SOURCES:.c=.o)
 
 

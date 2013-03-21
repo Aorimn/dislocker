@@ -15,7 +15,7 @@ OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c))
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	../common.o \
-			../ntfs/guid.o ../ntfs/clock.o \
+			../ntfs/guid.o ../ntfs/clock.o ../ntfs/encoding.o \
 			../metadata/datums.o ../metadata/vmk.o ../metadata/metadata.o \
 			../xstd/xstdio.o ../xstd/xstdlib.o \
 			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o \

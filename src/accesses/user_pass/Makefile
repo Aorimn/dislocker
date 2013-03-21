@@ -1,21 +1,17 @@
-PROGNAME	=	read_bekfile
+PROGNAME	=	user_pass
 AUTHOR		=	\"Romain Coltel\"
 ARCH		=	$(shell uname)
 # DEBUG		=	1
 
 CC		=	gcc
-DEFINES		=	-DPROGNAME=\"$(PROGNAME)\"
-INC		=	-I/usr/include -I../..
+DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
+INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-SOURCES		=	*.c
-OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c))
+# LDFLAGS		=	-lcrypto
+SOURCES		=	*.c ../stretch_key.c
+OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../stretch_key.o ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
-
-EXT_OBJ		=	../../common.o ../../metadata/datums.o \
-			../../ntfs/guid.o ../../ntfs/clock.o ../../ntfs/encoding.o \
-			../../xstd/xstdio.o ../../xstd/xstdlib.o
-
 
 ifeq ($(shell uname -m), x86_64)
 LIB		= 	-L/usr/lib64
@@ -33,13 +29,12 @@ endif
 
 
 ifdef DEBUG
-DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
+DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUGs)
 CFLAGS		+=	$(DBGFLAGS)
 endif
 
 
-
-.PHONY : all $(BIN) library clean
+.PHONY : all library $(BIN) clean
 
 .c.o :
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -47,14 +42,15 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
+	@make -C ../../polarssl library
 	@make DEBUG=$(DEBUG) -C ../../ common
-	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ ../../common.o ../../polarssl/sha2.o $(LDFLAGS)
 
-library : read_bekfile.o
+library : user_pass.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
-	@make -C ../../ clean
 	rm -rf -- *.o $(BIN) *~ *.swp
-
+	@make -C ../../ clean
+	@make -C ../../polarssl clean
 

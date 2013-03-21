@@ -20,24 +20,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef FUSE_H
-#define FUSE_H
+#ifndef STRETCH_KEY_H
+#define STRETCH_KEY_H
+
+
+#include "common.h"
+#include "polarssl/sha2.h"
+#include "ssl_bindings.h"
+
+
+#define SHA256_DIGEST_LENGTH 32
+#define SALT_LENGTH          16
+
+
+// Needed structure
+typedef struct {
+	uint8_t updated_hash[SHA256_DIGEST_LENGTH];
+	uint8_t password_hash[SHA256_DIGEST_LENGTH];
+	uint8_t salt[SALT_LENGTH];
+	uint64_t hash_count;
+} bitlocker_chain_hash_t;
 
 
 
+/*
+ * Prototypes
+ */
 
-#ifdef __DARWIN
-# include <osxfuse/fuse.h>
-#else
-# include <fuse.h>
-#endif /* __DARWIN */
+int stretch_recovery_key(const uint8_t *recovery_key, const uint8_t *salt, uint8_t *result);
 
-
-
-
-/** NTFS virtual partition's name */
-#define NTFS_FILENAME "/dislocker-file"
+int stretch_user_key(const uint8_t *user_hash, const uint8_t *salt, uint8_t *result);
 
 
-
-#endif /* FUSE_H */
+#endif // STRETCH_KEY_H

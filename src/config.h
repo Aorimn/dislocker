@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,8 +33,9 @@
  */
 typedef enum {
 	USE_CLEAR_KEY         = 0x1,
-	USE_RECOVERY_PASSWORD = 0x2,
-	USE_BEKFILE           = 0x4
+	USE_USER_PASSWORD     = 0x2,
+	USE_RECOVERY_PASSWORD = 0x4,
+	USE_BEKFILE           = 0x8
 } DECRYPT_MEAN;
 
 
@@ -62,6 +63,9 @@ typedef struct _dis_cfg {
 	 * DECRYPT_MEAN
 	 */
 	uint8_t*      recovery_password;
+	
+	/* User password to use in case of using the USER_PASSWORD DECRYPT_MEAN */
+	uint8_t*      user_password;
 	
 	/* Output verbosity */
 	LEVELS        verbosity;

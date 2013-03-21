@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -75,20 +75,20 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header)
 	xprintf(level, "  Reserved clusters: 0x%1$04x (%1$hu) bytes\n", volume_header->reserved_clusters);
 	xprintf(level, "  Fat count: 0x%1$02x (%1$hhu) bytes\n", volume_header->fat_count);
 	xprintf(level, "  Root entries: 0x%1$04x (%1$hu) bytes\n", volume_header->root_entries);
-	xprintf(level, "  Not used: 0x%1$04x (%1$hu) bytes\n", volume_header->not_used);
+	xprintf(level, "  Number of sectors (16 bits): 0x%1$04x (%1$hu) bytes\n", volume_header->nb_sectors_16b);
 	xprintf(level, "  Media descriptor: 0x%1$02x (%1$hhu) bytes\n", volume_header->media_descriptor);
 	xprintf(level, "  Sectors per fat: 0x%1$04x (%1$hu) bytes\n", volume_header->sectors_per_fat);
 	xprintf(level, "  Hidden sectors: 0x%1$08x (%1$u) bytes\n", volume_header->hidden_sectors);
-	xprintf(level, "  Large sectors: 0x%1$08x (%1$u) bytes\n", volume_header->large_sectors);
-	xprintf(level, "  Number of sectors: 0x%1$016x (%1$llu) bytes\n", volume_header->nb_sectors);
+	xprintf(level, "  Number of sectors (32 bits): 0x%1$08x (%1$u) bytes\n", volume_header->nb_sectors_32b);
+	xprintf(level, "  Number of sectors (64 bits): 0x%1$016x (%1$llu) bytes\n", volume_header->nb_sectors_64b);
 	xprintf(level, "  MFT start cluster: 0x%1$016x (%1$lu) bytes\n", volume_header->mft_start_cluster);
 	xprintf(level, "  Metadata Lcn: 0x%1$016x (%1$lu) bytes\n", volume_header->metadata_lcn);
 	
 	xprintf(level, "  Volume GUID: '%.37s'\n", rec_id);
 	
-	xprintf(level, "  First metadata header offset: 0x%016"  F_U64_T "\n", volume_header->offset_bl_header[0]);
+	xprintf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[0]);
 	xprintf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset: 0x%016"  F_U64_T "\n", volume_header->offset_bl_header[2]);
+	xprintf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[2]);
 	
 	xprintf(level, "  Boot Partition Identifier: '0x%04x'\n", volume_header->boot_partition_identifier);
 	xprintf(level, "========================================\n");
@@ -195,7 +195,7 @@ void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header)
 	if(bl_header->version == V_SEVEN)
 	{
 		hexdump(level, bl_header->unknown1, 4);
-		xprintf(level, "  Volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->volume_size, bl_header->volume_size / (1024*1024));
+		xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->encrypted_volume_size, bl_header->encrypted_volume_size / (1024*1024));
 		hexdump(level, bl_header->unknown2, 4);
 		xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", bl_header->nb_backup_sectors);
 	}
@@ -285,6 +285,9 @@ void print_data(LEVELS level, void* metadata)
 	{
 		/* Begin with reading the header */
 		datum_header_safe_t header;
+		
+		if(data >= end_dataset)
+			break;
 		
 		if(!get_header_safe(data, &header))
 			break;

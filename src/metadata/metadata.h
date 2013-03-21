@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -33,7 +33,7 @@
 /** Known BitLocker versions */
 enum {
 	V_VISTA = 1,
-	V_SEVEN = 2
+	V_SEVEN = 2  // Same version used by Windows 8
 };
 typedef uint16_t version_t;
 
@@ -53,15 +53,15 @@ typedef struct _volume_header
 	uint16_t reserved_clusters;   //                                                -- offset 0xe
 	uint8_t  fat_count;           //                                                -- offset 0x10
 	uint16_t root_entries;        //                                                -- offset 0x11
-	uint16_t not_used;            //                                                -- offset 0x13
+	uint16_t nb_sectors_16b;      //                                                -- offset 0x13
 	uint8_t  media_descriptor;    //                                                -- offset 0x15
 	uint16_t sectors_per_fat;     //                                                -- offset 0x16
 	uint16_t sectors_per_track;   //                                                -- offset 0x18
 	uint16_t nb_of_heads;         //                                                -- offset 0x1a
 	uint32_t hidden_sectors;      //                                                -- offset 0x1c
-	uint32_t large_sectors;       //                                                -- offset 0x20
+	uint32_t nb_sectors_32b;      //                                                -- offset 0x20
 	uint8_t  unknown2[4];         // For NTFS, always 0x00800080 (little endian)    -- offset 0x24
-	uint64_t nb_sectors;          //                                                -- offset 0x28
+	uint64_t nb_sectors_64b;      //                                                -- offset 0x28
 	uint64_t mft_start_cluster;   //                                                -- offset 0x30
 	union {                       // Metadata LCN or MFT Mirror                     -- offset 0x38
 		uint64_t metadata_lcn;    //  depending on whether we're talking about a Vista volume
@@ -108,7 +108,7 @@ typedef struct _bitlocker_header
 	version_t version;    // = 0x0002 for Windows 7 and 1 for Windows Vista                 -- offset 0xa
 	
 	uint8_t unknown1[4];  // FIXME Unknown -- What else?                                    -- offset 0xc
-	uint64_t volume_size; // Size of the encrypted volume                                   -- offset 0x10
+	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
 	uint8_t unknown2[4];  //                                                                -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
 	

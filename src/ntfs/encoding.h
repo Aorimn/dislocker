@@ -20,24 +20,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef FUSE_H
-#define FUSE_H
+#ifndef ENCODING_H
+#define ENCODING_H
+
+
+#include "common.h"
 
 
 
+/*
+ * Prototypes of functions from encoding.c
+ */
+int utf16towchars(uint16_t* utf16, size_t utf16_length, wchar_t* utf32);
 
-#ifdef __DARWIN
-# include <osxfuse/fuse.h>
-#else
-# include <fuse.h>
-#endif /* __DARWIN */
+int asciitoutf16(const uint8_t* ascii, uint16_t* utf16);
 
-
-
-
-/** NTFS virtual partition's name */
-#define NTFS_FILENAME "/dislocker-file"
+int utf16bigtolittleendian(uint16_t* utf16, size_t utf16_length);
 
 
-
-#endif /* FUSE_H */
+#endif /* ENCODING_H */

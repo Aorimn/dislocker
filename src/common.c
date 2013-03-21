@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -309,7 +309,6 @@ void memclean(void* ptr, size_t size)
 {
 	memset(ptr, 0, size);
 	xfree(ptr);
-	ptr = NULL;
 }
 
 

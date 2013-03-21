@@ -20,24 +20,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef FUSE_H
-#define FUSE_H
+#ifndef USER_PASS_H
+#define USER_PASS_H
+
+
+#include "common.h"
+#include "../stretch_key.h"
+#include "ntfs/encoding.h"
 
 
 
+/*
+ * Prototypes
+ */
+int user_key(const uint8_t *user_password, const uint8_t *salt, uint8_t *result_key);
 
-#ifdef __DARWIN
-# include <osxfuse/fuse.h>
-#else
-# include <fuse.h>
-#endif /* __DARWIN */
+int prompt_up(uint8_t** up);
 
-
-
-
-/** NTFS virtual partition's name */
-#define NTFS_FILENAME "/dislocker-file"
-
-
-
-#endif /* FUSE_H */
+#endif // USER_PASS_H

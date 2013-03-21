@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -61,13 +61,13 @@ int file_main(char* ntfs_file)
 	off_t offset          = 0;
 	long long int percent = 0;
 	
-	xprintf(L_INFO, "File size: %llu bytes\n", disk_op_data.metadata->volume_size);
+	xprintf(L_INFO, "File size: %llu bytes\n", disk_op_data.volume_size);
 	
 	/* Read all sectors and decrypt them if necessary */
 	xprintf(L_INFO, "\rDecrypting... 0%%");
 	fflush(stdout);
 	
-	off_t decrypting_size = (off_t)disk_op_data.metadata->volume_size;
+	off_t decrypting_size = (off_t)disk_op_data.volume_size;
 	
 	while(offset < decrypting_size)
 	{

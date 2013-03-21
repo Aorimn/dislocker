@@ -24,15 +24,16 @@
 #include <getopt.h>
 
 #include "common.h"
-#include "recovery_password.h"
+#include "user_pass.h"
+#include "accesses/stretch_key.h"
 
 
 void usage(char **argv)
 {
-	fprintf(stderr, "Usage: %s [-h] [-p RECOVERY_PASSWORD]\n"
+	fprintf(stderr, "Usage: %s [-h] [-u USER_PASSWORD]\n"
 					"\n"
-					"    -h                    print this help and exit\n"
-					"    -p RECOVERY_PASSWORD  the recovery password to compute\n", argv[0]);
+					"    -h                 print this help and exit\n"
+					"    -u USER_PASSWORD   a user password to check on the volume\n", argv[0]);
 }
 
 
@@ -46,22 +47,23 @@ int main(int argc, char **argv)
 	}
 	
 	int optchar = 0;
-	uint8_t *recovery_password = NULL;
-	uint8_t *recovery_key = NULL;
-	uint8_t salt[16] = {
-		(uint8_t)'\x3b', (uint8_t)'\x36', (uint8_t)'\xd9', (uint8_t)'\x30', (uint8_t)'\x72', (uint8_t)'\xa2', (uint8_t)'\x2e', (uint8_t)'\x03',
-		(uint8_t)'\xf2', (uint8_t)'\xed', (uint8_t)'\xfe', (uint8_t)'\x6f', (uint8_t)'\xcd', (uint8_t)'\x14', (uint8_t)'\xb4', (uint8_t)'\x58'
-	};
+	uint8_t *user_password = NULL;
 	
-	while((optchar = getopt(argc, argv, "p:h")) != -1)
+	uint8_t   user_hash[32]  = {0,};
+	
+	
+	int8_t salt[16] = {0,}; // TODO
+	
+	
+	while((optchar = getopt(argc, argv, "u:h")) != -1)
 	{
 		switch(optchar)
 		{
 			case 'h':
 				usage(argv);
 				return 0;
-			case 'p':
-				recovery_password = (uint8_t *) strdup(optarg);
+			case 'u':
+				user_password = (uint8_t *) strdup(optarg);
 				break;
 			case '?':
 			default:
@@ -73,18 +75,27 @@ int main(int argc, char **argv)
 	
 	xstdio_init(L_DEBUG, NULL);
 	
-	xprintf(L_INFO, "Recovery Password: %s\n", (char *)recovery_password);
+	if(user_password == NULL)
+	{
+		xprintf(L_CRITICAL, "No user password given, aborting.\n");
+		goto error;
+	}
 	
-	recovery_key = xmalloc(32 * sizeof(uint8_t));
+	xprintf(L_INFO, "User Password: %s\n", (char *)user_password);
 	
-	if(!intermediate_key(recovery_password, salt, recovery_key))
-		return 1;
+	if(!user_key(user_password, salt, user_hash))
+	{
+		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
+		goto error;
+	}
 	
-	print_intermediate_key(recovery_key);
 	
-	xfree(recovery_key);
-	if(recovery_password)
-		xfree(recovery_password);
+	hexdump(L_INFO, user_hash, 32);
+	
+	
+error:
+	if(user_password)
+		xfree(user_password);
 	
 	xstdio_end();
 	

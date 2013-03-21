@@ -24,10 +24,11 @@ OBJECTS		=	$(SOURCES:.c=.o)
 LDFLAGS		=	-lpthread
 BIN		=	$(PROGNAME)
 
-EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/vmk.o metadata/fvek.o \
+EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/vmk.o metadata/fvek.o metadata/extended_info.o \
 			accesses/rp/recovery_password.o accesses/bek/read_bekfile.o \
+			accesses/user_pass/user_pass.o accesses/stretch_key.o \
 			encryption/decrypt.o encryption/encrypt.o encryption/diffuser.o encryption/crc32.o \
-			ntfs/guid.o ntfs/clock.o \
+			ntfs/guid.o ntfs/clock.o ntfs/encoding.o \
 			polarssl/aes.o polarssl/sha2.o
 
 

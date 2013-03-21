@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,7 +37,7 @@ void* xmalloc(size_t size)
 {
 	void* p = malloc(size);
 	
-	xprintf(L_DEBUG, "New memory allocation at %p (%#x byte allocated)\n", p, size);
+	xprintf(L_DEBUG, "New memory allocation at %p (%#zx byte allocated)\n", p, size);
 	
 	if(p == NULL)
 	{

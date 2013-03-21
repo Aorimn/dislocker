@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -282,7 +282,7 @@ static void* thread_decrypt(void* params)
 	
 	thread_arg_t* args = (thread_arg_t*)params;
 	
-	off_t   loop             = 0;
+	off_t loop               = 0;
 	off_t offset             = args->sector_start;
 	
 	uint8_t* loop_input      = args->input;
@@ -355,7 +355,7 @@ static void* thread_decrypt(void* params)
 		}
 		
 		
-		/* Check for sectors fixing */
+		/* Check for sectors fixing and non-encrypted sectors */
 		if(version == V_SEVEN &&
 		   (uint64_t)sector_offset < disk_op_data.metadata->nb_backup_sectors)
 		{
@@ -382,6 +382,10 @@ static void* thread_decrypt(void* params)
 				);
 			else
 				memcpy(loop_output, loop_input, args->sector_size);
+		}
+		else if((unsigned)offset >= disk_op_data.metadata->encrypted_volume_size)
+		{
+			memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else
 		{

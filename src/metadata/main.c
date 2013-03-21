@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,11 +38,11 @@
 
 void usage()
 {
-	fprintf(stderr, "Usage: "PROGNAME" [-h] [-v VOLUME]\n"
+	fprintf(stderr, "Usage: "PROGNAME" [-h] [-V VOLUME]\n"
 					"\n"
 					"    -h         print this help and exit\n"
 					"    -o         partition offset\n"
-					"    -v VOLUME  volume to get metadata from\n"
+					"    -V VOLUME  volume to get metadata from\n"
 		   );
 }
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 	dis_config_t cfg;
 	memset(&cfg, 0, sizeof(cfg));
 	
-	while((optchar = getopt(argc, argv, "o:v:h")) != -1)
+	while((optchar = getopt(argc, argv, "o:V:h")) != -1)
 	{
 		switch(optchar)
 		{
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 				return 0;
 			case 'o':
 				cfg.offset = (off_t) strtoll(optarg, NULL, 10);
-			case 'v':
+			case 'V':
 				volume_path = strdup(optarg);
 				break;
 			case '?':

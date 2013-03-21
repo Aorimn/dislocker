@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,53 +22,8 @@
  */
 
 
-#include <errno.h>
-
 #include "recovery_password.h"
-#include "polarssl/sha2.h"
-#include "ssl_bindings.h"
 
-
-/**
- * Function implementing the algorithm of the chain hash, described by Jesse D. Kornblum.
- * Ref: http://jessekornblum.com/presentations/di09.pdf
- * 
- * @param recovery_key The 16-bytes recovery key previously distilled (16 bytes)
- * @param salt The salt used for crypto (16 bytes)
- * @param result Will contain the resulting hash key (32 bytes)
- * @return TRUE if result can be trusted, FALSE otherwise
- */
-int chain_hash(const uint8_t *recovery_key,
-			   const uint8_t *salt,
-			   uint8_t *result)
-{
-	size_t size = sizeof(bitlocker_chain_hash_t);
-	bitlocker_chain_hash_t * ch = NULL;
-	uint64_t loop = 0;
-	
-	ch = (bitlocker_chain_hash_t *) xmalloc(size);
-	
-	memset(ch, 0, size);
-	
-	/* 16 is the size of the recovery_key, in bytes (see doc above) */
-	SHA256(recovery_key, 16, ch->password_hash);
-	
-	memcpy(ch->salt, salt, SALT_LENGTH);
-	
-	for(loop = 0; loop < 0x100000; ++loop)
-	{
-		SHA256((unsigned char *)ch, size, ch->updated_hash);
-		
-		ch->hash_count++;
-	}
-	
-	memcpy(result, ch->updated_hash, SHA256_DIGEST_LENGTH);
-	
-	/* Wipe out with zeros and free it */
-	memclean(ch, size);
-	
-	return TRUE;
-} // End chain_hash
 
 
 /**
@@ -138,8 +93,9 @@ int valid_block(uint8_t* digits, int block_nb, uint16_t* short_password)
 
 
 /**
- * Validating (or not) the recovery password
- * If the password is valid, 
+ * Validating (or not) the recovery password.
+ * If the password is valid, short_password contains the blocs divided by 11 in
+ * uint16_t slot.
  * 
  * @param recovery_password The recovery password the user typed (48+7 bytes)
  * @param short_password The recovery password converted in uint16_t (8 uint16_t)
@@ -157,7 +113,7 @@ int is_valid_key(const uint8_t *recovery_password, uint16_t *short_password)
 	/* Begin by checking the length of the password */
 	if(strlen((char*)recovery_password) != 48+7)
 	{
-		xprintf(L_ERROR, "Error handling the recovery password: Wrong length (Has to be %d)\n", 48+7);
+		xprintf(L_ERROR, "Error handling the recovery password: Wrong length (has to be %d)\n", 48+7);
 		return FALSE;
 	}
 	
@@ -188,15 +144,15 @@ int is_valid_key(const uint8_t *recovery_password, uint16_t *short_password)
 
 
 /**
- * Calculate the intermediate key from a raw recovery password
+ * Calculate the intermediate key from a raw recovery password.
  * 
  * @param recovery_password The raw recovery password given by the user (48+7 bytes)
  * @param result_key The intermediate key used to decrypt the associated VMK (32 bytes)
  * @return TRUE if result_key can be trusted, FALSE otherwise
  */
 int intermediate_key(const uint8_t *recovery_password,
-					 const uint8_t *salt,
-					 uint8_t *result_key)
+                     const uint8_t *salt,
+                     uint8_t *result_key)
 {
 	// Check the parameters
 	if(recovery_password == NULL)
@@ -223,7 +179,7 @@ int intermediate_key(const uint8_t *recovery_password,
 	/* Check if the recovery_password has a good smile */
 	if(!is_valid_key(recovery_password, passwd))
 	{
-		xfree(iresult);
+		memclean(iresult, INTERMEDIATE_KEY_LENGTH * sizeof(uint8_t));
 		return FALSE;
 	}
 	
@@ -246,9 +202,9 @@ int intermediate_key(const uint8_t *recovery_password,
 	
 	xprintf(L_INFO, "Distilled password: '%s\b'\n", s);
 	
-	chain_hash(iresult, salt, result_key);
+	stretch_recovery_key(iresult, salt, result_key);
 	
-	xfree(iresult);
+	memclean(iresult, INTERMEDIATE_KEY_LENGTH * sizeof(uint8_t));
 	
 	/* We successfuly retrieve the key! */
 	return TRUE;
@@ -259,7 +215,7 @@ int intermediate_key(const uint8_t *recovery_password,
  * Prompt for the recovery password to be entered
  * 
  * @param rp The place where to put the entered recovery password
- * @return TRUE if result_key can be trusted, FALSE otherwise
+ * @return TRUE if rp can be trusted, FALSE otherwise
  */
 int prompt_rp(uint8_t** rp)
 {

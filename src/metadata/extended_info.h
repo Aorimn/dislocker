@@ -20,24 +20,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef FUSE_H
-#define FUSE_H
+#ifndef EXTENDED_INFO_H
+#define EXTENDED_INFO_H
+
+#include "common.h"
 
 
 
 
-#ifdef __DARWIN
-# include <osxfuse/fuse.h>
-#else
-# include <fuse.h>
-#endif /* __DARWIN */
+/**
+ * This structure is new to Windows 8
+ * It's the virtualization datum's payload
+ */
+typedef struct _extended_info {
+	uint16_t unknown1;
+	uint16_t size;
+	uint32_t unknown2;
+	uint32_t flags;
+	uint32_t unknown3;
+	uint64_t convertlog_addr;
+	uint32_t convertlog_size;
+	uint32_t unknown4;
+	uint32_t sector_size;
+} extended_info_t;
 
 
 
 
-/** NTFS virtual partition's name */
-#define NTFS_FILENAME "/dislocker-file"
+/*
+ * Here are prototypes of functions dealing extended info
+ */
+void print_extended_info(LEVELS level, extended_info_t* xinfo);
 
 
 
-#endif /* FUSE_H */
+
+#endif // EXTENDED_INFO_H

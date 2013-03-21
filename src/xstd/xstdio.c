@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -170,16 +170,24 @@ void xstdio_end()
 
 
 /**
- * Remove the '\n' before the first '\0' if present
+ * Remove the '\n', '\r' or '\r\n' before the first '\0' if present
  * 
- * @param string String where the '\n' is removed
+ * @param string String where the '\n', '\r' or '\r\n' is removed
  */
-static void chomp(char* string)
+void chomp(char* string)
 {
 	size_t len = strlen(string);
+	if(len == 0)
+		return;
 	
-	if(string[len - 1] == '\n')
+	if(string[len - 1] == '\n' || string[len - 1] == '\r')
 		string[len - 1] = '\0';
+	
+	if(len == 1)
+		return;
+	
+	if(string[len - 2] == '\r')
+		string[len - 2] = '\0';
 }
 
 

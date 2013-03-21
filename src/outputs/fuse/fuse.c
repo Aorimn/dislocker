@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -57,7 +57,7 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFREG | 0666;
 		stbuf->st_nlink = 1;
 		/** @see encommon.h */
-		stbuf->st_size = (off_t)disk_op_data.metadata->volume_size;
+		stbuf->st_size = (off_t)disk_op_data.volume_size;
 	}
 	else
 		res = -ENOENT;
@@ -146,11 +146,11 @@ static int fs_read(const char *path, char *buf, size_t size,
 	}
 	
 	/** @see encommon.h for disk_op_data */
-	if(offset >= (off_t)disk_op_data.metadata->volume_size)
+	if(offset >= (off_t)disk_op_data.volume_size)
 	{
 		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
 		                 F_OFF_T ")\n",
-		        offset, (off_t)disk_op_data.metadata->volume_size);
+		        offset, (off_t)disk_op_data.volume_size);
 		return -EFAULT;
 	}
 	
@@ -285,23 +285,22 @@ static int fs_write(const char *path, const char *buf, size_t size,
 	}
 	
 	/** @see encommon.h for disk_op_data */
-	if(offset >= (off_t)disk_op_data.metadata->volume_size)
+	if(offset >= (off_t)disk_op_data.volume_size)
 	{
 		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
 		                 F_OFF_T ")\n",
-		        offset, (off_t)disk_op_data.metadata->volume_size);
+		        offset, (off_t)disk_op_data.volume_size);
 		return -EFAULT;
 	}
 	
-	if((size_t)offset + size >= (size_t)disk_op_data.metadata->volume_size)
+	if((size_t)offset + size >= (size_t)disk_op_data.volume_size)
 	{
-		size_t nsize = (size_t)disk_op_data.metadata->volume_size
+		size_t nsize = (size_t)disk_op_data.volume_size
 		               - (size_t)offset;
 		xprintf(L_WARNING, "Size modified as exceeding volume's end (offset=%#"
 		                   F_SIZE_T " + size=%#" F_SIZE_T " >= volume_size=%#"
-		                   F_SIZE_T ") - new size: %#" F_SIZE_T "\n",
-		        (size_t)offset, size,
-		        (size_t)disk_op_data.metadata->volume_size, nsize);
+		                   F_SIZE_T ") ; new size: %#" F_SIZE_T "\n",
+		        (size_t)offset, size, (size_t)disk_op_data.volume_size, nsize);
 		size = nsize;
 	}
 	

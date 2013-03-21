@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,6 +26,7 @@
 #include "encryption/decrypt.h"
 #include "accesses/bek/read_bekfile.h"
 #include "accesses/rp/recovery_password.h"
+#include "accesses/user_pass/user_pass.h"
 #include "vmk.h"
 
 
@@ -51,7 +52,7 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
 	uint8_t* recovery_key = NULL;
 	size_t rk_size = 0;
 	
-	int result = 0;
+	int result = FALSE;
 	
 	char* type_str = datumtypestr(DATUM_KEY);
 	
@@ -125,13 +126,13 @@ int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_
 	uint8_t* recovery_key = NULL;
 	uint8_t salt[16] = {0,};
 	
-	int result = 0;
+	int result = FALSE;
 	
 	/* If the recovery password wasn't provide, ask for it */
 	if(!cfg->recovery_password)
 		if(!prompt_rp(&cfg->recovery_password))
 		{
-			xprintf(L_CRITICAL, "Cannot get valid recovery password, abort.\n");
+			xprintf(L_ERROR, "Cannot get valid recovery password. Abort.\n");
 			return FALSE;
 		}
 	
@@ -197,6 +198,9 @@ int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_
 		return FALSE;
 	}
 	
+	/* We don't need the recovery_password anymore */
+	memclean((char*)cfg->recovery_password, strlen((char*)cfg->recovery_password));
+	cfg->recovery_password = NULL;
 	
 	/* As the computed key length is always the same, use a direct value */
 	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, 32, (datum_key_t**)vmk_datum);
@@ -228,7 +232,7 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	uint8_t* recovery_key = NULL;
 	size_t rk_size = 0;
 	
-	int result = 0;
+	int result = FALSE;
 	int fd_bek = 0;
 	
 	
@@ -334,6 +338,100 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	xfree(recovery_key);
 	
 	return result;
+}
+
+
+/**
+ * Get the VMK datum using a user password
+ * 
+ * @param dataset The dataset of BitLocker's metadata on the volume
+ * @param cfg The configuration structure
+ * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum)
+{
+	// Check parameters
+	if(!dataset || !cfg)
+		return FALSE;
+	
+	uint8_t user_hash[32] = {0,};
+	uint8_t salt[16]      = {0,};
+	
+	/* If the user password wasn't provide, ask for it */
+	if(!cfg->user_password)
+		if(!prompt_up(&cfg->user_password))
+		{
+			xprintf(L_ERROR, "Cannot get valid user password. Abort.\n");
+			return FALSE;
+		}
+		
+	xprintf(L_INFO, "Using the user password: '%s'.\n",
+	                (char *)cfg->user_password);
+	
+	
+	/*
+	 * We need a salt contained in the VMK datum associated to the recovery
+	 * password, so go get this salt and the VMK datum first
+	 * We use here the range which should be equal to 0x2000
+	 * There may be another mean to find the correct datum, but I don't see
+	 * another one here
+	 */
+	if(!get_vmk_datum_from_range((void*)dataset, 0x2000, 0x2000, (void**)vmk_datum))
+	{
+		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
+		*vmk_datum = NULL;
+		return FALSE;
+	}
+	
+	
+	/*
+	 * We have the datum containing other data, so get in there and take the
+	 * nested one with type 3 (stretch key)
+	 */
+	void* stretch_datum = NULL;
+	if(!get_nested_datumtype(*vmk_datum, DATUM_STRETCH_KEY, &stretch_datum) || !stretch_datum)
+	{
+		char* type_str = datumtypestr(DATUM_STRETCH_KEY);
+		xprintf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
+		                 "Internal failure, abort.\n", DATUM_STRETCH_KEY, type_str);
+		xfree(type_str);
+		*vmk_datum = NULL;
+		return FALSE;
+	}
+	
+	
+	/* The salt is in here, don't forget to keep it somewhere! */
+	memcpy(salt, ((datum_stretch_key_t*)stretch_datum)->salt, 16);
+	
+	
+	/* Get data which can be decrypted with this password */
+	void* aesccm_datum = NULL;
+	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum) || !aesccm_datum)
+	{
+		xprintf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
+		*vmk_datum = NULL;
+		return FALSE;
+	}
+	
+	
+	/*
+	 * We have all the things we need to compute the intermediate key from
+	 * the user password, so do it!
+	 */
+	if(!user_key(cfg->user_password, salt, user_hash))
+	{
+		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
+		*vmk_datum = NULL;
+		return FALSE;
+	}
+	
+	/* We don't need the user password anymore */
+	memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
+	cfg->user_password = NULL;
+	
+	/* As the computed key length is always the same, use a direct value */
+	return get_vmk((datum_aes_ccm_t*)aesccm_datum, user_hash, 32, (datum_key_t**)vmk_datum);;
 }
 
 

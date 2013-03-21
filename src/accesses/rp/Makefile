@@ -9,8 +9,8 @@ INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
 # LDFLAGS		=	-lcrypto
-SOURCES		=	*.c
-OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../../xstd/xstdio.o ../../xstd/xstdlib.o
+SOURCES		=	*.c ../stretch_key.c
+OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../stretch_key.o ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
 
 ifeq ($(shell uname -m), x86_64)

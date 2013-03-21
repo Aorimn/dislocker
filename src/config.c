@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,7 +35,7 @@
 void usage()
 {
 	fprintf(stderr,
-"Usage: " PROGNAME " [-hqrv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME {-p[RECOVERY_PASSWORD]|-f BEK_FILE|-c} -F[N]] [-- ARGS...]\n"
+"Usage: " PROGNAME " [-hqrv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME {-p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-c} -F[N]] [-- ARGS...]\n"
 " (v" VERSION ")\n"
 "Options:\n"
 "    -c, --clearkey        decrypt volume using a clear key (default)\n"
@@ -50,6 +50,7 @@ void usage()
 "                          decrypt volume using the recovery password method\n"
 "    -q, --quiet           do NOT display anything\n"
 "    -r, --readonly        do not allow to write on the BitLocker volume\n"
+"    -u, --user-password   decrypt volume using the user password method\n"
 "    -v, --verbosity       increase verbosity (CRITICAL errors are displayed by default)\n"
 "    -V, --volume VOLUME   volume to get metadata and keys from\n"
 "\n"
@@ -85,7 +86,7 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 	};
 	
 	/* Options which could be passed as argument */
-	const char          short_opts[] = "cf:F::hl:o:p::qrvV:";
+	const char          short_opts[] = "cf:F::hl:o:p::qru::vV:";
 	const struct option long_opts[] = {
 		{"clearkey",          NO_OPT,   NULL, 'c'},
 		{"bekfile",           NEED_OPT, NULL, 'f'},
@@ -96,6 +97,7 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 		{"recovery-password", MAY_OPT,  NULL, 'p'},
 		{"quiet",             NO_OPT,   NULL, 'q'},
 		{"readonly",          NO_OPT,   NULL, 'r'},
+		{"user-password",     MAY_OPT,  NULL, 'u'},
 		{"verbosity",         NO_OPT,   NULL, 'v'},
 		{"volume",            NEED_OPT, NULL, 'V'},
 		{0, 0, 0, 0}
@@ -152,6 +154,15 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 			case 'r':
 				cfg->is_ro |= READ_ONLY;
 				break;
+			case 'u':
+				if(optarg)
+				{
+					if(cfg->user_password != NULL)
+						free(cfg->user_password);
+					cfg->user_password = (uint8_t *) strdup(optarg);
+				}
+				cfg->decryption_mean |= USE_USER_PASSWORD;
+				break;
 			case 'v':
 				if(cfg->verbosity != L_QUIET)
 					cfg->verbosity++;
@@ -198,7 +209,11 @@ void free_args(dis_config_t* cfg)
 {
 	if(cfg->recovery_password)
 		memclean(cfg->recovery_password,
-				 strlen((char*)cfg->recovery_password) + sizeof(char));
+		         strlen((char*)cfg->recovery_password) + sizeof(char));
+	
+	if(cfg->user_password)
+		memclean(cfg->user_password,
+		         strlen((char*)cfg->user_password) + sizeof(char));
 	
 	if(cfg->bek_file)
 		memclean(cfg->bek_file, strlen(cfg->bek_file) + sizeof(char));

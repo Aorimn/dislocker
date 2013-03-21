@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,7 +25,9 @@
 
 
 #include "common.h"
+#include "extended_info.h"
 #include "ntfs/clock.h"
+#include "ntfs/encoding.h"
 #include "ntfs/guid.h"
 
 
@@ -49,9 +51,6 @@ enum cipher_types
 	AES_256_NO_DIFFUSER = 0x8003,
 };
 typedef uint16_t cipher_t;
-
-
-
 
 
 
@@ -227,6 +226,12 @@ typedef struct _datum_virtualization
 	datum_header_safe_t header;
 	uint64_t ntfs_boot_sectors;
 	uint64_t nb_bytes;
+	
+	/* 
+	 * Below is a structure added to this virtualization structure in Windows 8
+	 * The header is still 0x18 in size, which means xinfo is a payload
+	 */
+	extended_info_t xinfo;
 } datum_virtualization_t;
 #pragma pack ()
 
@@ -345,7 +350,6 @@ void print_datum_external(LEVELS level, void* vdatum);
 void print_datum_virtualization(LEVELS level, void* vdatum);
 
 void print_nonce(LEVELS level, uint8_t* nonce);
-
 void print_mac(LEVELS level, uint8_t* mac);
 
 int get_next_datum(bitlocker_dataset_t* dataset, int16_t type, int16_t datum_type, void* datum_begin, void** datum_result);
@@ -384,5 +388,3 @@ static const print_datum_f print_datum_tab[NB_DATUM_TYPES] =
 
 
 #endif // DATUM_HEADER_H
-
-

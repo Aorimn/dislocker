@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -66,8 +66,8 @@ static int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek,
  * decryption/encryption
  */
 static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
-                         dis_config_t* cfg, uint16_t sector_size, off_t offset,
-                         int fd_volume);
+                        dis_config_t* cfg, volume_header_t* volume_header,
+                        off_t offset, int fd_volume);
 
 
 
@@ -237,6 +237,18 @@ int main(int argc, char** argv)
 				break;
 			}
 		}
+		else if(cfg.decryption_mean & USE_USER_PASSWORD)
+		{
+			if(!get_vmk_from_user_pass(dataset, &cfg, &vmk_datum))
+			{
+				cfg.decryption_mean &= (unsigned) ~USE_USER_PASSWORD;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used user password decryption method\n");
+				break;
+			}
+		}
 		else if(cfg.decryption_mean & USE_RECOVERY_PASSWORD)
 		{
 			if(!get_vmk_from_rp(dataset, &cfg, &vmk_datum))
@@ -350,7 +362,7 @@ FIRST_CLEAN:
 	 * Fill the data_t structure which will be used for decryption afterward
 	 */
 	if(!prepare_crypt((bitlocker_header_t*) bl_metadata, &ctx, &cfg,
-	                  volume_header.sector_size, cfg.offset, fd_volume))
+	                  &volume_header, cfg.offset, fd_volume))
 	{
 		xprintf(L_CRITICAL, "Can't prepare the crypt structure. Abort.\n");
 		ret = EXIT_FAILURE;
@@ -543,18 +555,21 @@ static int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
  * @param ctx Contexts used to encrypt/decrypt data
  * @param sector_size The sector size of the volume
  * @param offset Where the real volume begins
- * @param fd 
+ * @param fd The volume's file descriptor
  */
 static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
-                         dis_config_t* cfg, uint16_t sector_size, off_t offset,
-                         int fd_volume)
+                         dis_config_t* cfg, volume_header_t* volume_header,
+                         off_t offset, int fd_volume)
 {
+	uint16_t sector_size = volume_header->sector_size;
+	
 	/** @see encommon.h for disk_op_data */
 	memset(&disk_op_data, 0, sizeof(data_t));
 	
 	disk_op_data.metadata       = metadata;
 	disk_op_data.metafiles_size = (off_t)
 	                              (~(sector_size - 1) & (sector_size + 0xffff));
+	disk_op_data.xinfo          = NULL;
 	disk_op_data.sector_size    = sector_size;
 	disk_op_data.part_off       = offset;
 	disk_op_data.ctx            = ctx;
@@ -570,23 +585,42 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	}
 	
 	/*
-	 * In BitLocker Vista's metadata, there's no volume size.
-	 * So we need to decrypt the first NTFS sector and grab the volume size from
-	 * it.
+	 * We need to grab the volume's size from the first sector, so we can
+	 * announce it on a getattr call
 	 */
-	if(disk_op_data.metadata->version == V_VISTA)
+	if(volume_header->nb_sectors_16b)
 	{
-		volume_header_t ntfs;
-		memset(&ntfs, 0, sizeof(ntfs));
-		read_decrypt_sectors(fd_volume, 1, sector_size, offset,(uint8_t*)&ntfs);
-		
-		disk_op_data.metadata->volume_size = ntfs.sector_size * ntfs.nb_sectors;
+		disk_op_data.volume_size = (uint64_t)volume_header->sector_size
+		                         * volume_header->nb_sectors_16b;
 	}
+	else if(volume_header->nb_sectors_32b)
+	{
+		disk_op_data.volume_size = (uint64_t)volume_header->sector_size
+		                         * volume_header->nb_sectors_32b;
+	}
+	else if(disk_op_data.metadata->version == V_VISTA && volume_header->nb_sectors_64b)
+	{
+		disk_op_data.volume_size = (uint64_t)volume_header->sector_size
+		                         * volume_header->nb_sectors_64b;
+	}
+	else if(disk_op_data.metadata->version == V_SEVEN)
+	{
+		disk_op_data.volume_size = metadata->encrypted_volume_size;
+	}
+	else
+	{
+		xprintf(L_ERROR, "Can't initialize the volume's size\n");
+		return FALSE;
+	}
+	
+	xprintf(L_INFO, "Found volume's size: 0x%1$016x (%1$llu) bytes\n", disk_op_data.volume_size);
+	
 	
 	/*
 	 * On BitLocker 7's volumes, there's a virtualized space used to store
 	 * firsts NTFS sectors. BitLocker creates a NTFS file to not write on the
-	 * area and displays a zero-fill file.
+	 * area and displays a zeroes-filled file.
+	 * A second part, new from Windows 8, follows...
 	 */
 	if(disk_op_data.metadata->version == V_SEVEN)
 	{
@@ -605,6 +639,11 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 		xfree(type_str);
 		
 		disk_op_data.virtualized_size = (off_t)datum->nb_bytes;
+		xprintf(L_DEBUG, "Virtualized info size: %#" F_OFF_T "\n",
+		        disk_op_data.virtualized_size);
+		
+		/* Extended info is new to Windows 8 */
+		disk_op_data.xinfo = &datum->xinfo;
 	}
 	
 	return TRUE;

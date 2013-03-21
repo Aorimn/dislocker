@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,23 +25,11 @@
 
 
 #include "common.h"
-
+#include "../stretch_key.h"
 
 // Specifications of the recovery password
 #define NB_RP_BLOCS   8
 #define NB_DIGIT_BLOC 6
-
-#define SHA256_DIGEST_LENGTH 32
-#define SALT_LENGTH          16
-
-// Needed structure
-typedef struct {
-	uint8_t updated_hash[SHA256_DIGEST_LENGTH];
-	uint8_t password_hash[SHA256_DIGEST_LENGTH];
-	uint8_t salt[SALT_LENGTH];
-	uint64_t hash_count;
-} bitlocker_chain_hash_t;
-
 
 #define INTERMEDIATE_KEY_LENGTH 32
 
@@ -49,8 +37,6 @@ typedef struct {
 /*
  * Prototypes
  */
-
-int chain_hash(const uint8_t *recovery_key, const uint8_t *salt, uint8_t *result);
 
 int is_valid_key(const uint8_t *recovery_password, uint16_t *short_password);
 

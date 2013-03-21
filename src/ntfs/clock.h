@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,8 +36,6 @@ typedef uint64_t ntfs_time_t;
  * Prototypes of functions from clock.c
  */
 void ntfs2utc(ntfs_time_t t, time_t *ts);
-
-int utf16towchars(uint16_t* utf16, size_t utf16_length, wchar_t* utf32);
 
 
 #endif /* CLOCK_H */

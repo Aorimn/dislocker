@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,8 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum);
 int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
 
 int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
+
+int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
 
 int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum);
 

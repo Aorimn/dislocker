@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -253,7 +253,7 @@ void print_one_datum(LEVELS level, void* datum)
  */
 void print_header(LEVELS level, datum_header_safe_t* header)
 {
-	xprintf(level, "Total datum size: 0x%1$04hx (%1$d) bytes\n", header->datum_size);
+	xprintf(level, "Total datum size: 0x%1$04hx (%1$hd) bytes\n", header->datum_size);
 	
 	xprintf(level, "Type: %hu\n", header->type);
 	if(header->type < NB_TYPES)
@@ -459,6 +459,14 @@ void print_datum_virtualization(LEVELS level, void* vdatum)
 	
 	xprintf(level, "NTFS boot sectors address:  %#llx\n", datum->ntfs_boot_sectors);
 	xprintf(level, "Number of backuped bytes: %1$#llx (%1$llu)\n", datum->nb_bytes);
+	
+	/* For Windows 8 metadata */
+	size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
+	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
+	if(actual_size > win7_size)
+	{
+		print_extended_info(level, &datum->xinfo);
+	}
 }
 
 

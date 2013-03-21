@@ -9,13 +9,14 @@ INC		=	-I/usr/include -I..
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
 # LDFLAGS		=	-lcrypto
-SOURCES		=	main.c metadata.c datums.c vmk.c
+SOURCES		=	main.c metadata.c datums.c vmk.c extended_info.c
 OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	../common.o ../encryption/crc32.o ../encryption/decrypt.o ../encryption/diffuser.o \
 			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o \
-			../ntfs/guid.o ../ntfs/clock.o \
+			../accesses/user_pass/user_pass.o ../accesses/stretch_key.o \
+			../ntfs/guid.o ../ntfs/clock.o ../ntfs/encoding.o \
 			../xstd/xstdio.o ../xstd/xstdlib.o \
 			../polarssl/aes.o ../polarssl/sha2.o
 
@@ -57,7 +58,7 @@ $(BIN) : $(OBJECTS)
 	@make DEBUG=$(DEBUG) -C ../accesses library
 	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ) $(LDFLAGS)
 
-library: metadata.o vmk.o fvek.o datums.o
+library: metadata.o vmk.o fvek.o datums.o extended_info.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :

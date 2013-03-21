@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -60,10 +60,16 @@ typedef struct _data {
 	/* Size of files containing metadata on the NTFS level */
 	off_t               metafiles_size;   /* BitLocker's metadata */
 	off_t               virtualized_size; /* NTFS backed-up sectors */
+	
+	/* Extended info which may be present (NULL otherwise) */
+	extended_info_t*    xinfo;
+	
 	/* Where the real partition begins */
 	off_t               part_off;
 	/* Volume sector size */
 	uint16_t            sector_size;
+	/* Volume size, in bytes */
+	uint64_t            volume_size;
 	/* File descriptor to access the volume */
 	int                 volume_fd;
 	

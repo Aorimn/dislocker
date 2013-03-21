@@ -67,6 +67,7 @@ Precisely, the table below indicates distrib, version and arch:
 | Fedora      |   15    | x86_64 |        vs         |
 | Fedora      |   16    | x86    |        vs         |
 | Fedora      |   16    | x86_64 |        vs         |
+| Ubuntu      |  11.04  | x86    |         s         |
 | MacOSX      | 10.6.8  | i386   |        vs         |
 +----------------------------------------------------+
 
@@ -77,6 +78,8 @@ doesn't work for you. Test it and send me feedbacks, whether it works or not.
 
 In any case, feel free to send comments and feedbacks to
 <Romain[DOT]Coltel[AT]hsc[DOT]fr>.
+
+Thanks goes to Rogier Wolff for testing.
 
 
 
@@ -90,6 +93,7 @@ process separately.
 
 Binary capable directories:
 - accesses/bek/: read a .bek file and display information about it;
+- accesses/rp/: calculate the intermediate key for a given recovery password;
 - encryption/: test encryption/decryption on a test case;
 - metadata/: read a BitLocker volume and display information about its metadata;
 - outputs/fuse/: FUSE's hello world example.

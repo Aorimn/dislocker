@@ -3,7 +3,7 @@
 /*
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
- * Copyright (C) 2012  Romain Coltel, Hervé Schauer Consultants
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -66,6 +66,8 @@ void xstdio_init(int verbosity, const char* logfile);
 void xstdio_end();
 int  get_input_fd();
 void close_input_fd();
+
+void chomp(char* string);
 
 int xprintf(LEVELS level, const char* format, ...);
 int xvprintf(LEVELS level, const char* format, va_list ap);

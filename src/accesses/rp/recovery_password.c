@@ -198,7 +198,7 @@ int intermediate_key(const uint8_t *recovery_password,
 	/* Just print it */
 	char s[NB_RP_BLOCS*2 * 5 + 1] = {0,};
 	for (loop = 0; loop < NB_RP_BLOCS*2; ++loop)
-		snprintf(&s[loop*5], 6, "0x%02x ", iresult[loop]);
+		snprintf(&s[loop*5], 6, "0x%02hhx ", iresult[loop]);
 	
 	xprintf(L_INFO, "Distilled password: '%s\b'\n", s);
 	
@@ -363,7 +363,7 @@ void print_intermediate_key(uint8_t *result_key)
 	int loop = 0;
 	char s[32*3 + 1] = {0,};
 	for(loop = 0; loop < 32; ++loop)
-		snprintf(&s[loop*3], 4, "%02x ", result_key[loop]);
+		snprintf(&s[loop*3], 4, "%02hhx ", result_key[loop]);
 	
 	xprintf(L_INFO, "Intermediate recovery key:\n\t%s\n", s);
 }

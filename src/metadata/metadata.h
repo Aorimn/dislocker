@@ -76,7 +76,7 @@ typedef struct _volume_header
 	uint8_t  unknown4[310];       // FIXME                                          -- offset 0xc8
 	
 	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
-} volume_header_t;
+} volume_header_t; // Size = 512
 #pragma pack ()
 
 

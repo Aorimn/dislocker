@@ -90,7 +90,7 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header)
 	xprintf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->offset_bl_header[1]);
 	xprintf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[2]);
 	
-	xprintf(level, "  Boot Partition Identifier: '0x%04x'\n", volume_header->boot_partition_identifier);
+	xprintf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
 	xprintf(level, "========================================\n");
 }
 

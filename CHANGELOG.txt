@@ -9,7 +9,7 @@ v0.3 -- Bugfixes:
    the NTFS layer, which is currently completely dislocker-independant.
   
      -- Features improvement:
- - One can write on a BitLocker encrypted volume;
+ - One can write on a BitLocker encrypted volume (only on Vista and 7 volumes);
  - Adding `--readonly' argument to deny writes on the BitLocker volume;
  - Default verbosity to CRITICAL level instead of QUIET, hence the `--quiet'
    option have been added;

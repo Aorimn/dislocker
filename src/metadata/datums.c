@@ -483,7 +483,7 @@ void print_nonce(LEVELS level, uint8_t* nonce)
 	char s[12*3 + 1] = {0,};
 	
 	for(i = 0; i < 12; ++i)
-		snprintf(&s[i*3], 4, "%02x ", nonce[i]);
+		snprintf(&s[i*3], 4, "%02hhx ", nonce[i]);
 	
 	xprintf(level, "%s\n", s);
 }
@@ -501,7 +501,7 @@ void print_mac(LEVELS level, uint8_t* mac)
 	char s[16*3 + 1] = {0,};
 	
 	for(i = 0; i < 16; ++i)
-		snprintf(&s[i*3], 4, "%02x ", mac[i]);
+		snprintf(&s[i*3], 4, "%02hhx ", mac[i]);
 	
 	xprintf(level, "%s\n", s);
 }

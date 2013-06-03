@@ -137,7 +137,7 @@ int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_
 		}
 	
 	
-	xprintf(L_INFO, "Using the recovery password: '%s'.\n",
+	xprintf(L_DEBUG, "Using the recovery password: '%s'.\n",
 	                (char *)cfg->recovery_password);
 	
 	
@@ -366,7 +366,7 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 			return FALSE;
 		}
 		
-	xprintf(L_INFO, "Using the user password: '%s'.\n",
+	xprintf(L_DEBUG, "Using the user password: '%s'.\n",
 	                (char *)cfg->user_password);
 	
 	

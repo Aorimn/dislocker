@@ -605,6 +605,7 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	}
 	else if(disk_op_data.metadata->version == V_SEVEN)
 	{
+		/* This is not the first sector but well, it's worth a try */
 		disk_op_data.volume_size = metadata->encrypted_volume_size;
 	}
 	else
@@ -613,7 +614,7 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 		return FALSE;
 	}
 	
-	xprintf(L_INFO, "Found volume's size: 0x%1$016x (%1$llu) bytes\n", disk_op_data.volume_size);
+	xprintf(L_INFO, "Found volume's size: 0x%1$" F_U64_T " (%1$llu) bytes\n", disk_op_data.volume_size);
 	
 	
 	/*
@@ -624,11 +625,11 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	 */
 	if(disk_op_data.metadata->version == V_SEVEN)
 	{
-		char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
 		datum_virtualization_t* datum = NULL;
 		if(!get_next_datum(&metadata->dataset, -1,
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
+			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
 			xprintf(L_ERROR, "Error looking for the VIRTUALIZATION datum type"
 			                 " %hd (%s). Internal failure, abort.\n",
 			                 DATUM_VIRTUALIZATION_INFO, type_str);
@@ -636,14 +637,19 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			datum = NULL;
 			return FALSE;
 		}
-		xfree(type_str);
 		
 		disk_op_data.virtualized_size = (off_t)datum->nb_bytes;
 		xprintf(L_DEBUG, "Virtualized info size: %#" F_OFF_T "\n",
 		        disk_op_data.virtualized_size);
 		
 		/* Extended info is new to Windows 8 */
-		disk_op_data.xinfo = &datum->xinfo;
+		size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
+		size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
+		if(actual_size > win7_size)
+		{
+			disk_op_data.xinfo = &datum->xinfo;
+			xprintf(L_DEBUG, "Got extended info\n");
+		}
 	}
 	
 	return TRUE;

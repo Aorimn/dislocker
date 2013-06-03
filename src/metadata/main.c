@@ -79,6 +79,7 @@ int main(int argc, char **argv)
 				return 0;
 			case 'o':
 				cfg.offset = (off_t) strtoll(optarg, NULL, 10);
+				break;
 			case 'V':
 				volume_path = strdup(optarg);
 				break;

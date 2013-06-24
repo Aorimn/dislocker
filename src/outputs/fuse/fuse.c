@@ -49,14 +49,15 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 	memset(stbuf, 0, sizeof(struct stat));
 	if(strcmp(path, "/") == 0)
 	{
-		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_mode = S_IFDIR | 0555;
 		stbuf->st_nlink = 2;
 	}
 	else if(strcmp(path, NTFS_FILENAME) == 0)
 	{
-		stbuf->st_mode = S_IFREG | 0666;
+		/** @see encommon.h for disk_op_data */
+		mode_t m = disk_op_data.cfg->is_ro ? 0444 : 0666;
+		stbuf->st_mode = S_IFREG | m;
 		stbuf->st_nlink = 1;
-		/** @see encommon.h */
 		stbuf->st_size = (off_t)disk_op_data.volume_size;
 	}
 	else

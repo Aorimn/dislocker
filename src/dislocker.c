@@ -129,7 +129,15 @@ int main(int argc, char** argv)
 	
 	
 	/* Open the volume as a (big) normal file */
-	fd_volume = xopen(cfg.volume_path, O_RDWR|O_LARGEFILE);
+	fd_volume = open(cfg.volume_path, O_RDWR|O_LARGEFILE);
+	if(fd_volume < 0)
+	{
+		/* Trying to open it in read-only if O_RDWR doesn't work */
+		fd_volume = xopen(cfg.volume_path, O_RDONLY|O_LARGEFILE);
+		cfg.is_ro |= READ_ONLY;
+	}
+	else
+		xprintf(L_DEBUG, "Opened (fd #%d).\n", fd_volume);
 	
 	
 	

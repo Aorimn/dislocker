@@ -5,15 +5,19 @@ v0.3 -- Bugfixes:
      dislocker used this size to tell the partition's size, which induced to
      present a zero-length NTFS file hence this bug.
  - Code cleaned and reorganised (yes, it's a bugfix);
- - Better BitLocker's files handling. This is not optimal yet, as it involved
-   the NTFS layer, which is currently completely dislocker-independant.
+ - Better BitLocker's files handling. This is not optimal yet, as it should
+   involve the NTFS layer, which is currently completely dislocker-independant.
   
      -- Features improvement:
- - One can write on a BitLocker encrypted volume (only on Vista and 7 volumes);
+ - One can write on a BitLocker encrypted volume (only on Vista and 7 volumes,
+   not on 8s);
  - Adding `--readonly' argument to deny writes on the BitLocker volume;
+ - Adding `--fvek' argument to decrypt a volume directly from a specially
+   crafted FVEK file;
  - Default verbosity to CRITICAL level instead of QUIET, hence the `--quiet'
-   option have been added;
- - One can use a user password to decrypt a volume now.
+   option has been added;
+ - One can use a user password to decrypt a volume through the
+   `--user-password' option now.
 
      -- Notable changes:
  - OpenSSL is no longer used for decryption (and encryption). An embedded

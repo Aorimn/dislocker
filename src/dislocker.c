@@ -679,6 +679,7 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			xprintf(L_DEBUG, "Got extended info\n");
 			
 			/* FIXME Windows 8 writing is not supported right now */
+			disk_op_data.config.is_ro |= READ_ONLY;
 		}
 	}
 	

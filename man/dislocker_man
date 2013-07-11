@@ -49,6 +49,9 @@ This option has priority on any `\fB-v\fR'. One probably wants to check the retu
 .TB
 .B -r, --readonly
 do not allow to write on the BitLocker volume (read only mode)
+.TB
+.B -u, --user-password
+decrypt the volume using the user password method
 .TP
 .B -v, --verbosity
 increase verbosity (verbosity to CRITICAL level by default), see also `\fB-q\fR'

@@ -35,7 +35,8 @@
 void usage()
 {
 	fprintf(stderr,
-"Usage: " PROGNAME " [-hqrv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME {-p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-c} -F[N]] [-- ARGS...]\n"
+"Usage: " PROGNAME " [-hqrv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
+"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"
 " (v" VERSION ")\n"
 "Options:\n"
 "    -c, --clearkey        decrypt volume using a clear key (default)\n"
@@ -43,6 +44,7 @@ void usage()
 "                          decrypt volume using the bek file (on USB key)\n"
 "    -F, --force-block N   force use of metadata block number N (1, 2 or 3)\n"
 "    -h, --help            print this help and exit\n"
+"    -k, --fvek FVEK_FILE  decrypt volume using the FVEK directly\n"
 "    -l, --logfile LOG_FILE\n"
 "                          put messages into this file (stdout by default)\n"
 "    -o, --offset OFFSET   BitLocker partition offset (default is 0)\n"
@@ -86,13 +88,14 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 	};
 	
 	/* Options which could be passed as argument */
-	const char          short_opts[] = "cf:F::hl:o:p::qru::vV:";
+	const char          short_opts[] = "cf:F::hk:l:o:p::qru::vV:";
 	const struct option long_opts[] = {
 		{"clearkey",          NO_OPT,   NULL, 'c'},
 		{"bekfile",           NEED_OPT, NULL, 'f'},
 		{"force-block",       MAY_OPT,  NULL, 'F'},
 		{"help",              NO_OPT,   NULL, 'h'},
 		{"logfile",           NEED_OPT, NULL, 'l'},
+		{"fvek",              NEED_OPT, NULL, 'k'},
 		{"offset",            NEED_OPT, NULL, 'o'},
 		{"recovery-password", MAY_OPT,  NULL, 'p'},
 		{"quiet",             NO_OPT,   NULL, 'q'},
@@ -131,6 +134,12 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 				usage();
 				free_args(cfg);
 				exit(EXIT_SUCCESS);
+			case 'k':
+				if(cfg->fvek_file != NULL)
+					free(cfg->fvek_file);
+				cfg->fvek_file = (char *) strdup(optarg);
+				cfg->decryption_mean |= USE_FVEKFILE;
+				break;
 			case 'l':
 				if(cfg->log_file != NULL)
 					free(cfg->log_file);
@@ -218,6 +227,9 @@ void free_args(dis_config_t* cfg)
 	if(cfg->bek_file)
 		memclean(cfg->bek_file, strlen(cfg->bek_file) + sizeof(char));
 	
+	if(cfg->fvek_file)
+		memclean(cfg->fvek_file, strlen(cfg->fvek_file) + sizeof(char));
+	
 	if(cfg->volume_path)
 		xfree(cfg->volume_path);
 	
@@ -247,6 +259,9 @@ void print_args(dis_config_t* cfg)
 		case USE_BEKFILE:
 			xprintf(L_INFO,"   \tusing the bek file at '%s'\n", cfg->bek_file);
 			break;
+		case USE_FVEKFILE:
+			xprintf(L_INFO,"   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
+			break;
 		default:
 			break;
 	}
@@ -263,3 +278,4 @@ void print_args(dis_config_t* cfg)
 	
 	xprintf(L_INFO, "... End config ---\n");
 }
+

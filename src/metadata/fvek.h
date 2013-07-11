@@ -33,6 +33,8 @@
  */
 int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum);
 
+int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum);
+
 
 
 #endif /* FVEK_H */

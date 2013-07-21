@@ -37,7 +37,7 @@ BUGS
 There may be bugs, and I'll be happy to hear about it!
 A precise test table is present into the INSTALL.txt file.
 
-Feel free to send comments and feedbacks to <Romain[DOT]Coltel[AT]hsc[DOT]fr>.
+Feel free to send comments and feedbacks to <dislocker __AT__ hsc __DOT__ fr>.
 
 
 

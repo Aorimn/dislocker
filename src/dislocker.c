@@ -242,6 +242,7 @@ int main(int argc, char** argv)
 			else
 			{
 				xprintf(L_INFO, "Used clear key decryption method\n");
+				cfg.decryption_mean = USE_CLEAR_KEY;
 				break;
 			}
 		}
@@ -254,6 +255,7 @@ int main(int argc, char** argv)
 			else
 			{
 				xprintf(L_INFO, "Used user password decryption method\n");
+				cfg.decryption_mean = USE_USER_PASSWORD;
 				break;
 			}
 		}
@@ -266,6 +268,7 @@ int main(int argc, char** argv)
 			else
 			{
 				xprintf(L_INFO, "Used recovery password decryption method\n");
+				cfg.decryption_mean = USE_RECOVERY_PASSWORD;
 				break;
 			}
 		}
@@ -278,6 +281,20 @@ int main(int argc, char** argv)
 			else
 			{
 				xprintf(L_INFO, "Used bek file decryption method\n");
+				cfg.decryption_mean = USE_BEKFILE;
+				break;
+			}
+		}
+		else if(cfg.decryption_mean & USE_FVEKFILE)
+		{
+			if(!build_fvek_from_file(&cfg, &fvek_datum))
+			{
+				cfg.decryption_mean &= (unsigned) ~USE_FVEKFILE;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used FVEK file decryption method\n");
+				cfg.decryption_mean = USE_FVEKFILE;
 				break;
 			}
 		}
@@ -310,10 +327,13 @@ int main(int argc, char** argv)
 	/*
 	 * And then, use the VMK to decrypt the FVEK
 	 */
-	if(!get_fvek(dataset, vmk_datum, &fvek_datum))
+	if(cfg.decryption_mean != USE_FVEKFILE)
 	{
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
+		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
+		{
+			ret = EXIT_FAILURE;
+			goto FIRST_CLEAN;
+		}
 	}
 	
 	
@@ -657,6 +677,9 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 		{
 			disk_op_data.xinfo = &datum->xinfo;
 			xprintf(L_DEBUG, "Got extended info\n");
+			
+			/* FIXME Windows 8 writing is not supported right now */
+			disk_op_data.cfg->is_ro |= READ_ONLY;
 		}
 	}
 	

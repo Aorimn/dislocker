@@ -33,7 +33,7 @@
  * 
  * @param dataset The metadata's dataset used
  * @param vmk_datum The datum of type 1 containing the VMK
- * @param fvek_datum 
+ * @param fvek_datum The FVEK datum KEY structure
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
@@ -88,6 +88,73 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 	xprintf(L_INFO, "=========================[ FVEK ]=========================\n");
 	print_one_datum(L_INFO, *fvek_datum);
 	xprintf(L_INFO, "==========================================================\n");
+	
+	return TRUE;
+}
+
+
+/**
+ * Build the FVEK datum using the FVEK file.
+ * The expected format is:
+ * - 2 bytes for the encryption method used (AES 128/256 bits, with or without
+ * diffuser). These two bytes are between 0x8000 -> 0x8003 included, {@see
+ * cipher_types@datums.h}.
+ * - 512 bytes that are usable directly in init_keys()@dislocker.c
+ * 
+ * @param cfg The configuration structure, therefore having the FVEK file
+ * @param fvek_datum The FVEK datum KEY structure
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
+{
+	if(!cfg)
+		return FALSE;
+	
+	
+	off_t actual_size   = -1;
+	int   file_fd = -1;
+	datum_key_t* datum_key = NULL;
+	
+	char enc_method[2]  = {0,};
+	char fvek_keys[64] = {0,};
+	
+	off_t expected_size = sizeof(enc_method) + sizeof(fvek_keys);
+	
+	
+	file_fd = xopen(cfg->fvek_file, O_RDONLY);
+	
+	/* Check the file's size */
+	actual_size = xlseek(file_fd, 0, SEEK_END);
+	
+	if(actual_size != expected_size)
+	{
+		xprintf(L_ERROR, "Wrong FVEK file size, expected %d but has %d\n",
+		        expected_size, actual_size);
+		return FALSE;
+	}
+	
+	/* Read everything */
+	xlseek(file_fd, 0, SEEK_SET);
+	xread(file_fd, enc_method, sizeof(enc_method));
+	xread(file_fd, fvek_keys,  sizeof(fvek_keys));
+	
+	
+	/* Create the FVEK datum */
+	*fvek_datum = xmalloc(sizeof(datum_key_t) + sizeof(fvek_keys));
+	
+	/* ... create the header */
+	datum_key = *fvek_datum;
+	datum_key->header.datum_size = sizeof(datum_key_t) + sizeof(fvek_keys);
+	datum_key->header.type       = 3;
+	datum_key->header.datum_type = DATUM_KEY;
+	datum_key->header.error_status = 1;
+	
+	datum_key->algo = *(cipher_t*)enc_method;
+	datum_key->padd = 0;
+	
+	/* ... copy the keys */
+	memcpy((char*) *fvek_datum + sizeof(datum_key_t), fvek_keys, sizeof(fvek_keys));
+	
 	
 	return TRUE;
 }

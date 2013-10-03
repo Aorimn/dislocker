@@ -32,10 +32,11 @@
  * Different methods to decrypt the VMK
  */
 typedef enum {
-	USE_CLEAR_KEY         = 0x1,
-	USE_USER_PASSWORD     = 0x2,
-	USE_RECOVERY_PASSWORD = 0x4,
-	USE_BEKFILE           = 0x8
+	USE_CLEAR_KEY         = 0x01,
+	USE_USER_PASSWORD     = 0x02,
+	USE_RECOVERY_PASSWORD = 0x04,
+	USE_BEKFILE           = 0x08,
+	USE_FVEKFILE          = 0x10
 } DECRYPT_MEAN;
 
 
@@ -51,11 +52,11 @@ enum {
  * Structure containing command line options
  */
 typedef struct _dis_cfg {
-	/* Which method to use to decrypt */
-	DECRYPT_MEAN  decryption_mean;
-	
 	/* BitLocker-volume-to-mount path */
 	char*         volume_path;
+	
+	/* Which method to use to decrypt */
+	DECRYPT_MEAN  decryption_mean;
 	/* Path to the .bek file in case of using the BEKFILE DECRYPT_MEAN */
 	char*         bek_file;
 	/*
@@ -63,9 +64,10 @@ typedef struct _dis_cfg {
 	 * DECRYPT_MEAN
 	 */
 	uint8_t*      recovery_password;
-	
 	/* User password to use in case of using the USER_PASSWORD DECRYPT_MEAN */
 	uint8_t*      user_password;
+	/* Use directly the FVEK file DECRYPT_MEAN */
+	char*         fvek_file;
 	
 	/* Output verbosity */
 	LEVELS        verbosity;

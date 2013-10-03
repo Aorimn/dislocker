@@ -1,6 +1,6 @@
 PROGNAME	=	dislocker
 AUTHOR		=	\"Romain Coltel\"
-VERSION		=	0.2.3
+VERSION		=	0.3
 ARCH		=	$(shell uname)
 DATE		=	$(shell date +%Y-%m-%d)
 

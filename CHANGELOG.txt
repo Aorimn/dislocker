@@ -9,8 +9,7 @@ v0.3 -- Bugfixes:
    involve the NTFS layer, which is currently completely dislocker-independant.
   
      -- Features improvement:
- - One can write on a BitLocker encrypted volume (only on Vista and 7 volumes,
-   not on 8s);
+ - One can write on a BitLocker encrypted volume;
  - Adding `--readonly' argument to deny writes on the BitLocker volume;
  - Adding `--fvek' argument to decrypt a volume directly from a specially
    crafted FVEK file;

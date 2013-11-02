@@ -88,7 +88,10 @@ libs: $(OBJECTS)
 
 
 # Default rules for final binaries
-$(BIN) : libs
+touch :
+	touch $(BIN).c
+
+$(BIN) : touch libs
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(EXT_OBJ) $(LDFLAGS)
 
 
@@ -120,11 +123,17 @@ fuse: $(FUSE_ROOT).o
 fuse: $(BIN)
 
 
+# Check if the installed binary is present, make it if it isn't
+check-install :
+	[ -e $(BIN) ] && echo "Found $(BIN) binary" || make clean fuse
+	@# But if it fails, exit, there's no other choice I think :/
+	[ -e $(BIN) ] || exit 42
+
 # Classic rules
 common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o
 	@make -C ntfs/
 
-install: all
+install: check-install
 	cp $(BIN) $(INSTALL_PATH)
 	chmod 755 $(INSTALL_PATH)$(BIN)
 	cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
@@ -135,17 +144,14 @@ install: all
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
 uninstall: clean
-	[ -f $(INSTALL_PATH)$(BIN) ] && rm $(INSTALL_PATH)$(BIN)           || echo -n ""
-	[ -f $(INSTALL_PATH)$(BIN) ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER) || echo -n ""
-	[ -f $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz && rm $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz ] || echo -n ""
+	[ -f $(INSTALL_PATH)$(BIN) ]              && rm $(INSTALL_PATH)$(BIN)              || echo -n ""
+	[ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz || echo -n ""
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 
 
 clean:
-	$(eval SOURCES += $(FILE_ROOT).c)
-	$(eval SOURCES += $(FUSE_ROOT).c)
-	rm -rf -- $(EXT_OBJ) $(OBJECTS) *~ *.swp dislocker $(BIN)
+	rm -rf -- $(EXT_OBJ) $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BIN)
 
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)

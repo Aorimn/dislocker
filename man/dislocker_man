@@ -46,10 +46,10 @@ If no password is provided, it will be asked afterward; this has the advantage t
 .B -q, --quiet
 do NOT display any information.
 This option has priority on any `\fB-v\fR'. One probably wants to check the return value of the program when using this option
-.TB
+.TP
 .B -r, --readonly
 do not allow to write on the BitLocker volume (read only mode)
-.TB
+.TP
 .B -u, --user-password
 decrypt the volume using the user password method
 .TP

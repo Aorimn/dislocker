@@ -1,6 +1,6 @@
 PROGNAME	=	dislocker
 AUTHOR		=	\"Romain Coltel\"
-VERSION		=	0.3
+VERSION		=	0.3.1
 ARCH		=	$(shell uname)
 DATE		=	$(shell date +%Y-%m-%d)
 
@@ -93,7 +93,7 @@ $(BIN) : libs
 
 
 static : libs
-	$(CC) -static  $(CFLAGS) -o $(BIN)-static $(OBJECTS) $(EXT_OBJ) $(LDFLAGS) -lz -ldl 
+	$(CC) -static  $(CFLAGS) -o $(BIN)-static $(OBJECTS) $(EXT_OBJ) $(LDFLAGS) -lz -ldl
 
 
 # Build the binary for the file output

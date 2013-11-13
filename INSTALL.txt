@@ -57,26 +57,9 @@ PORTABILITY
 Globally, this was successfuly tested on Linux x86/x86_64. It won't work on
 Windows and may not work on *BSD (never tested).
 
-Precisely, the table below indicates distrib, version and arch:
+For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
 
-+----------------------------------------------------+
-| distrib/OS  | version |  arch  | Vista(v)/Seven(s) |
-|-------------+---------+--------+-------------------|
-| Fedora      |   14    | x86_64 |         s         |
-| Fedora      |   15    | x86    |        vs         |
-| Fedora      |   15    | x86_64 |        vs         |
-| Fedora      |   16    | x86    |        vs         |
-| Fedora      |   16    | x86_64 |        vs         |
-| Ubuntu      |  11.04  | x86    |         s         |
-| MacOSX      | 10.6.8  | i386   |        vs         |
-+----------------------------------------------------+
-
-Note: For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
-
-If your distrib/OS isn't in that table, this doesn't imply that the driver
-doesn't work for you. Test it and send me feedbacks, whether it works or not.
-
-In any case, feel free to send comments and feedbacks to
+Whether it works or not, feel free to send comments and feedbacks to
 <dislocker __AT__ hsc __DOT__ fr>.
 
 Thanks goes to Rogier Wolff for testing.
@@ -97,3 +80,4 @@ Binary capable directories:
 - encryption/: test encryption/decryption on a test case;
 - metadata/: read a BitLocker volume and display information about its metadata;
 - outputs/fuse/: FUSE's hello world example.
+

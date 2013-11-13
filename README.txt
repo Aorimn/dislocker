@@ -3,7 +3,7 @@ INTRODUCTION AND EXPLANATIONS
 
 This software has been designed to read BitLocker encrypted partitions under a
 Linux system. The driver used to only read volumes encrypted under a Windows 7
-system but is now Windows Vista capable and has the write functionality.
+system but is now Windows Vista and 8 capable and has the write functionality.
 
 The driver can run into two different modes : with or without FUSE. This mode is
 decided at compilation time within the Makefile.

@@ -321,7 +321,7 @@ int prompt_rp(uint8_t** rp)
 				{
 					/* Hide the recovery password for sneaky eyes */
 					printf("%1$s%2$s-%2$s-%2$s-%2$s-%2$s-%2$s-%2$s-%2$s\n", prompt, "XXXXXX");
-					printf("Valid password, continuing.\n");
+					printf("Valid password format, continuing.\n");
 					close_input_fd();
 					return TRUE;
 				}

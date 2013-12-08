@@ -512,27 +512,6 @@ static int fs_write(const char *path, const char *buf, size_t size,
 	return outsize;
 }
 
-static int fs_fsync(const char *path, int isdatasync,
-					UNUSED struct fuse_file_info* fi)
-{
-	/*
-	 * In fact, this should not be necessary but you know, zeal...
-	 */
-	(void) path;
-	(void) isdatasync;
-	
-	return fdatasync(disk_op_data.volume_fd);
-}
-
-static int fs_flush(const char *path, UNUSED struct fuse_file_info* fi)
-{
-	(void) path;
-	
-	return fdatasync(disk_op_data.volume_fd);
-}
-
-
-
 
 struct fuse_operations fs_oper = {
 	.getattr = fs_getattr,
@@ -540,6 +519,4 @@ struct fuse_operations fs_oper = {
 	.open    = fs_open,
 	.read    = fs_read,
 	.write   = fs_write,
-	.fsync   = fs_fsync,
-	.flush   = fs_flush,
 };

@@ -109,10 +109,10 @@ using the recovery password method.
 In `FUSE' mode:
 .TP
 .B % dislocker -V encrypted.bitlocker -f /path/to/usb/file.BEK -- /mnt/ntfs
-This will create a file into \fB/mnt/ntfs\fR named dislocker-file if the encrypted volume has a clear key enabled.
+This will create a file into \fB/mnt/ntfs\fR named dislocker-file.
 .TP
 To mount partitions once decrypted, use this sort of line on Linux:
-.B % mount -o loop ntfs/dislocker-file /mnt/clear
+.B % mount -o loop /mnt/ntfs/dislocker-file /mnt/clear
 .TP
 On MacOSX, you first need to create the block device:
 .B % hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount ntfs/dislocker-file
@@ -122,7 +122,7 @@ Then mount it on a file into /Volumes for instance:
 .TP
 It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour.
 In order to do so, you may run these commands (replacing your mount points):
-.B % umount /mnt/clear && umount ntfs/dislocker-file
+.B % umount /mnt/clear && umount /mnt/ntfs/dislocker-file
 .SH AUTHOR
 This tool is developped by Romain Coltel on behalf of HSC (
 .B http://www.hsc.fr/

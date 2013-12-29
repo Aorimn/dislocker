@@ -9,6 +9,7 @@ INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
 # LDFLAGS		=	-lcrypto
+LDFLAGS		=	-lpolarssl
 SOURCES		=	*.c ../stretch_key.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../stretch_key.o ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
@@ -42,9 +43,8 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
-	@make -C ../../polarssl library
 	@make DEBUG=$(DEBUG) -C ../../ common
-	$(CC) $(CFLAGS) -o $@ $^ ../../common.o ../../polarssl/sha2.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ ../../common.o $(LDFLAGS)
 
 library : recovery_password.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
@@ -52,5 +52,4 @@ library : recovery_password.o
 clean :
 	rm -rf -- *.o $(BIN) *~ *.swp
 	@make -C ../../ clean
-	@make -C ../../polarssl clean
 

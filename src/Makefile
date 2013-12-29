@@ -21,15 +21,14 @@ CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
 SOURCES		=	dislocker.c common.c sectors.c \
 			config.c xstd/xstdio.c xstd/xstdlib.c
 OBJECTS		=	$(SOURCES:.c=.o)
-LDFLAGS		=	-lpthread
+LDFLAGS		=	-lpthread -lpolarssl
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/vmk.o metadata/fvek.o metadata/extended_info.o \
 			accesses/rp/recovery_password.o accesses/bek/read_bekfile.o \
 			accesses/user_pass/user_pass.o accesses/stretch_key.o \
 			encryption/decrypt.o encryption/encrypt.o encryption/diffuser.o encryption/crc32.o \
-			ntfs/guid.o ntfs/clock.o ntfs/encoding.o \
-			polarssl/aes.o polarssl/sha2.o
+			ntfs/guid.o ntfs/clock.o ntfs/encoding.o
 
 
 INSTALL_PATH	=	/usr/bin/
@@ -80,7 +79,6 @@ endif
 all : fuse
 
 libs: $(OBJECTS)
-	@make DEBUG=$(DEBUG) -C polarssl/   library
 	@make DEBUG=$(DEBUG) -C accesses/   library
 	@make DEBUG=$(DEBUG) -C metadata/   library
 	@make DEBUG=$(DEBUG) -C ntfs/       library

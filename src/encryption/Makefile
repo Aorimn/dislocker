@@ -10,6 +10,7 @@ INC		=	-I/usr/include -I..
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
 # LDFLAGS		=	-lcrypto
+LDFLAGS		=	-lpolarssl
 SOURCES		=	*.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c))
 BIN		=	$(PROGNAME)
@@ -18,8 +19,7 @@ EXT_OBJ		=	../common.o \
 			../ntfs/guid.o ../ntfs/clock.o ../ntfs/encoding.o \
 			../metadata/datums.o ../metadata/vmk.o ../metadata/metadata.o \
 			../xstd/xstdio.o ../xstd/xstdlib.o \
-			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o \
-			../polarssl/aes.o ../polarssl/sha2.o
+			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o
 
 
 ifeq ($(shell uname -m), x86_64)
@@ -53,7 +53,6 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
-	@make -C ../polarssl/ library
 	@make DEBUG=$(DEBUG) -C ../ common
 	@make DEBUG=$(DEBUG) -C ../metadata/ library
 	@make DEBUG=$(DEBUG) -C ../accesses/ library
@@ -63,7 +62,6 @@ library : decrypt.o encrypt.o diffuser.o crc32.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
-	@make -C ../polarssl/ clean
 	@make -C ../ clean
 	@make -C ../metadata/ clean
 	rm -rf -- *.o $(BIN) $(EXT_OBJ) *~ *.swp

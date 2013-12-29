@@ -65,6 +65,20 @@ void usage()
 }
 
 
+/**
+ * Hide a commandline option, replacing the actual optarg by 'X's.
+ * 
+ * @param opt The option to hide
+ */
+static void hide_opt(char* opt)
+{
+	size_t len = strlen(opt);
+	
+	while(len)
+	{
+		opt[--len] = 'X';
+	}
+}
 
 
 /**
@@ -154,8 +168,10 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 					if(cfg->recovery_password != NULL)
 						free(cfg->recovery_password);
 					cfg->recovery_password = (uint8_t *) strdup(optarg);
+					cfg->decryption_mean |= USE_RECOVERY_PASSWORD;
+					
+					hide_opt(optarg);
 				}
-				cfg->decryption_mean |= USE_RECOVERY_PASSWORD;
 				break;
 			case 'q':
 				cfg->verbosity = L_QUIET;
@@ -169,8 +185,10 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 					if(cfg->user_password != NULL)
 						free(cfg->user_password);
 					cfg->user_password = (uint8_t *) strdup(optarg);
+					cfg->decryption_mean |= USE_USER_PASSWORD;
+					
+					hide_opt(optarg);
 				}
-				cfg->decryption_mean |= USE_USER_PASSWORD;
 				break;
 			case 'v':
 				if(cfg->verbosity != L_QUIET)

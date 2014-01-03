@@ -22,11 +22,6 @@ EXT_OBJ		=	../common.o \
 			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o
 
 
-ifeq ($(shell uname -m), x86_64)
-LIB		= 	-L/usr/lib64
-else
-LIB		= 	-L/usr/lib
-endif
 
 # For MacOSX users
 ifeq ($(shell uname -s), Darwin)

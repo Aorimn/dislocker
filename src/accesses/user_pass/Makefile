@@ -14,11 +14,6 @@ SOURCES		=	*.c ../stretch_key.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../stretch_key.o ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
 
-ifeq ($(shell uname -m), x86_64)
-LIB		= 	-L/usr/lib64
-else
-LIB		= 	-L/usr/lib
-endif
 
 # For MacOSX users
 ifeq ($(shell uname -s), Darwin)

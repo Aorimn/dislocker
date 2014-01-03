@@ -22,10 +22,7 @@ EXT_OBJ		=	../common.o ../encryption/crc32.o ../encryption/decrypt.o ../encrypti
 
 
 ifeq ($(shell uname -m), x86_64)
-LIB		= 	-L/usr/lib64
 CFLAGS		+= 	-D __ARCH_X86_64
-else
-LIB		= 	-L/usr/lib
 endif
 
 # For MacOSX users

@@ -43,10 +43,7 @@ FILE_ROOT	=	outputs/file/file
 
 # Get the system architecture
 ifeq ($(shell uname -m), x86_64)
-LIB		=	-L/usr/lib64
 CFLAGS		+=	-D__ARCH_X86_64
-else
-LIB		=	-L/usr/lib
 endif
 
 

@@ -115,7 +115,7 @@ fuse: CFLAGS  += -D__RUN_FUSE -DFUSE_USE_VERSION=26
 fuse: SOURCES += $(FUSE_ROOT).c
 
 # Don't link with the same library on MacOSX
-ifeq ($(ARCH), Darwin)
+ifeq ($(OS), Darwin)
 fuse: LDFLAGS += -losxfuse_i64
 else
 fuse: LDFLAGS += -lfuse

@@ -35,9 +35,11 @@
 void usage()
 {
 	fprintf(stderr,
+PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
+"\n"
 "Usage: " PROGNAME " [-hqrv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
 "    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"
-" (v" VERSION ")\n"
+"\n"
 "Options:\n"
 "    -c, --clearkey        decrypt volume using a clear key (default)\n"
 "    -f, --bekfile BEKFILE\n"

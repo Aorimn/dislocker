@@ -20,6 +20,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
+#if defined(__FREEBSD)
+#define _WITH_GETLINE
+#endif
 
 #include "user_pass.h"
 

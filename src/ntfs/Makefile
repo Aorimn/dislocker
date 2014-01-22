@@ -1,7 +1,4 @@
-
-CC		=	gcc
-INC		=	-I/usr/include -I../
-WFLAGS		=	-Wall -Werror -Wextra
+INC		+=	-I../
 CFLAGS		=	$(WFLAGS) $(INC)
 
 SOURCES		=	guid.c clock.c encoding.c

@@ -522,7 +522,7 @@ static int fs_fsync(const char *path, int isdatasync,
 	(void) path;
 	(void) isdatasync;
 	
-#ifdef __FREEBSD
+#if defined(__FREEBSD) || defined(__DARWIN)
 	return fsync(disk_op_data.volume_fd);
 #else
 	return fdatasync(disk_op_data.volume_fd);
@@ -533,7 +533,7 @@ static int fs_flush(const char *path, UNUSED struct fuse_file_info* fi)
 {
 	(void) path;
 	
-#ifdef __FREEBSD
+#if defined(__FREEBSD) || defined(__DARWIN)
 	return fsync(disk_op_data.volume_fd);
 #else
 	return fdatasync(disk_op_data.volume_fd);

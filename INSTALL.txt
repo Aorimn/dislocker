@@ -24,6 +24,13 @@ INSTALLING
 
 First thing to do is to cd into the src/ directory. Then...
 
+. If you are on MacOSX, just install Homebrew (http://brew.sh/) and run the
+following command:
+$ brew install brew_install_dislocker.rb
+This will install dislocker in FUSE mode.
+
+
+. If you aren't on MacOSX...
 As you may know, the driver can be used in two ways: using FUSE or not. By
 default, typing `make` will generate a FUSE capable binary. However, running
 `make file` won't include FUSE capabilities. In this latter mode, dislocker

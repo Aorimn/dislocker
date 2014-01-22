@@ -1,15 +1,10 @@
 PROGNAME	=	read_bekfile
-AUTHOR		=	\"Romain Coltel\"
-ARCH		=	$(shell uname)
-# DEBUG		=	1
 
-CC		=	gcc
-DEFINES		=	-DPROGNAME=\"$(PROGNAME)\"
-INC		=	-I/usr/include -I../..
-WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
+INC		+=	-I../..
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 SOURCES		=	*.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c))
+LDFLAGS		=	$(LIB)
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	../../common.o ../../metadata/datums.o \
@@ -17,16 +12,14 @@ EXT_OBJ		=	../../common.o ../../metadata/datums.o \
 			../../xstd/xstdio.o ../../xstd/xstdlib.o
 
 
-ifeq ($(shell uname -m), x86_64)
+ifeq ($(ARCH), x86_64)
 LIB		= 	-L/usr/lib64
 else
 LIB		= 	-L/usr/lib
 endif
 
 # For MacOSX users
-ifeq ($(shell uname -s), Darwin)
-DEFINES		+=	-D__DARWIN
-else
+ifneq ($(OS), Darwin)
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
 endif
@@ -47,14 +40,14 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
-	@make DEBUG=$(DEBUG) -C ../../ common
-	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ)
+	@$(MAKE) DEBUG=$(DEBUG) -C ../../ common
+	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ) $(LDFLAGS)
 
 library : read_bekfile.o
 	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
-	@make -C ../../ clean
+	@$(MAKE) -C ../../ clean
 	rm -rf -- *.o $(BIN) *~ *.swp
 
 

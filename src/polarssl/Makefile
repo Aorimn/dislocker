@@ -1,5 +1,5 @@
 
-CC		=	gcc
+CC		=	cc
 INC		=	-I/usr/include -I../
 CFLAGS		=	$(INC)
 

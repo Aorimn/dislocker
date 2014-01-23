@@ -135,6 +135,9 @@ int main(int argc, char** argv)
 		/* Trying to open it in read-only if O_RDWR doesn't work */
 		fd_volume = xopen(cfg.volume_path, O_RDONLY|O_LARGEFILE);
 		cfg.is_ro |= READ_ONLY;
+		xprintf(L_WARNING,
+				"Failed to open %s for writing. Falling back to read-only.\n",
+				cfg.volume_path);
 	}
 	else
 		xprintf(L_DEBUG, "Opened (fd #%d).\n", fd_volume);
@@ -680,6 +683,7 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			
 			/* FIXME Windows 8 writing is not supported right now */
 			disk_op_data.cfg->is_ro |= READ_ONLY;
+			xprintf(L_WARNING, "Volume formated Win8, falling back to read-only.\n");
 		}
 	}
 	

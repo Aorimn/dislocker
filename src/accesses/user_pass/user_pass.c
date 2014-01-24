@@ -42,7 +42,7 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 		return -1;
 
 	struct termios old, new;
-	size_t n;
+	size_t n = 0;
 	ssize_t nread;
 
 	/* Turn echoing off and fail if we can't. */

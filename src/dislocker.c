@@ -134,6 +134,14 @@ int main(int argc, char** argv)
 	{
 		/* Trying to open it in read-only if O_RDWR doesn't work */
 		fd_volume = xopen(cfg.volume_path, O_RDONLY|O_LARGEFILE);
+		if(fd_volume < 0)
+		{
+			xprintf(L_CRITICAL,
+					"Failed to open %s: %s\n",
+					cfg.volume_path, strerror(errno));
+			ret = EXIT_FAILURE;
+			goto FIRST_CLEAN;
+		}
 		cfg.is_ro |= READ_ONLY;
 		xprintf(L_WARNING,
 				"Failed to open %s for writing. Falling back to read-only.\n",

@@ -141,7 +141,7 @@ int prompt_up(uint8_t** up)
 
 	*up = NULL;
 
-	ssize_t nb_read = my_getpass((char**)&up, stdin);
+	ssize_t nb_read = my_getpass((char**)up, stdin);
 
 	if(nb_read <= 0)
 	{

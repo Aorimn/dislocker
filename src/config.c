@@ -168,10 +168,10 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 					if(cfg->recovery_password != NULL)
 						free(cfg->recovery_password);
 					cfg->recovery_password = (uint8_t *) strdup(optarg);
-					cfg->decryption_mean |= USE_RECOVERY_PASSWORD;
 					
 					hide_opt(optarg);
 				}
+				cfg->decryption_mean |= USE_RECOVERY_PASSWORD;
 				break;
 			case 'q':
 				cfg->verbosity = L_QUIET;
@@ -185,10 +185,10 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 					if(cfg->user_password != NULL)
 						free(cfg->user_password);
 					cfg->user_password = (uint8_t *) strdup(optarg);
-					cfg->decryption_mean |= USE_USER_PASSWORD;
 					
 					hide_opt(optarg);
 				}
+				cfg->decryption_mean |= USE_USER_PASSWORD;
 				break;
 			case 'v':
 				if(cfg->verbosity != L_QUIET)

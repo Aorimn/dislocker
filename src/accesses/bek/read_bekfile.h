@@ -26,6 +26,7 @@
 #include "ntfs/clock.h"
 #include "ntfs/guid.h"
 #include "metadata/datums.h"
+#include "metadata/extended_info.h"
 
 
 

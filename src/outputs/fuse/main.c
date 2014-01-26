@@ -6,11 +6,11 @@
     See the file COPYING.
 */
 
-#if defined(__DARWIN) || defined(__FREEBSD)
+#ifdef __DARWIN
 # include <osxfuse/fuse.h>
 #else
 # include <fuse.h>
-#endif /* __DARWIN || __FREEBSD */
+#endif /* __DARWIN */
 
 #include <stdio.h>
 #include <string.h>

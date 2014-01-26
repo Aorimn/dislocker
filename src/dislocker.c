@@ -46,12 +46,12 @@
 
 
 /*
- * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables
+ * On Darwin, files are open using 64 bits offsets/variables
  * and O_LARGEFILE isn't defined
  */
-#if defined(__DARWIN) || defined(__FREEBSD)
+#ifdef __DARWIN
 #  define O_LARGEFILE 0
-#endif /* __DARWIN || __FREEBSD */
+#endif /* __DARWIN */
 
 
 
@@ -677,6 +677,9 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 		{
 			disk_op_data.xinfo = &datum->xinfo;
 			xprintf(L_DEBUG, "Got extended info\n");
+			
+			/* FIXME Windows 8 writing is not supported right now */
+			disk_op_data.cfg->is_ro |= READ_ONLY;
 		}
 	}
 	

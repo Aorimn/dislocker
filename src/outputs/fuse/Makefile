@@ -1,16 +1,24 @@
 PROGNAME	=	fuse
 AUTHOR		=	\"Romain Coltel\"
-ARCH		=	$(shell uname)
+ARCH		=	$(shell uname -m)
+OS		=	$(shell uname -s)
 # DEBUG		=	1
+
+ifeq ($(OS), FreeBSD)
+MAKE		=	gmake
+else
+MAKE		=	make
+endif
 
 USE_FUSE	=	1
 
 CC		=	gcc
-DEFINES		=	-D PROGNAME=\"$(PROGNAME)\" -D __XYSSL
-INC		=	-I/usr/include -I../..
+DEFINES		=	-D PROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
+DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
+DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-# LDFLAGS		=	-lcrypto
+CFLAGS		=	$(WFLAGS) $(DEFINES)
+LDFLAGS		=	$(LIB)
 SOURCES		=	main.c
 OBJECTS		=	$(SOURCES:.c=.o) ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
@@ -20,8 +28,7 @@ EXT_OBJ		=	../../common.o
 
 
 # For MacOSX users
-ifeq ($(shell uname -s), Darwin)
-DEFINES		+=	-D__DARWIN
+ifeq ($(OS), Darwin)
 LDFLAGS		+=	-losxfuse_i64
 else
 LDFLAGS		+=	-lfuse
@@ -52,7 +59,6 @@ $(BIN) : $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ) $(LDFLAGS)
 
 library : fuse.o
-	@echo -n ""  # He wants a rule here... Do not ask me why :D
 
 clean :
 	@make -C ../../ clean

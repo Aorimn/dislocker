@@ -1,63 +1,16 @@
-PROGNAME	=	encryption
-AUTHOR		=	\"Romain Coltel\"
-ARCH		=	$(shell uname)
-# DEBUG		=	1
+INC		+=	-I..
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 
 
-CC		=	gcc
-DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
-INC		=	-I/usr/include -I..
-WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-# LDFLAGS		=	-lcrypto
-LDFLAGS		=	-lpolarssl
-SOURCES		=	*.c
-OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c))
-BIN		=	$(PROGNAME)
-
-EXT_OBJ		=	../common.o \
-			../ntfs/guid.o ../ntfs/clock.o ../ntfs/encoding.o \
-			../metadata/datums.o ../metadata/vmk.o ../metadata/metadata.o \
-			../xstd/xstdio.o ../xstd/xstdlib.o \
-			../accesses/rp/recovery_password.o ../accesses/bek/read_bekfile.o
-
-
-
-# For MacOSX users
-ifeq ($(shell uname -s), Darwin)
-DEFINES		+=	-D__DARWIN
-else
-# Useless warnings when used within Darwin
-WFLAGS		+=	-Wconversion
-endif
-
-
-ifdef DEBUG
-DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
-CFLAGS		+=	$(DBGFLAGS)
-endif
-
-
-
-
-.PHONY : all $(BIN) library clean
+.PHONY : library clean
 
 .c.o :
 	$(CC) $(CFLAGS) $(LIBRARY_FLAGS) -c -o $@ $<
 
-all : $(BIN)
-
-$(BIN) : $(OBJECTS)
-	@make DEBUG=$(DEBUG) -C ../ common
-	@make DEBUG=$(DEBUG) -C ../metadata/ library
-	@make DEBUG=$(DEBUG) -C ../accesses/ library
-	$(CC) $(CFLAGS) -o $@ $(EXT_OBJ) $^ $(LDFLAGS)
-
 library : decrypt.o encrypt.o diffuser.o crc32.o
-	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
-	@make -C ../ clean
-	@make -C ../metadata/ clean
+	@$(MAKE) -C ../ clean
+	@$(MAKE) -C ../metadata/ clean
 	rm -rf -- *.o $(BIN) $(EXT_OBJ) *~ *.swp
 

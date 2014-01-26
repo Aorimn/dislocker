@@ -1,15 +1,21 @@
 PROGNAME	=	getmetadata
 AUTHOR		=	\"Romain Coltel\"
-ARCH		=	$(shell uname)
+ARCH		=	$(shell uname -m)
+OS		=	$(shell uname -s)
 # DEBUG		=	1
 
-CC		=	gcc
+ifeq ($(OS), FreeBSD)
+MAKE		=	gmake
+else
+MAKE		=	make
+endif
+
+CC		=	cc
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I..
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-# LDFLAGS		=	-lcrypto
-LDFLAGS		=	-lpolarssl
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
+LDFLAGS		=	$(LIB) -lpolarssl
 SOURCES		=	main.c metadata.c datums.c vmk.c extended_info.c
 OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)
@@ -21,12 +27,12 @@ EXT_OBJ		=	../common.o ../encryption/crc32.o ../encryption/decrypt.o ../encrypti
 			../xstd/xstdio.o ../xstd/xstdlib.o
 
 
-ifeq ($(shell uname -m), x86_64)
+ifeq ($(ARCH), x86_64)
 CFLAGS		+= 	-D __ARCH_X86_64
 endif
 
 # For MacOSX users
-ifeq ($(shell uname -s), Darwin)
+ifeq ($(OS), Darwin)
 DEFINES		+=	-D__DARWIN
 else
 # Useless warnings when used within Darwin
@@ -49,15 +55,14 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
-	@make DEBUG=$(DEBUG) -C .. common
-	@make DEBUG=$(DEBUG) -C ../encryption library
-	@make DEBUG=$(DEBUG) -C ../accesses library
+	@$(MAKE) DEBUG=$(DEBUG) -C .. common
+	@$(MAKE) DEBUG=$(DEBUG) -C ../encryption library
+	@$(MAKE) DEBUG=$(DEBUG) -C ../accesses library
 	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ) $(LDFLAGS)
 
 library: metadata.o vmk.o fvek.o datums.o extended_info.o
-	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
-	@make -C ../ clean
+	@$(MAKE) -C ../ clean
 	rm -rf -- *.o $(BIN) *~ *.swp
 

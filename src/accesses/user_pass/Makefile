@@ -1,22 +1,28 @@
 PROGNAME	=	user_pass
 AUTHOR		=	\"Romain Coltel\"
-ARCH		=	$(shell uname)
+ARCH		=	$(shell uname -m)
+OS		=	$(shell uname -s)
 # DEBUG		=	1
 
-CC		=	gcc
+ifeq ($(OS), FreeBSD)
+MAKE		=	gmake
+else
+MAKE		=	make
+endif
+
+CC		=	cc
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(LIB)
-# LDFLAGS		=	-lcrypto
-LDFLAGS		=	-lpolarssl
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
+LDFLAGS		=	$(LIB) -lpolarssl
 SOURCES		=	*.c ../stretch_key.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../stretch_key.o ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
 
 
 # For MacOSX users
-ifeq ($(shell uname -s), Darwin)
+ifeq ($(OS), Darwin)
 DEFINES		+=	-D__DARWIN
 else
 # Useless warnings when used within Darwin
@@ -25,7 +31,7 @@ endif
 
 
 ifdef DEBUG
-DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUGs)
+DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
 CFLAGS		+=	$(DBGFLAGS)
 endif
 
@@ -38,13 +44,12 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
-	@make DEBUG=$(DEBUG) -C ../../ common
+	@$(MAKE) DEBUG=$(DEBUG) -C ../../ common
 	$(CC) $(CFLAGS) -o $@ $^ ../../common.o $(LDFLAGS)
 
 library : user_pass.o
-	@echo -n "" # He wants a rule here... Do not ask me why :D
 
 clean :
 	rm -rf -- *.o $(BIN) *~ *.swp
-	@make -C ../../ clean
+	@$(MAKE) -C ../../ clean
 

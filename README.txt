@@ -52,7 +52,6 @@ process separately.
 Binary capable directories:
 - accesses/bek/: read a .bek file and display information about it;
 - accesses/rp/: calculate the intermediate key for a given recovery password;
-- encryption/: test encryption/decryption on a test case;
 - metadata/: read a BitLocker volume and display information about its metadata;
 - outputs/fuse/: FUSE's hello world example.
 

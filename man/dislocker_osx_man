@@ -110,10 +110,14 @@ In `FUSE' mode:
 .B % dislocker -V encrypted.bitlocker -f /path/to/usb/file.BEK -- /mnt/ntfs
 This will create a file into \fB/mnt/ntfs\fR named dislocker-file.
 .TP
-To mount partitions once decrypted, use this sort of line:
-.B % mount -o loop /mnt/ntfs/dislocker-file /mnt/clear
+To mount partitions once decrypted, you first need to create the block device:
+.B % hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount ntfs/dislocker-file
 .TP
-It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour. In order to do so, you may run these commands (replacing your mount points):
+Then mount it on a file into /Volumes for instance:
+.B % mkdir /Volumes/blah && mount -t ntfs /dev/disk1 /Volumes/blah
+.TP
+It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour.
+In order to do so, you may run these commands (replacing your mount points):
 .B % umount /mnt/clear && umount /mnt/ntfs/dislocker-file
 .SH AUTHOR
 This tool is developped by Romain Coltel on behalf of HSC (

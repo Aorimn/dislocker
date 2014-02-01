@@ -132,7 +132,11 @@ common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o metadata/extend
 install: check-install
 	cp $(BIN) $(INSTALL_PATH)
 	chmod 755 $(INSTALL_PATH)$(BIN)
-	cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
+	if [ "$(OS)" = "Darwin" ]; then                                      \
+		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER) \
+	else                                                                 \
+		cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER)     \
+	fi
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
 	@echo "==========================================================="

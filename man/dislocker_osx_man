@@ -90,24 +90,23 @@ The file is therefore 514 bytes long, not more nor less.
 .SH EXAMPLES
 These are exemples you can run directly.
 First, you may want to copy the BitLocker volume:
-.TP
+.P
 .B % dd if=/dev/sda2 of=encrypted.bitlocker
+.P
 This will copy the entire volume located into \fB/dev/sda2\fR to \fBencrypted.bitlocker\fR.
-.PP
+.P
 Then dislock it:
-.PP
-In `file' mode:
-.TP
+.IP
+-- In `file' mode:
+.IP
 .B % dislocker -V encrypted.bitlocker -p563200-557084-108284-218900-019151-415437-694144-239976 -- decrypted.ntfs
-This will decrypt 
-.B encrypted.bitlocker
-into 
-.B decrypted.ntfs
-using the recovery password method.
-.PP
-In `FUSE' mode:
-.TP
+.IP
+This will decrypt \fBencrypted.bitlocker\fR into \fBdecrypted.ntfs\fR using the recovery password method.
+.IP
+-- In `FUSE' mode:
+.IP
 .B % dislocker -V encrypted.bitlocker -f /path/to/usb/file.BEK -- /mnt/ntfs
+.IP
 This will create a file into \fB/mnt/ntfs\fR named dislocker-file.
 .TP
 To mount partitions once decrypted, you first need to create the block device:
@@ -115,10 +114,15 @@ To mount partitions once decrypted, you first need to create the block device:
 .TP
 Then mount it on a file into /Volumes for instance:
 .B % mkdir /Volumes/blah && mount -t ntfs /dev/disk1 /Volumes/blah
+.P
+--
 .TP
-It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour.
-In order to do so, you may run these commands (replacing your mount points):
+It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour. In order to do so, you may run these commands (replacing your mount points):
 .B % umount /mnt/clear && umount /mnt/ntfs/dislocker-file
+.P
+--
+.P
+Note that these are \fBexamples\fR and, as such, you may need to modify the given command lines. For example, you may want to change the decryption method used in them.
 .SH AUTHOR
 This tool is developped by Romain Coltel on behalf of HSC (
 .B http://www.hsc.fr/

@@ -9,9 +9,15 @@ REQUIREMENTS
 `------------
 
 You need:
- - Package libfuse-dev (debian), fuse-devel (fedora) or osxfuse (OSX), if you
-   want to use FUSE;
+ - Headers for FUSE, if you want to use FUSE;
+ - Headers for PolarSSL;
  - A partition encrypted with BitLocker, from Windows Vista or 7.
+
+For Debian:
+  aptitude install libfuse-dev libpolarssl-dev
+For Fedora:
+  yum install fuse-devel polarssl-devel
+For OSX: Follow the instructions n the next section.
 
 Of course, you need a compiler (tested against gcc 4.6 and darwin 10-4.2.1).
 
@@ -22,7 +28,8 @@ Note that the code expects FUSE 2.6, when using the decryption with FUSE.
 INSTALLING
 `----------
 
-First thing to do is to cd into the src/ directory. Then...
+First thing to do is to cd into the src/ directory. Then, each OS type has its
+own section below, beware to follow yours:
 
 . If you are on MacOSX, just install Homebrew (http://brew.sh/) and run the
 following command:

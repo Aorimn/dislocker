@@ -121,9 +121,7 @@ fuse: $(BIN)
 
 # Check if the installed binary is present, make it if it isn't
 check-install :
-	[ -e $(BIN) ] && echo "Found $(BIN) binary" || make clean fuse
-	@# But if it fails, exit, there's no other choice I think :/
-	[ -e $(BIN) ] || exit 42
+	@[ -e $(BIN) ] && echo "Found $(BIN) binary, installing it" || make clean fuse
 
 # Classic rules
 common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o metadata/extended_info.o
@@ -132,10 +130,10 @@ common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o metadata/extend
 install: check-install
 	cp $(BIN) $(INSTALL_PATH)
 	chmod 755 $(INSTALL_PATH)$(BIN)
-	if [ "$(OS)" = "Darwin" ]; then                                      \
-		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER) \
-	else                                                                 \
-		cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER)     \
+	if [ "$(OS)" = "Darwin" ]; then                                       \
+		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
+	else                                                                  \
+		cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER);     \
 	fi
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
@@ -144,8 +142,8 @@ install: check-install
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
 uninstall: clean
-	[ -f $(INSTALL_PATH)$(BIN) ]              && rm $(INSTALL_PATH)$(BIN)              || echo -n ""
-	[ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz || echo -n ""
+	[ -f $(INSTALL_PATH)$(BIN) ]              && rm $(INSTALL_PATH)$(BIN)
+	[ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 

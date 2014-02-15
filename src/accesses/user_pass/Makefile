@@ -16,8 +16,11 @@ INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 LDFLAGS		=	$(LIB) -lpolarssl
-SOURCES		=	*.c ../stretch_key.c
-OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c)) ../stretch_key.o ../../xstd/xstdio.o ../../xstd/xstdlib.o
+MAIN_OBJECT	=	
+SOURCES		=	user_pass.c ../stretch_key.c
+OBJECTS		=	$(SOURCES:.c=.o) ../stretch_key.o \
+			../../xstd/xstdio.o ../../xstd/xstdlib.o \
+			../../ntfs/encoding.o
 BIN		=	$(PROGNAME)
 
 
@@ -41,15 +44,28 @@ endif
 .c.o :
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+all : MAIN_OBJECT = main.o
+all : main.o
 all : $(BIN)
+
+check : MAIN_OBJECT = check_user_pass.o
+check : check_user_pass.o
+check : DEFINES += -D__CK_DOING_TESTS
+check : CFLAGS  += -fprofile-arcs -ftest-coverage
+check : LDFLAGS += -lcheck
+check : do_check
+
+do_check : $(BIN)
+	./$(BIN)
+	gcov $(BIN).c
 
 $(BIN) : $(OBJECTS)
 	@$(MAKE) DEBUG=$(DEBUG) -C ../../ common
-	$(CC) $(CFLAGS) -o $@ $^ ../../common.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(MAIN_OBJECT) $^ ../../common.o $(LDFLAGS)
 
 library : user_pass.o
 
 clean :
-	rm -rf -- *.o $(BIN) *~ *.swp
+	rm -rf -- $(BIN) *.o *~ *.swp *.gcno *.gcda *.gcov
 	@$(MAKE) -C ../../ clean
 

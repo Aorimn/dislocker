@@ -8,3 +8,8 @@ read_bekfile
 encryption
 getmetadata
 fuse
+
+# Unit test files
+*.gcno
+*.gcda
+*.gcov

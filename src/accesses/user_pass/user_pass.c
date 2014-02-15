@@ -44,9 +44,15 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 	if(!lineptr || !stream)
 		return -1;
 
-	struct termios old, new;
 	size_t n = 0;
 	ssize_t nread;
+
+	/*
+	 * If we're running tests under check, disable echoing off: this doesn't
+	 * work on pipes
+	 */
+#ifndef __CK_DOING_TESTS
+	struct termios old, new;
 
 	/* Turn echoing off and fail if we can't. */
 	if(tcgetattr(fileno(stream), &old) != 0)
@@ -56,13 +62,16 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 	new.c_lflag &= (tcflag_t)~ECHO;
 	if(tcsetattr(fileno(stream), TCSAFLUSH, &new) != 0)
 		return -1;
+#endif
 
 	/* Read the password. */
 	nread = getline(lineptr, &n, stream);
 	xprintf(L_DEBUG, "New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n", (void*)*lineptr, n);
 
+#ifndef __CK_DOING_TESTS
 	/* Restore terminal. */
 	(void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
+#endif
 
 	return nread;
 }
@@ -139,8 +148,11 @@ int prompt_up(uint8_t** up)
 	if(!up)
 		return FALSE;
 
+	/* There's no need for a prompt if we're doing tests */
+#ifndef __CK_DOING_TESTS
 	printf("Enter the user password: ");
 	fflush(NULL);
+#endif
 
 	*up = NULL;
 

@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	uint8_t   user_hash[32]  = {0,};
 	
 	
-	int8_t salt[16] = {0,}; // TODO
+	uint8_t salt[16] = {0,}; // TODO
 	
 	
 	while((optchar = getopt(argc, argv, "u:h")) != -1)
@@ -90,6 +90,7 @@ int main(int argc, char **argv)
 	}
 	
 	
+	xprintf(L_INFO, "User hash:\n");
 	hexdump(L_INFO, user_hash, 32);
 	
 	

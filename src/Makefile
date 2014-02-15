@@ -13,11 +13,6 @@ else
 MAKE		=	make
 endif
 
-# Choose between one of them (done automatically by using `make fuse' or `make file')
-__RUN_FUSE	=	0
-__RUN_FILE	=	0
-# NOTE: __RUN_FILE can be a veeeeeeeery long process to complete
-
 
 CC		=	cc
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64

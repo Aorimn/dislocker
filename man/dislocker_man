@@ -1,5 +1,5 @@
-.\" 
-.\" 
+.\"
+.\"
 .TH DISLOCKER 1 2011-09-07 "Linux" "DISLOCKER"
 .SH NAME
 Dislocker - Read BitLocker encrypted volumes under Linux
@@ -21,7 +21,7 @@ decrypt volume using a clear key which is search on the volume
 decrypt volume using the bek file (present on a USB key)
 .TP
 .B -F, --force-block[\fIN\fB]\fR
-force use of metadata block number 
+force use of metadata block number
 .B N
 (1, 2 or 3), the first by default
 .TP
@@ -84,9 +84,9 @@ There is no impact on the final user if only "small" piece of data are asked.
 The FVEK file option expects a specific format from the file. The file is split into two major parts:
 - 2 bytes describing the encryption in use, from 0x8000 to 0x8003 for AES 128 or 256 bits, with or without diffuser.
 
-- 512 bytes which are the FVEK as in the FVEK key protector once decrypted.
+- 64 bytes (512 bits) which are the FVEK as in the FVEK key protector once decrypted.
 .PP
-The file is therefore 514 bytes long, not more nor less.
+The file is therefore 66 bytes long, not more nor less.
 .SH EXAMPLES
 These are exemples you can run directly.
 First, you may want to copy the BitLocker volume:

@@ -87,6 +87,7 @@ The FVEK file option expects a specific format from the file. The file is split 
 - 64 bytes (512 bits) which are the FVEK as in the FVEK key protector once decrypted.
 .PP
 The file is therefore 66 bytes long, not more nor less.
+Note that you may have to deal with endianness.
 .SH EXAMPLES
 These are exemples you can run directly.
 First, you may want to copy the BitLocker volume:

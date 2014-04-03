@@ -76,7 +76,7 @@ int valid_block(uint8_t* digits, int block_nb, uint16_t* short_password)
 
 	if(check_digit != (digits[5] - 48))
 	{
-		xprintf(L_ERROR, "Error handling the recovery password: Bloc n°%d (%d) invalid.\n", block_nb, block);
+		xprintf(L_ERROR, "Error handling the recovery password: Bloc n°%d (%d) has invalid checksum.\n", block_nb, block);
 		return FALSE;
 	}
 
@@ -200,7 +200,7 @@ int intermediate_key(const uint8_t *recovery_password,
 	for (loop = 0; loop < NB_RP_BLOCS*2; ++loop)
 		snprintf(&s[loop*5], 6, "0x%02hhx ", iresult[loop]);
 
-	xprintf(L_INFO, "Distilled password: '%s\b'\n", s);
+	xprintf(L_DEBUG, "Distilled password: '%s\b'\n", s);
 
 	stretch_recovery_key(iresult, salt, result_key);
 

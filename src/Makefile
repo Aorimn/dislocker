@@ -24,7 +24,7 @@ CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 SOURCES		=	dislocker.c common.c sectors.c \
 			config.c xstd/xstdio.c xstd/xstdlib.c
 OBJECTS		=	$(SOURCES:.c=.o)
-LDFLAGS		=	$(LIB) -lpthread -lpolarssl
+override LDFLAGS		+=	$(LIB) -lpthread -lpolarssl
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/vmk.o metadata/fvek.o metadata/extended_info.o \

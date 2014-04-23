@@ -123,22 +123,21 @@ common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o metadata/extend
 	@$(MAKE) -C ntfs/
 
 install: check-install
-	cp $(BIN) $(INSTALL_PATH)
-	chmod 755 $(INSTALL_PATH)$(BIN)
+	install -pdm755 $(BIN) $(DESTDIR)$(INSTALL_PATH)$(BIN)
 	if [ "$(OS)" = "Darwin" ]; then                                       \
 		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
 	else                                                                  \
 		cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER);     \
 	fi
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
-	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
+	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(DESTDIR)$(MAN_PATH)
 	@echo "==========================================================="
 	@echo "'$(BIN)' installed into" $(INSTALL_PATH)
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
 uninstall: clean
-	[ -f $(INSTALL_PATH)$(BIN) ]              && rm $(INSTALL_PATH)$(BIN)
-	[ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz
+	[ -f $(DESTDIR)$(INSTALL_PATH)$(BIN) ]              && rm $(DESTDIR)$(INSTALL_PATH)$(BIN)
+	[ -f $(DESTDIR)$(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(DESTDIR)$(MAN_PATH)$(BIN).$(MAN_NUMBER).gz
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 

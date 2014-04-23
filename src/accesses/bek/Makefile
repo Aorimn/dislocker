@@ -17,7 +17,7 @@ WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 SOURCES		=	*.c
 OBJECTS		=	$(patsubst %.c, %.o, $(wildcard *.c))
-LDFLAGS		=	$(LIB)
+override LDFLAGS    +=	$(LIB)
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	../../common.o ../../metadata/datums.o ../../metadata/extended_info.o \

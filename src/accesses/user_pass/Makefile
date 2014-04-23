@@ -15,7 +15,7 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I../../
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
-LDFLAGS		=	$(LIB) -lpolarssl
+override LDFLAGS    +=	$(LIB) -lpolarssl
 MAIN_OBJECT	=	
 SOURCES		=	user_pass.c ../stretch_key.c
 OBJECTS		=	$(SOURCES:.c=.o) ../stretch_key.o \

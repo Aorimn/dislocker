@@ -15,7 +15,7 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I..
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
-LDFLAGS		=	$(LIB) -lpolarssl
+override LDFLAGS    +=	$(LIB) -lpolarssl
 SOURCES		=	main.c metadata.c datums.c vmk.c extended_info.c
 OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)

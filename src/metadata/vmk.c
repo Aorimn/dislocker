@@ -262,15 +262,13 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	
 	/* Get the external datum */
 	get_next_datum(bek_dataset, -1, DATUM_EXTERNAL_KEY, NULL, vmk_datum);
-	if(bek_dataset)
-		memclean(bek_dataset, bek_dataset->size);
-	
 	
 	/* Check the result datum */
 	if(!*vmk_datum || !datum_type_must_be(*vmk_datum, DATUM_EXTERNAL_KEY))
 	{
 		xprintf(L_ERROR, "Error processing the bekfile: datum of type 9 not found. Internal failure, abort.\n");
 		*vmk_datum = NULL;
+		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
 	}
 	
@@ -286,6 +284,7 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	{
 		xprintf(L_ERROR, "Error processing the bekfile: no nested datum found. Internal failure, abort.\n");
 		*vmk_datum = NULL;
+		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
 	}
 	
@@ -293,8 +292,11 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	{
 		xprintf(L_ERROR, "Error getting the key to decrypt VMK from the bekfile. Internal failure, abort.\n");
 		*vmk_datum = NULL;
+		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
 	}
+	
+	memclean(bek_dataset, bek_dataset->size);
 	
 	
 	/*
@@ -308,11 +310,12 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 		
 		xprintf(L_ERROR,
 				"\n\tError, can't find a valid and matching VMK datum.\n"
-				"\tThe GUID researched was '%s', check if you have the right bek file.\n"
+				"\tThe GUID researched was '%s', check if you have the right bek file for the right volume.\n"
 				"\tAbort.\n",
 			rec_id
 		);
 		*vmk_datum = NULL;
+		xfree(recovery_key);
 		return FALSE;
 	}
 	
@@ -327,6 +330,7 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	{
 		xprintf(L_ERROR, "Error looking for the nested datum in the VMK one. Internal failure, abort.\n");
 		*vmk_datum = NULL;
+		xfree(recovery_key);
 		return FALSE;
 	}
 	

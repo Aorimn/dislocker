@@ -96,6 +96,7 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
 		type_str = datumtypestr(DATUM_AES_CCM);
 		xprintf(L_ERROR, "Error in finding the %s including the VMK. Internal failure, abort.\n", type_str);
 		xfree(type_str);
+		xfree(recovery_key);
 		*vmk_datum = NULL;
 		return FALSE;
 	}
@@ -458,12 +459,12 @@ static int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key
 	
 	unsigned int vmk_size = 0;
 	
-	xprintf(L_INFO, "=====================[ ENCRYPTED VMK ]====================\n");
-	print_one_datum(L_INFO, *vmk);
-	xprintf(L_INFO, "==========================================================\n");
-	xprintf(L_INFO, "=====================[ RECOVERY KEY ]=====================\n");
-	hexdump(L_INFO, recovery_key, key_size);
-	xprintf(L_INFO, "==========================================================\n");
+	xprintf(L_DEBUG, "=====================[ ENCRYPTED VMK ]====================\n");
+	print_one_datum(L_DEBUG, *vmk);
+	xprintf(L_DEBUG, "==========================================================\n");
+	xprintf(L_DEBUG, "=====================[ RECOVERY KEY ]=====================\n");
+	hexdump(L_DEBUG, recovery_key, key_size);
+	xprintf(L_DEBUG, "==========================================================\n");
 	
 	if(!decrypt_key((datum_aes_ccm_t*)vmk_datum, recovery_key, (void**)vmk, &vmk_size))
 	{
@@ -487,9 +488,9 @@ static int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key
 	}
 	
 	
-	xprintf(L_INFO, "==========================[ VMK ]=========================\n");
-	print_one_datum(L_INFO, *vmk);
-	xprintf(L_INFO, "==========================================================\n");
+	xprintf(L_DEBUG, "==========================[ VMK ]=========================\n");
+	print_one_datum(L_DEBUG, *vmk);
+	xprintf(L_DEBUG, "==========================================================\n");
 	
 	
 	return TRUE;

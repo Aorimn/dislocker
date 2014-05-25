@@ -386,6 +386,8 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	{
 		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
 		*vmk_datum = NULL;
+		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 	
@@ -402,6 +404,8 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 		                 "Internal failure, abort.\n", DATUM_STRETCH_KEY, type_str);
 		xfree(type_str);
 		*vmk_datum = NULL;
+		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 	
@@ -416,6 +420,8 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	{
 		xprintf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
 		*vmk_datum = NULL;
+		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 	
@@ -428,6 +434,8 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	{
 		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
 		*vmk_datum = NULL;
+		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 	

@@ -110,8 +110,8 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 		{"bekfile",           NEED_OPT, NULL, 'f'},
 		{"force-block",       MAY_OPT,  NULL, 'F'},
 		{"help",              NO_OPT,   NULL, 'h'},
-		{"logfile",           NEED_OPT, NULL, 'l'},
 		{"fvek",              NEED_OPT, NULL, 'k'},
+		{"logfile",           NEED_OPT, NULL, 'l'},
 		{"offset",            NEED_OPT, NULL, 'o'},
 		{"recovery-password", MAY_OPT,  NULL, 'p'},
 		{"quiet",             NO_OPT,   NULL, 'q'},
@@ -273,8 +273,8 @@ void print_args(dis_config_t* cfg)
 			xprintf(L_INFO,"   \tusing a clear key on the volume.\n");
 			break;
 		case USE_RECOVERY_PASSWORD:
-			xprintf(L_INFO,"   \tusing the following recovery password: '%s'\n",
-					cfg->recovery_password);
+			xprintf(L_INFO,"   \tusing the recovery password method\n");
+			xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
 			break;
 		case USE_BEKFILE:
 			xprintf(L_INFO,"   \tusing the bek file at '%s'\n", cfg->bek_file);

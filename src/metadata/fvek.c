@@ -85,9 +85,9 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 	
 	xfree(vmk_key);
 	
-	xprintf(L_INFO, "=========================[ FVEK ]=========================\n");
-	print_one_datum(L_INFO, *fvek_datum);
-	xprintf(L_INFO, "==========================================================\n");
+	xprintf(L_DEBUG, "=========================[ FVEK ]=========================\n");
+	print_one_datum(L_DEBUG, *fvek_datum);
+	xprintf(L_DEBUG, "==========================================================\n");
 	
 	return TRUE;
 }

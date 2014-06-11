@@ -39,6 +39,7 @@
 #include <inttypes.h>
 
 #include "common.h"
+#include "metadata/metadata.h"
 #include "read_bekfile.h"
 
 
@@ -128,19 +129,19 @@ int get_bek_dataset(int fd, void** bek_dataset)
 		return FALSE;
 	}
 	
-	dataset_t dataset;
+	bitlocker_dataset_t dataset;
 	
 	/* Read the dataset header */
-	ssize_t nb_read = xread(fd, &dataset, sizeof(dataset_t));
+	ssize_t nb_read = xread(fd, &dataset, sizeof(bitlocker_dataset_t));
 	
 	// Check if we read all we wanted
-	if(nb_read != sizeof(dataset_t))
+	if(nb_read != sizeof(bitlocker_dataset_t))
 	{
 		xprintf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset header).\n");
 		return FALSE;
 	}
 	
-	if(dataset.size <= sizeof(dataset_t))
+	if(dataset.size <= sizeof(bitlocker_dataset_t))
 	{
 		xprintf(L_ERROR, "get_bek_dataset::Error, dataset size < dataset header size.\n");
 		return FALSE;
@@ -149,12 +150,12 @@ int get_bek_dataset(int fd, void** bek_dataset)
 	*bek_dataset = xmalloc(dataset.size);
 	
 	memset(*bek_dataset, 0, dataset.size);
-	memcpy(*bek_dataset, &dataset, sizeof(dataset_t));
+	memcpy(*bek_dataset, &dataset, sizeof(bitlocker_dataset_t));
 	
-	size_t rest = dataset.size - sizeof(dataset_t);
+	size_t rest = dataset.size - sizeof(bitlocker_dataset_t);
 	
 	/* Read the data included in the dataset */
-	nb_read = xread(fd, *bek_dataset + sizeof(dataset_t), rest);
+	nb_read = xread(fd, *bek_dataset + sizeof(bitlocker_dataset_t), rest);
 	
 	// Check if we read all we wanted
 	if((size_t) nb_read != rest)

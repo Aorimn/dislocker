@@ -48,6 +48,7 @@ all : MAIN_OBJECT = main.o
 all : main.o
 all : $(BIN)
 
+check : clean
 check : MAIN_OBJECT = check_user_pass.o
 check : check_user_pass.o
 check : DEFINES += -D__CK_DOING_TESTS
@@ -66,6 +67,6 @@ $(BIN) : $(OBJECTS)
 library : user_pass.o
 
 clean :
-	rm -rf -- $(BIN) *.o *~ *.swp *.gcno *.gcda *.gcov
 	@$(MAKE) -C ../../ clean
+	rm -rf -- $(BIN) *.o *~ *.swp *.gcno *.gcda *.gcov
 

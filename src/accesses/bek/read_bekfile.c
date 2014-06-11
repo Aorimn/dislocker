@@ -122,6 +122,12 @@ void decode(int fd, dataset_t* bek_data, external_info_header_t* header, key_hea
 
 int get_bek_dataset(int fd, void** bek_dataset)
 {
+	if(!bek_dataset)
+	{
+		xprintf(L_ERROR, "Invalid parameter given to get_bek_dataset().\n");
+		return FALSE;
+	}
+	
 	dataset_t dataset;
 	
 	/* Read the dataset header */

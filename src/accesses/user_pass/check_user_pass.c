@@ -8,7 +8,9 @@
 static char* ck_password = "TestPassword123!";
 
 
-
+/*
+ * Core tests
+ */
 // int prompt_up(uint8_t** up);
 START_TEST (check_prompt_up)
 {
@@ -103,6 +105,25 @@ START_TEST (check_user_key)
 END_TEST
 
 
+/*
+ * Limit tests
+ */
+START_TEST (check_user_key_nullargs)
+{
+	uint8_t *uint8_notnull = malloc(4);
+	
+	ck_assert_int_eq(user_key(NULL, uint8_notnull, uint8_notnull), FALSE);
+	ck_assert_int_eq(user_key(uint8_notnull, NULL, uint8_notnull), FALSE);
+	ck_assert_int_eq(user_key(uint8_notnull, uint8_notnull, NULL), FALSE);
+	
+	free(uint8_notnull);
+}
+END_TEST
+
+
+/*
+ * Testing suite
+ */
 Suite* user_pass_suite(void)
 {
 	Suite *s = suite_create("User pass");
@@ -113,7 +134,11 @@ Suite* user_pass_suite(void)
 	tcase_add_test(tc_core, check_prompt_up);
 	suite_add_tcase(s, tc_core);
 	
-	/* TODO add limits for more code coverage */
+	/* Limits tests case */
+	TCase *tc_limits = tcase_create("Limits");
+	tcase_add_test(tc_limits, check_user_key_nullargs);
+	/* TODO add more limits for more code coverage */
+	suite_add_tcase(s, tc_limits);
 	
 	return s;
 }

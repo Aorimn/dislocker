@@ -33,6 +33,7 @@
 
 #include "common.h"
 #include "config.h"
+#include "print_metadata.h"
 #include "metadata.h"
 
 

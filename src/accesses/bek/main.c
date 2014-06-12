@@ -27,6 +27,8 @@
 #include <getopt.h>
 
 #include "common.h"
+#include "metadata/print_metadata.h"
+#include "metadata/metadata.h"
 #include "read_bekfile.h"
 
 
@@ -43,9 +45,7 @@ int main (int argc, char **argv)
 	int c  = 0;
 	int fd = 0;
 	
-	dataset_t bek_dataset;
-	external_info_header_t header;
-	key_header_t key_header;
+	void* bek_dataset;
 	
 	opterr = 0;
 	
@@ -82,7 +82,11 @@ int main (int argc, char **argv)
 		exit(1);
 	}
 	
-	decode(fd, &bek_dataset, &header, &key_header);
+	if(!get_bek_dataset(fd, &bek_dataset))
+	{
+		xprintf(L_CRITICAL, "Unable to get the dataset from the BEK file\n");
+		exit(1);
+	}
 	
 	close(fd);
 	
@@ -90,14 +94,12 @@ int main (int argc, char **argv)
 	xprintf(L_INFO, "BEK File Information: %s\n", filename);
 	
 	/* bek header */
-	print_bek_header(&bek_dataset);
+	print_dataset(L_INFO, bek_dataset);
 	
-	/* header */
-	print_ext_info_header(&header);
+	/* external datum, which contains the decryption key */
+	print_one_datum(L_INFO, bek_dataset + sizeof(bitlocker_dataset_t));
 	
-	/* key header and payload */
-	print_key(&key_header);
-	
+	xfree(bek_dataset);
 	xstdio_end();
 	
 	return EXIT_SUCCESS;

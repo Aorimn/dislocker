@@ -425,15 +425,18 @@ void print_datum_external(LEVELS level, void* vdatum)
 	
 	char extkey_id[37];
 	time_t ts;
+	char* date = NULL;
 	int computed_size = 0;
 	
 	format_guid(datum->guid, extkey_id);
 	ntfs2utc(datum->timestamp, &ts);
+	date = strdup(asctime(gmtime(&ts)));
+	chomp(date);
 	
 	xprintf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
-	xprintf(level, "Epoch Timestamp: %d sec, soit %s\n", (int)ts, asctime(gmtime(&ts)));
+	xprintf(level, "Epoch Timestamp: %u sec, soit %s\n", (unsigned int)ts, date);
 	
-	computed_size = sizeof(datum_vmk_t);
+	computed_size = sizeof(datum_external_t);
 	
 	/* This datum's payload seems to be another datum, so print it */
 	xprintf(level, "   ------ Nested datum ------\n");
@@ -451,6 +454,8 @@ void print_datum_external(LEVELS level, void* vdatum)
 		xprintf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	}
 	xprintf(level, "   ---------------------------\n");
+	
+	free(date);
 }
 
 void print_datum_virtualization(LEVELS level, void* vdatum)

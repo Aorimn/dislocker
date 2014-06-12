@@ -29,6 +29,7 @@
 #include "encommon.h"
 #include "metadata/datums.h"
 #include "metadata/metadata.h"
+#include "metadata/print_metadata.h"
 #include "metadata/fvek.h"
 #include "metadata/vmk.h"
 #include "sectors.h"

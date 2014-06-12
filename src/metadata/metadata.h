@@ -145,15 +145,9 @@ typedef struct _bitlocker_validations_infos
  */
 int get_volume_header(volume_header_t *volume_header, int fd, off_t partition_offset);
 
-void print_volume_header(LEVELS level, volume_header_t *volume_header);
-
 int get_metadata(off_t source, void **metadata, int fd);
 
-void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header);
-
 int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
-
-void print_data(LEVELS level, void* metadata);
 
 int get_metadata_check_validations(volume_header_t* volume_header, int fd, void** metadata, dis_config_t* cfg);
 

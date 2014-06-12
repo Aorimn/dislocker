@@ -23,6 +23,7 @@
 
 #include "encryption/crc32.h"
 #include "metadata.h"
+#include "print_metadata.h"
 
 
 /**
@@ -53,45 +54,6 @@ int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
 	xprintf(L_INFO, "Volume header read\n");
 	
 	return TRUE;
-}
-
-
-/**
- * Print a volume header structure into a human-readable format
- * 
- * @param volume_header The volume header to print
- */
-void print_volume_header(LEVELS level, volume_header_t *volume_header)
-{
-	char rec_id[37];
-	
-	format_guid(volume_header->guid, rec_id);
-	
-	
-	xprintf(level, "=====[ Volume header informations ]=====\n");
-	xprintf(level, "  Signature: '%.8s'\n", volume_header->signature);
-	xprintf(level, "  Sector size: 0x%1$04x (%1$hu) bytes\n", volume_header->sector_size);
-	xprintf(level, "  Sector per cluster: 0x%1$02x (%1$hhu) bytes\n", volume_header->sectors_per_cluster);
-	xprintf(level, "  Reserved clusters: 0x%1$04x (%1$hu) bytes\n", volume_header->reserved_clusters);
-	xprintf(level, "  Fat count: 0x%1$02x (%1$hhu) bytes\n", volume_header->fat_count);
-	xprintf(level, "  Root entries: 0x%1$04x (%1$hu) bytes\n", volume_header->root_entries);
-	xprintf(level, "  Number of sectors (16 bits): 0x%1$04x (%1$hu) bytes\n", volume_header->nb_sectors_16b);
-	xprintf(level, "  Media descriptor: 0x%1$02x (%1$hhu) bytes\n", volume_header->media_descriptor);
-	xprintf(level, "  Sectors per fat: 0x%1$04x (%1$hu) bytes\n", volume_header->sectors_per_fat);
-	xprintf(level, "  Hidden sectors: 0x%1$08x (%1$u) bytes\n", volume_header->hidden_sectors);
-	xprintf(level, "  Number of sectors (32 bits): 0x%1$08x (%1$u) bytes\n", volume_header->nb_sectors_32b);
-	xprintf(level, "  Number of sectors (64 bits): 0x%1$016x (%1$llu) bytes\n", volume_header->nb_sectors_64b);
-	xprintf(level, "  MFT start cluster: 0x%1$016x (%1$lu) bytes\n", volume_header->mft_start_cluster);
-	xprintf(level, "  Metadata Lcn: 0x%1$016x (%1$lu) bytes\n", volume_header->metadata_lcn);
-	
-	xprintf(level, "  Volume GUID: '%.37s'\n", rec_id);
-	
-	xprintf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[2]);
-	
-	xprintf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
-	xprintf(level, "========================================\n");
 }
 
 
@@ -173,63 +135,6 @@ int get_metadata(off_t source, void **metadata, int fd)
 
 
 /**
- * Print a BitLocker header structure into a human-readable format
- * 
- * @param bl_header The BitLocker header to print
- */
-void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header)
-{
-	time_t ts;
-	bitlocker_dataset_t bl_dataset = bl_header->dataset;
-	char* cipher = cipherstr(bl_dataset.algorithm);
-	char formated_guid[37];
-	
-	format_guid(bl_dataset.guid, formated_guid);
-	ntfs2utc(bl_dataset.timestamp, &ts);
-	
-	
-	xprintf(level, "=====================[ BitLocker metadata informations ]=====================\n");
-	xprintf(level, "  Signature: '%.8s'\n", bl_header->signature);
-	xprintf(level, "  Total Size: 0x%1$04x (%1$d) bytes (including signature and data)\n", bl_header->size << 4);
-	xprintf(level, "  Version: %hu\n", bl_header->version);
-	if(bl_header->version == V_SEVEN)
-	{
-		hexdump(level, bl_header->unknown1, 4);
-		xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->encrypted_volume_size, bl_header->encrypted_volume_size / (1024*1024));
-		hexdump(level, bl_header->unknown2, 4);
-		xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", bl_header->nb_backup_sectors);
-	}
-	else
-		hexdump(level, bl_header->unknown1, 20);
-#ifdef __ARCH_X86_64
-	xprintf(level, "  First metadata header offset:  %#lx\n", bl_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: %#lx\n", bl_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  %#lx\n", bl_header->offset_bl_header[2]);
-	xprintf(level, "  Boot sectors backup address:   %#lx\n", bl_header->boot_sectors_backup);
-#else
-	xprintf(level, "  First metadata header offset:  %#llx\n", bl_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: %#llx\n", bl_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  %#llx\n", bl_header->offset_bl_header[2]);
-	xprintf(level, "  Boot sectors backup address:   %#llx\n", bl_header->boot_sectors_backup);
-#endif
-	
-	xprintf(level, "  ----------------------------{ Dataset header }----------------------------\n");
-	xprintf(level, "    Dataset size: 0x%1$08x (%1$d) bytes (including data)\n", bl_dataset.size);
-	xprintf(level, "    Unknown data: 0x%08x (always 0x00000001)\n", bl_dataset.unknown1);
-	xprintf(level, "    Dataset header size: 0x%08x (always 0x00000030)\n", bl_dataset.header_size);
-	xprintf(level, "    Dataset copy size: 0x%1$08x (%1$d) bytes\n", bl_dataset.copy_size);
-	xprintf(level, "    Dataset GUID: '%.39s'\n", formated_guid);
-	xprintf(level, "    Next counter: %u\n", bl_dataset.next_counter);
-	xprintf(level, "    Encryption Type: %s (%#hx)\n", cipher, bl_dataset.algorithm);
-	xprintf(level, "    Epoch Timestamp: %d sec, that to say %s\n", (int)ts, asctime(gmtime(&ts)));
-	xprintf(level, "  --------------------------------------------------------------------------\n");
-	xprintf(level, "=============================================================================\n");
-	
-	xfree(cipher);
-}
-
-
-/**
  * Get the dataset in the metadata
  * 
  * @param metadata The one to check for a dataset
@@ -253,55 +158,6 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 		return FALSE;
 	
 	return TRUE;
-}
-
-
-/**
- * Print data of a given metadata
- * 
- * @param metadata The metadata from where data will be printed
- */
-void print_data(LEVELS level, void* metadata)
-{
-	// Check parameters
-	if(!metadata)
-		return;
-	
-	bitlocker_dataset_t* dataset = NULL;
-	void* data = NULL;
-	void* end_dataset = 0;
-	int loop = 0;
-	
-	if(!get_dataset(metadata, &dataset) || !dataset)
-	{
-		xprintf(L_ERROR, "Error, no dataset found.\n");
-		return;
-	}
-	
-	data = (char*)dataset + dataset->header_size;
-	end_dataset = (char*)dataset + dataset->size;
-	
-	while(1)
-	{
-		/* Begin with reading the header */
-		datum_header_safe_t header;
-		
-		if(data >= end_dataset)
-			break;
-		
-		if(!get_header_safe(data, &header))
-			break;
-		
-		if(data + header.datum_size > end_dataset)
-			break;
-		
-		xprintf(level, "\n");
-		xprintf(level, "======[ Datum n°%d informations ]======\n", ++loop);
-		print_one_datum(level, data);
-		xprintf(level, "=========================================\n");
-		
-		data += header.datum_size;
-	}
 }
 
 

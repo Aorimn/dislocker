@@ -16,7 +16,7 @@ INC		=	-I/usr/include -I..
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 override LDFLAGS    +=	$(LIB) -lpolarssl
-SOURCES		=	main.c metadata.c datums.c vmk.c extended_info.c
+SOURCES		=	main.c metadata.c print_metadata.c datums.c vmk.c extended_info.c
 OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)
 
@@ -60,7 +60,7 @@ $(BIN) : $(OBJECTS)
 	@$(MAKE) DEBUG=$(DEBUG) -C ../accesses library
 	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ) $(LDFLAGS)
 
-library: metadata.o vmk.o fvek.o datums.o extended_info.o
+library: metadata.o print_metadata.o vmk.o fvek.o datums.o extended_info.o
 
 clean :
 	@$(MAKE) -C ../ clean

@@ -11,13 +11,13 @@ REQUIREMENTS
 You need:
  - Headers for FUSE, if you want to use FUSE;
  - Headers for PolarSSL;
- - A partition encrypted with BitLocker, from Windows Vista or 7.
+ - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
 For Debian:
   aptitude install libfuse-dev libpolarssl-dev
 For Fedora:
   yum install fuse-devel polarssl-devel
-For OSX: Follow the instructions n the next section.
+For OSX: Follow the instructions in the next section.
 
 Of course, you need a compiler (tested against gcc 4.6 and darwin 10-4.2.1).
 
@@ -74,8 +74,8 @@ type `make uninstall`.
 PORTABILITY
 `-----------
 
-Globally, this was successfuly tested on Linux x86/x86_64. It won't work on
-Windows and may not work on *BSD (never tested).
+Globally, this was successfuly tested on Linux x86/x86_64, MacOSX and FreeBSD.
+It won't work on Windows and may not work on other BSDs.
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
 

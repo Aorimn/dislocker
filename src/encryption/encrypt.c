@@ -23,6 +23,7 @@
 
 
 #include "common.h"
+#include "metadata/datums.h"
 #include "encryption/diffuser.h"
 #include "encrypt.h"
 

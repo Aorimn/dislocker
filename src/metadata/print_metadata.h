@@ -25,6 +25,7 @@
 
 #include "common.h"
 #include "metadata.h"
+#include "datums.h"
 
 
 void print_volume_header(LEVELS level, volume_header_t *volume_header);

@@ -135,9 +135,6 @@ typedef struct _bitlocker_validations_infos
 
 
 
-#include "datums.h"
-
-
 
 
 /*
@@ -150,8 +147,6 @@ int get_metadata(off_t source, void **metadata, int fd);
 int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
 
 int get_metadata_check_validations(volume_header_t* volume_header, int fd, void** metadata, dis_config_t* cfg);
-
-int has_clear_key(void* dataset, datum_vmk_t** vmk_datum);
 
 
 #include "vmk.h"

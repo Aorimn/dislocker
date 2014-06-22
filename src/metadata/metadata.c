@@ -60,7 +60,7 @@ int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
 /**
  * Read one of BitLocker metadata and put data in a bitlocker_header_t structure
  * This also take the dataset header as it's in the bitlocker_header_t
- * Then read all metadata
+ * Then read all metadata, including datums
  * 
  * @param source The beginning address of the header
  * @param metadata One of the BitLocker metadata, beginning at source
@@ -136,6 +136,7 @@ int get_metadata(off_t source, void **metadata, int fd)
 
 /**
  * Get the dataset in the metadata
+ * No allocation is performed
  * 
  * @param metadata The one to check for a dataset
  * @param dataset The resulting dataset
@@ -176,7 +177,7 @@ static int compute_real_offsets(volume_header_t* vh, int fd, off_t offset)
 	if(!vh)
 		return FALSE;
 	
-	/* This is when the volume has been encrypted with W$ Seven */
+	/* This is when the volume has been encrypted with W$ 7 or 8 */
 	if(vh->metadata_lcn == 0)
 		return TRUE;
 	
@@ -315,27 +316,4 @@ int get_metadata_check_validations(volume_header_t *volume_header, int fd, void 
 	
 	return TRUE;
 }
-
-
-/**
- * Check if a clear key is stored in data
- * 
- * @param metadata The metadata where to look
- * @param vmk_datum The VMK datum of the clear key if found
- * @return TRUE if result can be trusted, FALSE otherwise
- */
-int has_clear_key(void* dataset, datum_vmk_t** vmk_datum)
-{
-	if(!dataset)
-		return FALSE;
-	
-	*vmk_datum = NULL;
-	
-	xprintf(L_DEBUG, "Entering has_clear_key. Returning result of get_vmk_datum_from_range with range between 0x00 and 0xff\n");
-	
-	return get_vmk_datum_from_range(dataset, 0x00, 0xff, (void**)vmk_datum);
-}
-
-
-
 

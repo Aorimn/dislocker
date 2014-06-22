@@ -27,6 +27,7 @@
 #include "common.h"
 #include "config.h"
 #include "metadata/metadata.h"
+#include "metadata/extended_info.h"
 
 
 #include "polarssl/aes.h"

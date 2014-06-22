@@ -25,6 +25,7 @@
 
 
 #include "common.h"
+#include "metadata.h"
 #include "extended_info.h"
 #include "ntfs/clock.h"
 #include "ntfs/encoding.h"
@@ -101,7 +102,6 @@ typedef struct _header_safe
 	datum_t  datum_type;
 	uint16_t error_status;
 } datum_header_safe_t;
-#pragma pack ()
 
 
 
@@ -110,13 +110,11 @@ typedef struct _header_safe
 /**
  * Used if the datum header is not implemented yet, according to the datum type
  */
-#pragma pack (1)
 typedef struct _datum_generic
 {
 	datum_header_safe_t header;
 // 	uint8_t* payload;
 } datum_generic_type_t;
-#pragma pack ()
 
 
 
@@ -125,36 +123,29 @@ typedef struct _datum_generic
  */
 
 /* Datum type = 0 */
-#pragma pack (1)
 typedef struct _datum_erased
 {
 	datum_header_safe_t header;
 } datum_erased_t;
-#pragma pack ()
 
 
 /* Datum type = 1 */
-#pragma pack (1)
 typedef struct _datum_key
 {
 	datum_header_safe_t header;
 	cipher_t algo;
 	uint16_t padd;
 } datum_key_t;
-#pragma pack ()
 
 
 /* Datum type = 2 */
-#pragma pack (1)
 typedef struct _datum_unicode
 {
 	datum_header_safe_t header;
 } datum_unicode_t;
-#pragma pack ()
 
 
 /* Datum type = 3 */
-#pragma pack (1)
 typedef struct _datum_stretch_key
 {
 	datum_header_safe_t header;
@@ -162,65 +153,53 @@ typedef struct _datum_stretch_key
 	uint16_t padd;
 	uint8_t  salt[16];
 } datum_stretch_key_t;
-#pragma pack ()
 
 
 /* Datum type = 4 */
-#pragma pack (1)
 typedef struct _datum_use_key
 {
 	datum_header_safe_t header;
 	cipher_t algo;
 	uint16_t padd;
 } datum_use_key_t;
-#pragma pack ()
 
 
 /* Datum type = 5 */
-#pragma pack (1)
 typedef struct _datum_aes_ccm
 {
 	datum_header_safe_t header;
 	uint8_t nonce[12];
 	uint8_t mac[16];
 } datum_aes_ccm_t;
-#pragma pack ()
 
 
 /* Datum type = 6 */
-#pragma pack (1)
 typedef struct _datum_tpm_enc
 {
 	datum_header_safe_t header;
 	uint32_t unknown;           // See properties below, the header size of this datum is 0xc => header + int32 (int32 possibly divided into more members)
 } datum_tpm_enc_t;
-#pragma pack ()
 
 
 /* Datum type = 8 */
-#pragma pack (1)
 typedef struct _datum_vmk
 {
 	datum_header_safe_t header;
 	guid_t guid;
 	uint8_t nonce[12];
 } datum_vmk_t;
-#pragma pack ()
 
 
 /* Datum type = 9 */
-#pragma pack (1)
 typedef struct _datum_external
 {
 	datum_header_safe_t header;
 	guid_t guid;
 	ntfs_time_t timestamp;
 } datum_external_t;
-#pragma pack ()
 
 
 /* Datum type = 15 */
-#pragma pack (1)
 typedef struct _datum_virtualization
 {
 	datum_header_safe_t header;
@@ -319,9 +298,6 @@ enum types
 
 
 
-#include "metadata.h"
-
-
 
 /*
  * Here are prototypes of functions dealing with data
@@ -358,6 +334,8 @@ int get_nested_datum(void* datum, void** datum_nested);
 int get_nested_datumtype(void* datum, datum_t datum_type, void** datum_nested);
 
 int datum_type_must_be(void* datum, datum_t datum_type);
+
+int has_clear_key(void* dataset, datum_vmk_t** vmk_datum);
 
 
 typedef void(*print_datum_f)(LEVELS, void*);

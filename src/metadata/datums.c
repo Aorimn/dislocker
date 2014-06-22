@@ -675,3 +675,24 @@ int datum_type_must_be(void* datum, datum_t datum_type)
 	else
 		return FALSE;
 }
+
+
+/**
+ * Check if a clear key is stored in data
+ * 
+ * @param metadata The metadata where to look
+ * @param vmk_datum The VMK datum of the clear key if found
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int has_clear_key(void* dataset, datum_vmk_t** vmk_datum)
+{
+	if(!dataset)
+		return FALSE;
+	
+	*vmk_datum = NULL;
+	
+	xprintf(L_DEBUG, "Entering has_clear_key. Returning result of get_vmk_datum_from_range with range between 0x00 and 0xff\n");
+	
+	return get_vmk_datum_from_range(dataset, 0x00, 0xff, (void**)vmk_datum);
+}
+

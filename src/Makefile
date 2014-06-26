@@ -35,10 +35,10 @@ EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/print_metadata.o \
 			ntfs/guid.o ntfs/clock.o ntfs/encoding.o
 
 
-INSTALL_PATH	=	/usr/bin/
+INSTALL_PATH	=	$(DESTDIR)/usr/bin/
 
 MAN_NUMBER	=	1
-MAN_PATH	=	/usr/share/man/man$(MAN_NUMBER)/
+MAN_PATH	=	$(DESTDIR)/usr/share/man/man$(MAN_NUMBER)/
 MAN_ROOT	=	../man/
 
 FUSE_ROOT	=	outputs/fuse/fuse
@@ -124,8 +124,7 @@ common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o metadata/print_
 	@$(MAKE) -C ntfs/
 
 install: check-install
-	cp $(BIN) $(INSTALL_PATH)
-	chmod 755 $(INSTALL_PATH)$(BIN)
+	install -pm755 $(BIN) $(INSTALL_PATH)$(BIN)
 	if [ "$(OS)" = "Darwin" ]; then                                       \
 		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
 	else                                                                  \

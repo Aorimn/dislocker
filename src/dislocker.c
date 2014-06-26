@@ -56,6 +56,10 @@
 
 
 
+/** Data used globally for operation on disk (encryption/decryption) */
+data_t disk_op_data;
+
+
 /**
  * Function used to initialize keys used for decryption/encryption
  */
@@ -603,7 +607,6 @@ static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 {
 	uint16_t sector_size = volume_header->sector_size;
 	
-	/** @see encommon.h for disk_op_data */
 	memset(&disk_op_data, 0, sizeof(data_t));
 	
 	disk_op_data.metadata       = metadata;

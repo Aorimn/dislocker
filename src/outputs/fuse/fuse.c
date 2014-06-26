@@ -37,6 +37,8 @@
 #include "fuse.h"
 
 
+/** Data used globally for operation on disk (encryption/decryption) */
+extern data_t disk_op_data;
 
 
 static int fs_getattr(const char *path, struct stat *stbuf)
@@ -54,7 +56,6 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 	}
 	else if(strcmp(path, NTFS_FILENAME) == 0)
 	{
-		/** @see encommon.h for disk_op_data */
 		mode_t m = disk_op_data.cfg->is_ro ? 0444 : 0666;
 		stbuf->st_mode = S_IFREG | m;
 		stbuf->st_nlink = 1;
@@ -146,7 +147,6 @@ static int fs_read(const char *path, char *buf, size_t size,
 		return -EFAULT;
 	}
 	
-	/** @see encommon.h for disk_op_data */
 	if(offset >= (off_t)disk_op_data.volume_size)
 	{
 		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
@@ -285,7 +285,6 @@ static int fs_write(const char *path, const char *buf, size_t size,
 		return -EFAULT;
 	}
 	
-	/** @see encommon.h for disk_op_data */
 	if(offset >= (off_t)disk_op_data.volume_size)
 	{
 		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"

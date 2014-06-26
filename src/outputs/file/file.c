@@ -38,6 +38,10 @@
 #endif /* __DARWIN */
 
 
+/** Data used globally for operation on disk (encryption/decryption) */
+extern data_t disk_op_data;
+
+
 int file_main(char* ntfs_file)
 {
 	// Check parameter
@@ -48,7 +52,6 @@ int file_main(char* ntfs_file)
 	}
 	
 	
-	/** @see encommon.h */
 	uint8_t* buffer = xmalloc((size_t)(NB_READ_SECTOR * disk_op_data.sector_size));
 	
 	mode_t mode = S_IRUSR|S_IWUSR;

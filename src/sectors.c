@@ -31,6 +31,9 @@
 #include "sectors.h"
 
 
+/** Data used globally for operation on disk (encryption/decryption) */
+extern data_t disk_op_data;
+
 
 /** Prototype of functions used internally */
 static void* thread_decrypt(void* args);

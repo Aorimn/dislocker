@@ -91,11 +91,4 @@ typedef struct _data {
 
 
 
-
-/** Data used globally for operation on disk (encryption/decryption) */
-UNUSED data_t disk_op_data;
-
-
-
-
 #endif /* ENCOMMON_H */

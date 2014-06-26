@@ -15,7 +15,7 @@ Options are described below:
 .PP
 .TP
 .B -c, --clearkey
-decrypt volume using a clear key which is search on the volume
+decrypt volume using a clear key which is searched on the volume (default)
 .TP
 .B -f, --bekfile \fIBEK_FILE\fR
 decrypt volume using the bek file (present on a USB key)

@@ -77,11 +77,9 @@ typedef struct _volume_header
 	
 	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
 } volume_header_t; // Size = 512
-#pragma pack ()
 
 
 
-#pragma pack (1)
 typedef struct _bitlocker_dataset
 {
 	uint32_t size;         //                      -- offset 0
@@ -96,11 +94,9 @@ typedef struct _bitlocker_dataset
 	uint16_t trash;        //                      -- offset 0x26
 	ntfs_time_t timestamp; //                      -- offset 0x28
 } bitlocker_dataset_t; // Size = 0x30
-#pragma pack ()
 
 
 
-#pragma pack (1)
 typedef struct _bitlocker_header
 {
 	uint8_t signature[8]; // = "-FVE-FS-"                                                   -- offset 0
@@ -119,20 +115,26 @@ typedef struct _bitlocker_header
 	
 	struct _bitlocker_dataset dataset; // See above                                         -- offset 0x40
 } bitlocker_header_t; // Size = 0x40 + 0x30
-#pragma pack ()
 
 
 
-#pragma pack (1)
 typedef struct _bitlocker_validations_infos
 {
 	uint16_t  size;
 	version_t version;
 	uint32_t  crc32;
-} bitlocker_validations_infos_t;
+} bitlocker_validations_infos_t; // Size = 8
+/*
+ * This structure is followed by a datum of type 5 (DATUM_AES_CCM) or 1
+ * (DATUM_KEY). When there's a DATUM_AES_CCM, this is actually the DATUM_KEY
+ * encrypted using the VMK.
+ * The key contained in the DATUM_KEY structure is the SHA-256 sum of the entire
+ * BitLocker's metadata fields (bitlocker_header_t + every datum).
+ * 
+ * Therefore, the size field contains 8 plus the size of the datum.
+ */
+
 #pragma pack ()
-
-
 
 
 

@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 	if(argc < 2)
 	{
 		usage();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	int optchar = 0;
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 		{
 			case 'h':
 				usage();
-				return 0;
+				return EXIT_SUCCESS;
 			case 'o':
 				cfg.offset = (off_t) strtoll(optarg, NULL, 10);
 				break;
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 			default:
 				fprintf(stderr, "Unknown option encountered.\n");
 				usage();
-				exit(1);
+				exit(EXIT_FAILURE);
 		}
 	}
 	
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 	if(!volume_path)
 	{
 		usage();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	// Open the volume as a normal file
@@ -127,14 +127,14 @@ int main(int argc, char **argv)
 		        "The signature of the volume (%.8s) doesn't match the "
 				"BitLocker's one (-FVE-FS-). Abort.\n",
 				volume_header.signature);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	// Getting BitLocker metadata and validate them
 	if(!get_metadata_check_validations(&volume_header, fd, &bl_metadata, &cfg))
 	{
 		xprintf(L_CRITICAL, "A problem occured during the retrieving of metadata. Abort.\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	if(cfg.force_block == 0 || !bl_metadata)
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 	if(!get_dataset(bl_metadata, &dataset))
 	{
 		xprintf(L_CRITICAL, "Can't find a valid dataset. Abort.\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	// Search for a clear key

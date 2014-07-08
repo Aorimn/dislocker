@@ -119,6 +119,16 @@ int main(int argc, char **argv)
 	// Printing them
 	print_volume_header(L_INFO, &volume_header);
 	
+	// Checking the volume signature
+	if(memcmp(BITLOCKER_SIGNATURE, volume_header.signature,
+	          BITLOCKER_SIGNATURE_SIZE) != 0)
+	{
+		xprintf(L_CRITICAL,
+		        "The signature of the volume (%.8s) doesn't match the "
+				"BitLocker's one (-FVE-FS-). Abort.\n",
+				volume_header.signature);
+		exit(1);
+	}
 	
 	// Getting BitLocker metadata and validate them
 	if(!get_metadata_check_validations(&volume_header, fd, &bl_metadata, &cfg))

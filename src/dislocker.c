@@ -165,6 +165,9 @@ int main(int argc, char** argv)
 		goto FIRST_CLEAN;
 	}
 	
+	/* For debug purpose, print the volume header retrieved */
+	print_volume_header(L_DEBUG, &volume_header);
+	
 	/* Checking the signature */
 	if(memcmp(BITLOCKER_SIGNATURE, volume_header.signature,
 	          BITLOCKER_SIGNATURE_SIZE) != 0)

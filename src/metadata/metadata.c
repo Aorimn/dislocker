@@ -181,9 +181,6 @@ static int compute_real_offsets(volume_header_t* vh, int fd, off_t offset)
 	if(vh->metadata_lcn == 0)
 		return TRUE;
 	
-	
-	print_volume_header(L_DEBUG, vh);
-	
 	/* And when encrypted with W$ Vista: */
 	xprintf(L_DEBUG,
 		"MetadataLcn = %llu | SectorsPerCluster = %llu | SectorSize = %llu\n",

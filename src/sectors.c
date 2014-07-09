@@ -69,10 +69,11 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 	
 	
 	size_t   nb_loop = 0;
-	uint8_t* input   = malloc(nb_read_sector * sector_size);
+	size_t   size    = nb_read_sector * sector_size;
+	uint8_t* input   = malloc(size);
 	
-	memset(input , 0, nb_read_sector * sector_size);
-	memset(output, 0, nb_read_sector * sector_size);
+	memset(input , 0, size);
+	memset(output, 0, size);
 	
 	
 	/* Be sure to lock for lseek/read */
@@ -94,7 +95,6 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 	}
 	
 	/* Read the sectors we need */
-	size_t size = nb_read_sector * sector_size;
 	ssize_t read_size = read(fd, input, size);
 	
 	if(read_size <= 0)

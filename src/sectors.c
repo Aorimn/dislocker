@@ -309,14 +309,17 @@ static void* thread_decrypt(void* params)
 			continue;
 		
 		/*
-		 * For BitLocker encrypted volume with W$ Seven:
-		 *   Don't decrypt the firsts sectors whatever might be the case, they
-		 *   are saved elsewhere anyway
+		 * For BitLocker encrypted volume with W$ 7/8:
+		 *   - Don't decrypt the firsts sectors whatever might be the case, they
+		 *   are saved elsewhere anyway.
 		 * For these encrypted with W$ Vista:
-		 *   Change the first sector
+		 *   - Change the first sector.
 		 * For both of them:
-		 *   Zero out the metadata area returned to the user (not the one on the
-		 *   disk, obviously)
+		 *   - Zero out the metadata area returned to the user (not the one on
+		 *   the disk, obviously).
+		 *   - Don't decrypt sectors if we're outside the encrypted volume's
+		 *   size (but still in the volume's size obv). This is needed when the
+		 *   encryption was paused during BitLocker's turn on.
 		 */
 		
 		off_t sector_offset = args->sector_start / args->sector_size + loop;
@@ -386,7 +389,7 @@ static void* thread_decrypt(void* params)
 			else
 				memcpy(loop_output, loop_input, args->sector_size);
 		}
-		else if((unsigned)offset >= disk_op_data.metadata->encrypted_volume_size)
+		else if((uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
 		{
 			memcpy(loop_output, loop_input, args->sector_size);
 		}
@@ -554,15 +557,22 @@ static void fix_read_sector_seven(data_t* disk_op_data,
 		return;
 	}
 	
-	
 	to -= disk_op_data->part_off;
-	decrypt_sector(
-		disk_op_data,
-		input,
-		to,
-		output
-	);
 	
+	/* If the sector wasn't yet encrypted, don't decrypt it */
+	if((uint64_t)to >= disk_op_data->metadata->encrypted_volume_size)
+	{
+		memcpy(output, input, disk_op_data->sector_size);
+	}
+	else
+	{
+		decrypt_sector(
+			disk_op_data,
+			input,
+			to,
+			output
+		);
+	}
 	
 	free(input);
 }

@@ -1,0 +1,50 @@
+/* -*- coding: utf-8 -*- */
+/* -*- mode: c -*- */
+/*
+ * Dislocker -- enables to read/write on BitLocker encrypted partitions under
+ * Linux
+ * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+ * USA.
+ */
+#ifndef PREPARE_H
+#define PREPARE_H
+
+
+#include <stdint.h>
+
+#include "config.h"
+#include "encommon.h"
+#include "metadata/datums.h"
+#include "metadata/metadata.h"
+
+
+
+/**
+ * Function used to initialize keys used for decryption/encryption
+ */
+int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, contexts_t* ctx);
+
+/**
+ * Function used to prepare a structure which hold data used for
+ * decryption/encryption
+ */
+int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
+                  dis_config_t* cfg, volume_header_t* volume_header,
+                  off_t offset, int fd_volume);
+
+
+#endif /* PREPARE_H */

@@ -22,7 +22,8 @@ INC		=	-I. -I/usr/local/include
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 SOURCES		=	dislocker.c common.c sectors.c \
-			config.c xstd/xstdio.c xstd/xstdlib.c
+			config.c xstd/xstdio.c xstd/xstdlib.c \
+			outputs/prepare.c
 OBJECTS		=	$(SOURCES:.c=.o)
 override LDFLAGS	+=	$(LIB) -lpthread -lpolarssl
 BIN		=	$(PROGNAME)

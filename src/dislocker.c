@@ -33,7 +33,7 @@
 #include "metadata/fvek.h"
 #include "metadata/vmk.h"
 #include "sectors.h"
-
+#include "outputs/prepare.h"
 
 #include "xstd/xstdio.h"
 
@@ -58,21 +58,6 @@
 
 /** Data used globally for operation on disk (encryption/decryption) */
 data_t disk_op_data;
-
-
-/**
- * Function used to initialize keys used for decryption/encryption
- */
-static int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek,
-                     contexts_t* ctx);
-
-/**
- * Function used to prepare a structure which hold data used for
- * decryption/encryption
- */
-static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
-                        dis_config_t* cfg, volume_header_t* volume_header,
-                        off_t offset, int fd_volume);
 
 
 
@@ -232,7 +217,7 @@ int main(int argc, char** argv)
 	
 	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
 	
-	/* For debug purpose, print the volume header retrieved and the metadata */
+	/* For debug purpose, print the metadata */
 	print_bl_metadata(L_DEBUG, bl_metadata);
 	print_data(L_DEBUG, bl_metadata);
 	
@@ -507,199 +492,3 @@ LAST_CLEAN:
 	
 	return ret;
 }
-
-
-/**
- * Initialize data decryption keys
- * 
- * @param dataset BitLocker dataset
- * @param fvek The entire 32 bytes FVEK, without the KEY structure
- * @param ctx Contexts to initialize, used by AES-CBC for data en/decryption
- * @return TRUE if result can be trusted, FALSE otherwise
- */
-static int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
-                     contexts_t* ctx)
-{
-	// Check parameters
-	if(!dataset || !fvek_datum || !ctx)
-		return FALSE;
-	
-	uint8_t* fvek    = NULL;
-	size_t size_fvek = 0;
-	
-	if(!get_payload_safe(fvek_datum, (void**)&fvek, &size_fvek))
-	{
-		xprintf(L_ERROR, "Can't get the FVEK datum payload. Abort.\n");
-		return FALSE;
-	}
-	
-	xprintf(L_DEBUG,
-	        "FVEK -----------------------------------------------------\n");
-	hexdump(L_DEBUG, fvek, size_fvek);
-	xprintf(L_DEBUG,
-	        "----------------------------------------------------------\n");
-	
-	/*
-	 * It shouldn't be necessary as the algorithms should be the same, but
-	 * still, we have a choice, so we do both
-	 */
-	uint16_t  algo[3] = {dataset->algorithm, fvek_datum->algo, 0};
-	uint16_t* palgo   = algo;
-	
-	while(*palgo != 0)
-	{
-		switch(*palgo)
-		{
-			case AES_128_DIFFUSER:
-				AES_SETENC_KEY(&ctx->TWEAK_E_ctx, fvek + 0x20, 128);
-				AES_SETDEC_KEY(&ctx->TWEAK_D_ctx, fvek + 0x20, 128);
-				/* no break on purpose */
-			case AES_128_NO_DIFFUSER:
-				AES_SETENC_KEY(&ctx->FVEK_E_ctx, fvek, 128);
-				AES_SETDEC_KEY(&ctx->FVEK_D_ctx, fvek, 128);
-				memclean(fvek, size_fvek);
-				return TRUE;
-				
-			case AES_256_DIFFUSER:
-				AES_SETENC_KEY(&ctx->TWEAK_E_ctx, fvek + 0x20, 256);
-				AES_SETDEC_KEY(&ctx->TWEAK_D_ctx, fvek + 0x20, 256);
-				/* no break on purpose */
-			case AES_256_NO_DIFFUSER:
-				AES_SETENC_KEY(&ctx->FVEK_E_ctx, fvek, 256);
-				AES_SETDEC_KEY(&ctx->FVEK_D_ctx, fvek, 256);
-				memclean(fvek, size_fvek);
-				return TRUE;
-				
-			default:
-			{
-				unsigned long i = (unsigned long)(palgo - algo);
-				i /= sizeof(uint16_t);
-				xprintf(L_WARNING, "[%lu] Algo not supported: %#hx\n",
-				        i, *palgo);
-				break;
-			}
-		}
-		
-		palgo++;
-	}
-	
-	xprintf(L_ERROR,
-	        "Dataset's and FVEK's algorithms not supported: %#hx and %#hx\n",
-	        dataset->algorithm, fvek_datum->algo);
-	memclean(fvek, size_fvek);
-	
-	return FALSE;
-}
-
-
-/**
- * Prepare a structure which hold data used for decryption/encryption
- * 
- * @param metadata The BitLocker metadata block
- * @param ctx Contexts used to encrypt/decrypt data
- * @param sector_size The sector size of the volume
- * @param offset Where the real volume begins
- * @param fd The volume's file descriptor
- */
-static int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
-                         dis_config_t* cfg, volume_header_t* volume_header,
-                         off_t offset, int fd_volume)
-{
-	uint16_t sector_size = volume_header->sector_size;
-	
-	memset(&disk_op_data, 0, sizeof(data_t));
-	
-	disk_op_data.metadata       = metadata;
-	disk_op_data.metafiles_size = (off_t)
-	                              (~(sector_size - 1) & (sector_size + 0xffff));
-	disk_op_data.xinfo          = NULL;
-	disk_op_data.sector_size    = sector_size;
-	disk_op_data.part_off       = offset;
-	disk_op_data.ctx            = ctx;
-	disk_op_data.cfg            = cfg;
-	disk_op_data.volume_fd      = fd_volume;
-	disk_op_data.decrypt_region = read_decrypt_sectors;
-	disk_op_data.encrypt_region = encrypt_write_sectors;
-	
-	if(pthread_mutex_init(&disk_op_data.mutex_lseek_rw, NULL) != 0)
-	{
-		xprintf(L_ERROR, "Can't initialize mutex: %s\n", strerror(errno));
-		return FALSE;
-	}
-	
-	/*
-	 * We need to grab the volume's size from the first sector, so we can
-	 * announce it on a getattr call
-	 */
-	if(volume_header->nb_sectors_16b)
-	{
-		disk_op_data.volume_size = (uint64_t)volume_header->sector_size
-		                         * volume_header->nb_sectors_16b;
-	}
-	else if(volume_header->nb_sectors_32b)
-	{
-		disk_op_data.volume_size = (uint64_t)volume_header->sector_size
-		                         * volume_header->nb_sectors_32b;
-	}
-	else if(disk_op_data.metadata->version == V_VISTA && volume_header->nb_sectors_64b)
-	{
-		disk_op_data.volume_size = (uint64_t)volume_header->sector_size
-		                         * volume_header->nb_sectors_64b;
-	}
-	else if(disk_op_data.metadata->version == V_SEVEN)
-	{
-		/* This is not the first sector but well, it's worth a try */
-		disk_op_data.volume_size = metadata->encrypted_volume_size;
-	}
-	else
-	{
-		xprintf(L_ERROR, "Can't initialize the volume's size\n");
-		return FALSE;
-	}
-	
-	xprintf(L_INFO, "Found volume's size: 0x%1$" F_U64_T " (%1$llu) bytes\n", disk_op_data.volume_size);
-	
-	
-	/*
-	 * On BitLocker 7's volumes, there's a virtualized space used to store
-	 * firsts NTFS sectors. BitLocker creates a NTFS file to not write on the
-	 * area and displays a zeroes-filled file.
-	 * A second part, new from Windows 8, follows...
-	 */
-	if(disk_op_data.metadata->version == V_SEVEN)
-	{
-		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(&metadata->dataset, -1,
-		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
-		{
-			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
-			xprintf(L_ERROR, "Error looking for the VIRTUALIZATION datum type"
-			                 " %hd (%s). Internal failure, abort.\n",
-			                 DATUM_VIRTUALIZATION_INFO, type_str);
-			xfree(type_str);
-			datum = NULL;
-			return FALSE;
-		}
-		
-		disk_op_data.virtualized_size = (off_t)datum->nb_bytes;
-		xprintf(L_DEBUG, "Virtualized info size: %#" F_OFF_T "\n",
-		        disk_op_data.virtualized_size);
-		
-		/* Extended info is new to Windows 8 */
-		size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
-		size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
-		if(actual_size > win7_size)
-		{
-			disk_op_data.xinfo = &datum->xinfo;
-			xprintf(L_DEBUG, "Got extended info\n");
-			
-			/* FIXME Windows 8 writing is not supported right now */
-			disk_op_data.cfg->is_ro |= READ_ONLY;
-			xprintf(L_WARNING, "Volume formated Win8, falling back to read-only.\n");
-		}
-	}
-	
-	return TRUE;
-}
-
-

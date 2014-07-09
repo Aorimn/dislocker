@@ -443,6 +443,9 @@ static void* thread_encrypt(void* params)
 		
 		/*
 		 * Just encrypt this sector
+		 * Exception: don't encrypt it if the sector wasn't (as in the
+		 * "BitLocker's-volume-encryption-was-paused case decribed in the
+		 * decryption function above")
 		 */
 		
 		off_t sector_offset = args->sector_start / args->sector_size + loop;
@@ -464,6 +467,10 @@ static void* thread_encrypt(void* params)
 				);
 			else
 				memcpy(loop_output, loop_input, args->sector_size);
+		}
+		else if((uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
+		{
+			memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else
 		{

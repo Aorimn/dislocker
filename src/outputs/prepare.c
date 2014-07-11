@@ -129,6 +129,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
  * @param volume_header First-sector data
  * @param offset Where the real volume begins
  * @param fd The volume's file descriptor
+ * @return TRUE if result can be trusted, FALSE otherwise
  */
 int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
                          dis_config_t* cfg, volume_header_t* volume_header,
@@ -219,7 +220,10 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 
 
 /**
+ * Retrieve the volume size from the first sector.
  * 
+ * @param volume_header The partition MBR to look at. NTFS or FVE, np
+ * @return The volume size or 0, which indicates the size couldn't be retrieved
  */
 static uint64_t get_volume_size_from_mbr(volume_header_t* volume_header)
 {
@@ -252,6 +256,7 @@ static uint64_t get_volume_size_from_mbr(volume_header_t* volume_header)
  * @param metadata The BitLocker metadata block
  * @param offset Where the real volume begins
  * @param fd The volume's file descriptor
+ * @return The volume size or 0 if it can't be determined
  */
 static uint64_t get_volume_size(volume_header_t* volume_header,
                                 bitlocker_header_t* metadata,

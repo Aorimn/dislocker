@@ -603,7 +603,7 @@ static void fix_read_sector_vista(data_t* disk_op_data,
 	
 	xprintf(L_DEBUG, "  Fixing sector (Vista): replacing signature "
 	                 "and MFTMirror field by: %#llx\n",
-	                 disk_op_data->metadata->boot_sectors_backup);
+	                 disk_op_data->metadata->mftmirror_backup);
 	
 	/* 
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
@@ -616,7 +616,7 @@ static void fix_read_sector_vista(data_t* disk_op_data,
 	memcpy(formatted_output->signature, NTFS_SIGNATURE, NTFS_SIGNATURE_SIZE);
 	
 	/* And this is for the MFT Mirror field */
-	formatted_output->mft_mirror = disk_op_data->metadata->boot_sectors_backup;
+	formatted_output->mft_mirror = disk_op_data->metadata->mftmirror_backup;
 }
 
 

@@ -123,13 +123,15 @@ typedef struct _bitlocker_header
 	state_t next_state;  // Next encryption state                                           -- offset 0xe
 	
 	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
-	uint8_t unknown[4];  //                                                                -- offset 0x18
+	uint8_t unknown[4];  //                                                                 -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
 	
 	uint64_t offset_bl_header[3]; //                                                        -- offset 0x20
 	
-	uint64_t boot_sectors_backup; // Address where the boot sectors have been backed up     -- offset 0x38
-	                              // This is the address of the MftMirror for Vista
+	union {
+		uint64_t boot_sectors_backup; // Address where the boot sectors have been backed up -- offset 0x38
+		uint64_t mftmirror_backup;    // This is the address of the MftMirror for Vista     -- offset 0x38
+	};
 	
 	struct _bitlocker_dataset dataset; // See above                                         -- offset 0x40
 } bitlocker_header_t; // Size = 0x40 + 0x30

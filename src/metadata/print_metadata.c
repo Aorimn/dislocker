@@ -98,9 +98,11 @@ const char* get_bl_state(state_t state)
  */
 void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header)
 {
+	int metadata_size = bl_header->version == V_SEVEN ? bl_header->size << 4 : bl_header->size;
+	
 	xprintf(level, "=====================[ BitLocker metadata informations ]=====================\n");
 	xprintf(level, "  Signature: '%.8s'\n", bl_header->signature);
-	xprintf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", bl_header->size << 4);
+	xprintf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", metadata_size);
 	xprintf(level, "  Version: %hu\n", bl_header->version);
 	if(bl_header->version == V_SEVEN)
 	{

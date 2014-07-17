@@ -375,6 +375,11 @@ static void* thread_decrypt(void* params)
 				loop_output
 			);
 		}
+		else if(version == V_SEVEN &&
+		       (uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
+		{
+			memcpy(loop_output, loop_input, args->sector_size);
+		}
 		else if(version == V_VISTA && sector_offset < 16)
 		{
 			/*
@@ -388,10 +393,6 @@ static void* thread_decrypt(void* params)
 				);
 			else
 				memcpy(loop_output, loop_input, args->sector_size);
-		}
-		else if((uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
-		{
-			memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else
 		{

@@ -24,6 +24,19 @@
 #include "print_metadata.h"
 
 
+/** BitLocker's states into string */
+static const char* states_str[] =
+{
+	"UNKNOWN 0",
+	"DECRYPTED",
+	"UNKNOWN 2",
+	"UNKNOWN 3",
+	"ENCRYPTED",
+	"SWITCHING ENCRYPTION",
+	"UNKNOWN STATE (too big)"
+};
+
+
 /**
  * Print a volume header structure into a human-readable format
  * 
@@ -64,6 +77,21 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header)
 
 
 /**
+ * Return the state in which BitLocker is in as a (constant) string
+ * 
+ * @param state The state to translate
+ * @return The state as a constant string
+ */
+const char* get_bl_state(state_t state)
+{
+	if(state >= sizeof(states_str))
+		return states_str[sizeof(states_str) - 1];
+	
+	return states_str[state];
+}
+
+
+/**
  * Print a BitLocker header structure into a human-readable format
  * 
  * @param bl_header The BitLocker header to print
@@ -72,28 +100,24 @@ void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header)
 {
 	xprintf(level, "=====================[ BitLocker metadata informations ]=====================\n");
 	xprintf(level, "  Signature: '%.8s'\n", bl_header->signature);
-	xprintf(level, "  Total Size: 0x%1$04x (%1$d) bytes (including signature and data)\n", bl_header->size << 4);
+	xprintf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", bl_header->size << 4);
 	xprintf(level, "  Version: %hu\n", bl_header->version);
 	if(bl_header->version == V_SEVEN)
 	{
-		hexdump(level, bl_header->unknown1, 4);
-		xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->encrypted_volume_size, bl_header->encrypted_volume_size / (1024*1024));
-		hexdump(level, bl_header->unknown2, 4);
-		xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", bl_header->nb_backup_sectors);
+		xprintf(level, "  Current state: %s (%hu)\n", get_bl_state(bl_header->curr_state), bl_header->curr_state);
+		xprintf(level, "  Next state: %s (%hu)\n", get_bl_state(bl_header->next_state), bl_header->next_state);
 	}
 	else
-		hexdump(level, bl_header->unknown1, 20);
-#ifdef __ARCH_X86_64
-	xprintf(level, "  First metadata header offset:  %#lx\n", bl_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: %#lx\n", bl_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  %#lx\n", bl_header->offset_bl_header[2]);
-	xprintf(level, "  Boot sectors backup address:   %#lx\n", bl_header->boot_sectors_backup);
-#else
-	xprintf(level, "  First metadata header offset:  %#llx\n", bl_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: %#llx\n", bl_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  %#llx\n", bl_header->offset_bl_header[2]);
-	xprintf(level, "  Boot sectors backup address:   %#llx\n", bl_header->boot_sectors_backup);
-#endif
+	{
+		hexdump(level, (uint8_t*)&bl_header->curr_state, 0x10-0xc);
+	}
+	xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->encrypted_volume_size, bl_header->encrypted_volume_size / (1024*1024));
+	hexdump(level, bl_header->unknown, 4);
+	xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", bl_header->nb_backup_sectors);
+	xprintf(level, "  First metadata header offset:  %#" F_U64_T "\n", bl_header->offset_bl_header[0]);
+	xprintf(level, "  Second metadata header offset: %#" F_U64_T "\n", bl_header->offset_bl_header[1]);
+	xprintf(level, "  Third metadata header offset:  %#" F_U64_T "\n", bl_header->offset_bl_header[2]);
+	xprintf(level, "  Boot sectors backup address:   %#" F_U64_T "\n", bl_header->boot_sectors_backup);
 	
 	print_dataset(level, &bl_header->dataset);
 	xprintf(level, "=============================================================================\n");

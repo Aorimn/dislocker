@@ -39,8 +39,8 @@ typedef uint16_t version_t;
 
 
 
-/** Different first sectors of an NTFS or BitLocker Vista/Seven partition */
 #pragma pack (1)
+/** First sector of an NTFS or BitLocker volume */
 typedef struct _volume_header
 {
 	/* 512 bytes long */
@@ -80,6 +80,7 @@ typedef struct _volume_header
 
 
 
+/** Header of a data set, used in the bitlocker header below */
 typedef struct _bitlocker_dataset
 {
 	uint32_t size;         //                      -- offset 0
@@ -96,16 +97,33 @@ typedef struct _bitlocker_dataset
 } bitlocker_dataset_t; // Size = 0x30
 
 
+/** Different states BitLocker is in */
+enum state_types
+{
+	DECRYPTED  = 1,
+	ENCRYPTED  = 4,
+	SWITCHING_ENCRYPTION = 5
+};
+typedef uint16_t state_t;
 
+
+/**
+ * Header of a BitLocker metadata structure
+ * 
+ * Datums (protectors) with keys in them follow this header
+ */
 typedef struct _bitlocker_header
 {
 	uint8_t signature[8]; // = "-FVE-FS-"                                                   -- offset 0
 	uint16_t size;        // Total size (has to be multiplied by 16 when the version is 2)  -- offset 8
 	version_t version;    // = 0x0002 for Windows 7 and 1 for Windows Vista                 -- offset 0xa
 	
-	uint8_t unknown1[4];  // FIXME Unknown -- What else?                                    -- offset 0xc
+	/* Not sure about the next two fields */
+	state_t curr_state;  // Current encryption state                                        -- offset 0xc
+	state_t next_state;  // Next encryption state                                           -- offset 0xe
+	
 	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
-	uint8_t unknown2[4];  //                                                                -- offset 0x18
+	uint8_t unknown[4];  //                                                                -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
 	
 	uint64_t offset_bl_header[3]; //                                                        -- offset 0x20

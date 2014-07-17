@@ -34,16 +34,13 @@ void print_extended_info(LEVELS level, extended_info_t* xinfo)
 {
 	xprintf(level, "Unknown:\n");
 	hexdump(level, (uint8_t*)&xinfo->unknown1, 2);
-	xprintf(level, "Size: 0x%1$04x (%1$hd)\n", xinfo->size);
+	xprintf(level, "Size: 0x%1$04x (%1$hu)\n", xinfo->size);
 	xprintf(level, "Unknown:\n");
 	hexdump(level, (uint8_t*)&xinfo->unknown2, 4);
-	xprintf(level, "Flags: 0x%1$x (%1$d)\n", xinfo->flags);
-	xprintf(level, "Unknown:\n");
-	hexdump(level, (uint8_t*)&xinfo->unknown3, 4);
+	xprintf(level, "Flags: 0x%1$"  F_U64_T " (%1$llu)\n", xinfo->flags);
 	xprintf(level, "Convert Log offset: 0x%016"  F_U64_T "\n", xinfo->convertlog_addr);
-	xprintf(level, "Convert Log size:   0x%1$08x (%1$d)\n",    xinfo->convertlog_size);
-	xprintf(level, "Unknown:\n");
-	hexdump(level, (uint8_t*)&xinfo->unknown4, 4);
-	xprintf(level, "Sector size: 0x%1$x (%1$d)\n", xinfo->sector_size);
+	xprintf(level, "Convert Log size:   0x%1$08x (%1$u)\n",    xinfo->convertlog_size);
+	xprintf(level, "Sector size (1): 0x%1$x (%1$d)\n", xinfo->sector_size1);
+	xprintf(level, "Sector size (2): 0x%1$x (%1$d)\n", xinfo->sector_size2);
 }
 

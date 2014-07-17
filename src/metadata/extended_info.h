@@ -36,12 +36,11 @@ typedef struct _extended_info {
 	uint16_t unknown1;
 	uint16_t size;
 	uint32_t unknown2;
-	uint32_t flags;
-	uint32_t unknown3;
+	uint64_t flags;
 	uint64_t convertlog_addr;
 	uint32_t convertlog_size;
-	uint32_t unknown4;
-	uint32_t sector_size;
+	uint32_t sector_size1;
+	uint32_t sector_size2;
 } extended_info_t;
 
 

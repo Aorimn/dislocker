@@ -58,9 +58,22 @@ typedef struct _aes_contexts {
 typedef struct _data {
 	/* Volume metadata */
 	bitlocker_header_t* metadata;
-	/* Size of files containing metadata on the NTFS level */
-	off_t               metafiles_size;   /* BitLocker's metadata */
-	off_t               virtualized_size; /* NTFS backed-up sectors */
+	
+	/*
+	 * Virtualized regions are presented as zeroes when queried from the NTFS
+	 * layer. In these virtualized regions, we find the 3 BitLocker metadata
+	 * headers, the area where NTFS boot sectors are backed-up for W$ 7&8, and
+	 * an area I don't know about yet for W$ 8.
+	 * This last area is used only when BitLocker's state is 2.
+	 */
+	size_t nb_virt_region;
+	struct {
+		uint64_t addr;
+		uint64_t size;
+	} virt_region[5];
+	
+	/* Size (in bytes) of the NTFS backed-up sectors */
+	off_t               virtualized_size;
 	
 	/* Extended info which may be present (NULL otherwise) */
 	extended_info_t*    xinfo;

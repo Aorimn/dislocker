@@ -306,15 +306,20 @@ static int fs_write(const char *path, const char *buf, size_t size,
 	
 	
 	/*
-	 * Don't authorize to write on metadata
+	 * Don't authorize to write on metadata, NTFS firsts sectors and on another
+	 * area we shouldn't write to (don't know its signification yet).
 	 */
 	off_t metadata_offset = 0;
-	off_t metadata_size   = disk_op_data.metafiles_size;
-	int   loop            = 0;
+	off_t metadata_size   = 0;
+	size_t virt_loop      = 0;
 	
-	for(loop = 0; loop < 3; loop++)
+	for(virt_loop = 0; virt_loop < disk_op_data.nb_virt_region; virt_loop++)
 	{
-		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[loop];
+		metadata_size = (off_t)disk_op_data.virt_region[virt_loop].size;
+		if(metadata_size == 0)
+			continue;
+		
+		metadata_offset = (off_t)disk_op_data.virt_region[virt_loop].addr;
 		
 		if(offset >= metadata_offset &&
 		   offset <= metadata_offset + metadata_size)
@@ -323,38 +328,12 @@ static int fs_write(const char *path, const char *buf, size_t size,
 			        F_OFF_T ")\n", offset);
 			return -EFAULT;
 		}
+		
 		if(offset < metadata_offset &&
 		   offset + (off_t)size >= metadata_offset)
 		{
 			xprintf(L_INFO, "Denying write request on the metadata (2:%#"
 			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
-			return -EFAULT;
-		}
-	}
-	
-	/*
-	 * Don't authorize writing directly on the NTFS firsts sectors backup area
-	 * on BitLocker's 7 disks
-	 */
-	if(disk_op_data.metadata->version == V_SEVEN)
-	{
-		metadata_offset = (off_t)disk_op_data.metadata->boot_sectors_backup;
-		metadata_size   = disk_op_data.virtualized_size;
-		
-		if(offset >= metadata_offset &&
-		   offset <= metadata_offset + metadata_size)
-		{
-			xprintf(L_INFO,
-			        "Denying write request on the virtualized area (1:%#"
-			        F_OFF_T ")\n", offset);
-			return -EFAULT;
-		}
-		if(offset < metadata_offset &&
-		   offset + (off_t)size >= metadata_offset)
-		{
-			xprintf(L_INFO,
-			        "Denying write request on the virtualized area (2:%#"
-			        F_OFF_T")\n", offset);
 			return -EFAULT;
 		}
 	}

@@ -291,11 +291,11 @@ static void* thread_decrypt(void* params)
 	uint8_t* loop_input      = args->input;
 	uint8_t* loop_output     = args->output;
 	
+	size_t   virt_loop       = 0;
 	off_t    metadata_offset = 0;
 	uint16_t version         = disk_op_data.metadata->version;
 	
-	
-	off_t size = disk_op_data.metafiles_size;
+	off_t size               = 0;
 	
 	
 	// TODO see to be more intelligent on these loops
@@ -309,7 +309,7 @@ static void* thread_decrypt(void* params)
 			continue;
 		
 		/*
-		 * For BitLocker encrypted volume with W$ 7/8:
+		 * For BitLocker-encrypted volume with W$ 7/8:
 		 *   - Don't decrypt the firsts sectors whatever might be the case, they
 		 *   are saved elsewhere anyway.
 		 * For these encrypted with W$ Vista:
@@ -317,7 +317,7 @@ static void* thread_decrypt(void* params)
 		 * For both of them:
 		 *   - Zero out the metadata area returned to the user (not the one on
 		 *   the disk, obviously).
-		 *   - Don't decrypt sectors if we're outside the encrypted volume's
+		 *   - Don't decrypt sectors if we're outside the encrypted-volume's
 		 *   size (but still in the volume's size obv). This is needed when the
 		 *   encryption was paused during BitLocker's turn on.
 		 */
@@ -325,35 +325,15 @@ static void* thread_decrypt(void* params)
 		off_t sector_offset = args->sector_start / args->sector_size + loop;
 		
 		/* Check for zero out areas */
-		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[0];
-		if(offset >= metadata_offset &&
-			offset <= metadata_offset + size)
+		for(virt_loop = 0; virt_loop < disk_op_data.nb_virt_region; virt_loop++)
 		{
-			memset(loop_output, 0, args->sector_size);
-			continue;
-		}
-		
-		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[1];
-		if(offset >= metadata_offset &&
-			offset <= metadata_offset + size)
-		{
-			memset(loop_output, 0, args->sector_size);
-			continue;
-		}
-		
-		metadata_offset = (off_t)disk_op_data.metadata->offset_bl_header[2];
-		if(offset >= metadata_offset &&
-			offset <= metadata_offset + size)
-		{
-			memset(loop_output, 0, args->sector_size);
-			continue;
-		}
-		
-		if(version == V_SEVEN)
-		{
-			metadata_offset = (off_t)disk_op_data.metadata->boot_sectors_backup;
+			size = (off_t)disk_op_data.virt_region[virt_loop].size;
+			if(size == 0)
+				continue;
+			
+			metadata_offset = (off_t)disk_op_data.virt_region[virt_loop].addr;
 			if(offset >= metadata_offset &&
-			   offset <= metadata_offset + disk_op_data.virtualized_size)
+				offset <= metadata_offset + size)
 			{
 				memset(loop_output, 0, args->sector_size);
 				continue;
@@ -378,6 +358,7 @@ static void* thread_decrypt(void* params)
 		else if(version == V_SEVEN &&
 		       (uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
 		{
+			/* Do not decrypt when there's nothing to */
 			memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else if(version == V_VISTA && sector_offset < 16)

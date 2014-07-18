@@ -135,7 +135,10 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
                          dis_config_t* cfg, volume_header_t* volume_header,
                          off_t offset, int fd_volume)
 {
+	size_t loop = 0;
 	uint16_t sector_size = volume_header->sector_size;
+	uint64_t metafiles_size = (uint64_t)(~(sector_size - 1)
+	                           & (sector_size + 0xffff));
 	
 	/** @see dislocker.c */
 	extern data_t disk_op_data;
@@ -143,8 +146,6 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	memset(&disk_op_data, 0, sizeof(data_t));
 	
 	disk_op_data.metadata       = metadata;
-	disk_op_data.metafiles_size = (off_t)
-	                              (~(sector_size - 1) & (sector_size + 0xffff));
 	disk_op_data.xinfo          = NULL;
 	disk_op_data.sector_size    = sector_size;
 	disk_op_data.part_off       = offset;
@@ -176,14 +177,26 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	        disk_op_data.volume_size);
 	
 	
-	/*
-	 * On BitLocker 7's volumes, there's a virtualized space used to store
-	 * firsts NTFS sectors. BitLocker creates a NTFS file to not write on the
-	 * area and displays a zeroes-filled file.
-	 * A second part, new from Windows 8, follows...
-	 */
-	if(disk_op_data.metadata->version == V_SEVEN)
+	/* Initialize  */
+	disk_op_data.nb_virt_region = 3;
+	for(loop = 0; loop < disk_op_data.nb_virt_region; loop++)
 	{
+		disk_op_data.virt_region[loop].addr = metadata->offset_bl_header[loop];
+		disk_op_data.virt_region[loop].size = metafiles_size;
+	}
+	
+	if(metadata->version == V_VISTA)
+	{
+		// Nothing special to do
+	}
+	else if(metadata->version == V_SEVEN)
+	{
+		/*
+		 * On BitLocker 7's volumes, there's a virtualized space used to store
+		 * firsts NTFS sectors. BitLocker creates a NTFS file to not write on
+		 * the area and displays a zeroes-filled file.
+		 * A second part, new from Windows 8, follows...
+		 */
 		datum_virtualization_t* datum = NULL;
 		if(!get_next_datum(&metadata->dataset, -1,
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
@@ -197,9 +210,14 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			return FALSE;
 		}
 		
-		disk_op_data.virtualized_size = (off_t)datum->nb_bytes;
+		disk_op_data.nb_virt_region++;
+		disk_op_data.virt_region[3].addr = metadata->boot_sectors_backup;
+		disk_op_data.virt_region[3].size = datum->nb_bytes;
+		disk_op_data.virtualized_size    = (off_t)datum->nb_bytes;
+		
 		xprintf(L_DEBUG, "Virtualized info size: %#" F_OFF_T "\n",
 		        disk_op_data.virtualized_size);
+		
 		
 		/* Extended info is new to Windows 8 */
 		size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
@@ -213,6 +231,19 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			disk_op_data.cfg->is_ro |= READ_ONLY;
 			xprintf(L_WARNING, "Volume formated Win8, falling back to read-only.\n");
 		}
+		
+		if(metadata->curr_state == UNKNOWN_STATE_2)
+		{
+			disk_op_data.nb_virt_region++;
+			disk_op_data.virt_region[4].addr = metadata->encrypted_volume_size;
+			disk_op_data.virt_region[4].size = metadata->unknown_size;
+		}
+	}
+	else
+	{
+		/* Explicitly mark a BitLocker version as unsupported */
+		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", metadata->version);
+		return FALSE;
 	}
 	
 	return TRUE;

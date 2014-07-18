@@ -100,8 +100,9 @@ typedef struct _bitlocker_dataset
 /** Different states BitLocker is in */
 enum state_types
 {
-	DECRYPTED  = 1,
-	ENCRYPTED  = 4,
+	DECRYPTED            = 1,
+	UNKNOWN_STATE_2      = 2,
+	ENCRYPTED            = 4,
 	SWITCHING_ENCRYPTION = 5
 };
 typedef uint16_t state_t;
@@ -123,7 +124,12 @@ typedef struct _bitlocker_header
 	state_t next_state;  // Next encryption state                                           -- offset 0xe
 	
 	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
-	uint8_t unknown[4];  //                                                                 -- offset 0x18
+	/*
+	 * This size describe a virtualized region. This region is only checked when
+	 * this->curr_state == 2. It begins at the offset described by
+	 * this->encrypted_volume_size
+	 */
+	uint32_t unknown_size;  //                                                              -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
 	
 	uint64_t offset_bl_header[3]; //                                                        -- offset 0x20

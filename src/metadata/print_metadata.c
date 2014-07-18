@@ -107,7 +107,7 @@ void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header)
 	xprintf(level, "  Current state: %s (%hu)\n", get_bl_state(bl_header->curr_state), bl_header->curr_state);
 	xprintf(level, "  Next state: %s (%hu)\n", get_bl_state(bl_header->next_state), bl_header->next_state);
 	xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->encrypted_volume_size, bl_header->encrypted_volume_size / (1024*1024));
-	hexdump(level, bl_header->unknown, 4);
+	xprintf(level, "  Size of virtualized region: %1$#x (%1$u)\n", bl_header->unknown_size);
 	xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", bl_header->nb_backup_sectors);
 	xprintf(level, "  First metadata header offset:  %#" F_U64_T "\n", bl_header->offset_bl_header[0]);
 	xprintf(level, "  Second metadata header offset: %#" F_U64_T "\n", bl_header->offset_bl_header[1]);

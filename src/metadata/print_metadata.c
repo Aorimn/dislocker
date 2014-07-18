@@ -29,10 +29,10 @@ static const char* states_str[] =
 {
 	"UNKNOWN 0",
 	"DECRYPTED",
-	"UNKNOWN 2",
+	"SWITCHING ENCRYPTION",
 	"UNKNOWN 3",
 	"ENCRYPTED",
-	"SWITCHING ENCRYPTION",
+	"SWITCHING ENCRYPTION PAUSED",
 	"UNKNOWN STATE (too big)"
 };
 

@@ -100,10 +100,10 @@ typedef struct _bitlocker_dataset
 /** Different states BitLocker is in */
 enum state_types
 {
-	DECRYPTED            = 1,
-	UNKNOWN_STATE_2      = 2,
-	ENCRYPTED            = 4,
-	SWITCHING_ENCRYPTION = 5
+	DECRYPTED                = 1,
+	SWITCHING_ENCRYPTION     = 2,
+	ENCRYPTED                = 4,
+	SWITCH_ENCRYPTION_PAUSED = 5
 };
 typedef uint16_t state_t;
 

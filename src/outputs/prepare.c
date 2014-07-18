@@ -232,7 +232,7 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			xprintf(L_WARNING, "Volume formated Win8, falling back to read-only.\n");
 		}
 		
-		if(metadata->curr_state == UNKNOWN_STATE_2)
+		if(metadata->curr_state == SWITCHING_ENCRYPTION)
 		{
 			disk_op_data.nb_virt_region++;
 			disk_op_data.virt_region[4].addr = metadata->encrypted_volume_size;

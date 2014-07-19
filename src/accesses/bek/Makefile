@@ -17,7 +17,8 @@ WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
 SOURCES		=	main.c read_bekfile.c
 OBJECTS		=	$(SOURCES:.c=.o)
-override LDFLAGS    +=	$(LIB)
+LHARDEN		=	-Wl,-z,relro
+override LDFLAGS    +=	$(LIB) $(LHARDEN)
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	../../common.o ../../metadata/datums.o ../../metadata/print_metadata.o ../../metadata/extended_info.o \

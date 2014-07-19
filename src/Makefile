@@ -21,11 +21,12 @@ DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) |
 INC		=	-I. -I/usr/local/include
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
+LHARDEN		=	-Wl,-z,relro
 SOURCES		=	dislocker.c common.c sectors.c \
 			config.c xstd/xstdio.c xstd/xstdlib.c \
 			outputs/prepare.c
 OBJECTS		=	$(SOURCES:.c=.o)
-override LDFLAGS	+=	$(LIB) -lpthread -lpolarssl
+override LDFLAGS	+=	$(LIB) $(LHARDEN) -lpthread -lpolarssl
 BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/print_metadata.o \

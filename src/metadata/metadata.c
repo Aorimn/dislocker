@@ -297,7 +297,8 @@ int get_metadata_check_validations(volume_header_t *volume_header, int fd, void 
 		 * this provides a better checksum (sha256 hash)
 		 *  => This needs the VMK (decrypted)
 		 */
-		xprintf(L_INFO, "Looking if %#x == %#x for metadata validation\n", metadata_crc32, validations.crc32);
+		xprintf(L_INFO, "Looking if %#x == %#x for metadata validation\n",
+		        metadata_crc32, validations.crc32);
 		
 		++current;
 		if(metadata_crc32 == validations.crc32)
@@ -313,4 +314,47 @@ int get_metadata_check_validations(volume_header_t *volume_header, int fd, void 
 	
 	return TRUE;
 }
+
+
+/**
+ * Check for dangerous state the BitLocker volume can be in.
+ * 
+ * @param metadata The BitLocker metadata header
+ * @return TRUE if it's safe to use the volume, FALSE otherwise
+ */
+int check_state(bitlocker_header_t* metadata)
+{
+	// Check parameter
+	if(!metadata)
+		return FALSE;
+	
+	char* enc = "enc";
+	char* dec = "dec";
+	char* next_state = NULL;
+	
+	switch(metadata->curr_state)
+	{
+		case SWITCHING_ENCRYPTION:
+			xprintf(L_ERROR, "The volume is currently in an unstable state.\n");
+			xprintf(L_ERROR, "  `--> Next state: %s\n",
+				get_bl_state(metadata->next_state)
+			);
+			return FALSE;
+		case SWITCH_ENCRYPTION_PAUSED:
+			if(metadata->next_state == DECRYPTED)
+				next_state = dec;
+			else
+				next_state = enc;
+			xprintf(L_WARNING,
+				"The volume is currently in a secure state, "
+				"but don't resume the %sryption while using " PROGNAME " for the volume "
+				"would become instable, resulting in data corruption.\n",
+				next_state
+			);
+			break;
+	}
+	
+	return TRUE;
+}
+
 

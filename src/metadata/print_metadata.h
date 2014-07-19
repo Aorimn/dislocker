@@ -36,5 +36,7 @@ void print_dataset(LEVELS level, bitlocker_dataset_t* dataset);
 
 void print_data(LEVELS level, void* metadata);
 
+const char* get_bl_state(state_t state);
+
 
 #endif // PRINT_METADATA_H

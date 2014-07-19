@@ -403,6 +403,14 @@ FIRST_CLEAN:
 	
 	
 #if defined(__RUN_FUSE)
+	/* Check the state the BitLocker volume is in */
+	if(!check_state((bitlocker_header_t*) bl_metadata))
+	{
+		xprintf(L_CRITICAL, "Invalid state, can't run safely. Abort.\n");
+		ret = EXIT_FAILURE;
+		goto LAST_CLEAN;
+	}
+	
 	/** @see fuse.c */
 	extern struct fuse_operations fs_oper;
 	

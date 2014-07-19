@@ -176,5 +176,7 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
 
 int get_metadata_check_validations(volume_header_t* volume_header, int fd, void** metadata, dis_config_t* cfg);
 
+int check_state(bitlocker_header_t* metadata);
+
 
 #endif // METADATA_H

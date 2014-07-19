@@ -75,10 +75,10 @@ export
 all : fuse
 
 libs: $(OBJECTS)
-	@$(MAKE) DEBUG=$(DEBUG) -C accesses/   library
-	@$(MAKE) DEBUG=$(DEBUG) -C metadata/   library
-	@$(MAKE) DEBUG=$(DEBUG) -C ntfs/       library
-	@$(MAKE) DEBUG=$(DEBUG) -C encryption/ library
+	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C accesses/   library
+	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C metadata/   library
+	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C ntfs/       library
+	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C encryption/ library
 
 
 # Default rules for final binaries

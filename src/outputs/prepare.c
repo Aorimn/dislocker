@@ -333,14 +333,6 @@ static uint64_t get_volume_size(volume_header_t* volume_header,
 			
 			xfree(input);
 		}
-		else if(metadata->version == V_VISTA)
-		{
-			/*
-			 * For V_VISTA version volumes, the encrypted size should always be
-			 * the volume's size
-			 */
-			volume_size = metadata->encrypted_volume_size;
-		}
 	}
 	
 	return volume_size;

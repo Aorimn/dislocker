@@ -32,7 +32,6 @@
  */
 static uint64_t get_volume_size(volume_header_t* volume_header,
                                 bitlocker_header_t* metadata,
-                                off_t offset,
                                 int fd_volume);
 
 
@@ -136,9 +135,10 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
                          off_t offset, int fd_volume)
 {
 	size_t loop = 0;
-	uint16_t sector_size = volume_header->sector_size;
+	uint16_t sector_size         = volume_header->sector_size;
 	uint8_t  sectors_per_cluster = volume_header->sectors_per_cluster;
-	uint64_t metafiles_size = 0;
+	uint32_t cluster_size        = 0;
+	uint64_t metafiles_size      = 0;
 	
 	/** @see dislocker.c */
 	extern data_t disk_op_data;
@@ -166,7 +166,7 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	 * announce it on a getattr call
 	 */
 	disk_op_data.volume_size = get_volume_size(volume_header, metadata,
-	                                           offset, fd_volume);
+	                                           fd_volume);
 	if(disk_op_data.volume_size == 0)
 	{
 		xprintf(L_ERROR, "Can't initialize the volume's size\n");
@@ -178,7 +178,7 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	
 	if(metadata->version == V_VISTA)
 	{
-		uint32_t cluster_size = (uint32_t)sector_size * sectors_per_cluster;
+		cluster_size   = (uint32_t)sector_size * sectors_per_cluster;
 		metafiles_size = (uint64_t)(cluster_size+0x3fff) & ~(cluster_size-1);
 	}
 	else if(metadata->version == V_SEVEN)
@@ -300,39 +300,38 @@ static uint64_t get_volume_size_from_mbr(volume_header_t* volume_header)
  * 
  * @param volume_header First-sector data
  * @param metadata The BitLocker metadata block
- * @param offset Where the real volume begins
  * @param fd The volume's file descriptor
  * @return The volume size or 0 if it can't be determined
  */
 static uint64_t get_volume_size(volume_header_t* volume_header,
                                 bitlocker_header_t* metadata,
-                                off_t offset,
                                 int fd_volume)
 {
 	uint64_t volume_size = 0;
 	
 	volume_size = get_volume_size_from_mbr(volume_header);
 	
-	if(!volume_size)
+	if(!volume_size && metadata->version == V_SEVEN)
 	{
-		if(metadata->version == V_SEVEN)
+		/*
+		 * For version V_SEVEN, volumes can be partially encrypted.
+		 * Therefore, try to get the real size from the NTFS data
+		 */
+		
+		uint8_t* input = xmalloc(volume_header->sector_size);
+		memset(input , 0, volume_header->sector_size);
+		
+		if(!read_decrypt_sectors(fd_volume, 1,  volume_header->sector_size, 0,
+		                         input))
 		{
-			/*
-			 * For version V_SEVEN, volumes can be partially encrypted.
-			 * Therefore, try to get the real size from the NTFS data
-			 */
-			
-			uint8_t* input = xmalloc(volume_header->sector_size);
-			memset(input , 0, volume_header->sector_size);
-			
-			off_t ntfs_mbr = (off_t)metadata->boot_sectors_backup + offset;
-			xlseek(fd_volume, ntfs_mbr, SEEK_SET);
-			xread(fd_volume, input, volume_header->sector_size);
-			
-			volume_size = get_volume_size_from_mbr((volume_header_t*)input);
-			
-			xfree(input);
+			xprintf(L_ERROR,
+			       "Unable to read the NTFS header to get the volume's size\n");
+			return 0;
 		}
+		
+		volume_size = get_volume_size_from_mbr((volume_header_t*)input);
+		
+		xfree(input);
 	}
 	
 	return volume_size;

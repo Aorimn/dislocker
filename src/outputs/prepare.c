@@ -137,8 +137,8 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 {
 	size_t loop = 0;
 	uint16_t sector_size = volume_header->sector_size;
-	uint64_t metafiles_size = (uint64_t)(~(sector_size - 1)
-	                           & (sector_size + 0xffff));
+	uint8_t  sectors_per_cluster = volume_header->sectors_per_cluster;
+	uint64_t metafiles_size = 0;
 	
 	/** @see dislocker.c */
 	extern data_t disk_op_data;
@@ -176,8 +176,22 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	xprintf(L_INFO, "Found volume's size: 0x%1$" F_U64_T " (%1$llu) bytes\n",
 	        disk_op_data.volume_size);
 	
+	if(metadata->version == V_VISTA)
+	{
+		uint32_t cluster_size = (uint32_t)sector_size * sectors_per_cluster;
+		metafiles_size = (uint64_t)(cluster_size+0x3fff) & ~(cluster_size-1);
+	}
+	else if(metadata->version == V_SEVEN)
+	{
+		metafiles_size = (uint64_t)(~(sector_size-1) & (sector_size+0xffff));
+	}
 	
-	/* Initialize  */
+	xprintf(L_DEBUG, "Metadata files size: %#" F_U64_T "\n", metafiles_size);
+	
+	/*
+	 * Initialize region to report as filled with zeroes, if asked from the NTFS
+	 * layer. This is to mimic BitLocker's behaviour.
+	 */
 	disk_op_data.nb_virt_region = 3;
 	for(loop = 0; loop < disk_op_data.nb_virt_region; loop++)
 	{
@@ -232,6 +246,7 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 			xprintf(L_WARNING, "Volume formated Win8, falling back to read-only.\n");
 		}
 		
+		/* Another area to report as filled with zeroes, new to W8 as well */
 		if(metadata->curr_state == SWITCHING_ENCRYPTION)
 		{
 			disk_op_data.nb_virt_region++;

@@ -330,25 +330,40 @@ int check_state(bitlocker_header_t* metadata)
 	
 	char* enc = "enc";
 	char* dec = "dec";
+	char* unknown = "unknown-";
 	char* next_state = NULL;
+	
+	if(metadata->next_state == DECRYPTED)
+		next_state = dec;
+	else if(metadata->next_state == ENCRYPTED)
+		next_state = enc;
+	else
+	{
+		next_state = unknown;
+		xprintf(L_WARNING,
+			"The next state of the volume is currently unknown of " PROGNAME
+			", but it would be awesome if you could spare some time to report "
+			"this state (%d) to the author and how did you do to have this. "
+			"Many thanks.",
+			metadata->next_state
+		);
+	}
 	
 	switch(metadata->curr_state)
 	{
 		case SWITCHING_ENCRYPTION:
-			xprintf(L_ERROR, "The volume is currently in an unstable state.\n");
-			xprintf(L_ERROR, "  `--> Next state: %s\n",
-				get_bl_state(metadata->next_state)
+			xprintf(L_ERROR,
+				"The volume is currently being %srypted, which is an unstable "
+				"state.\n",
+				next_state
 			);
 			return FALSE;
 		case SWITCH_ENCRYPTION_PAUSED:
-			if(metadata->next_state == DECRYPTED)
-				next_state = dec;
-			else
-				next_state = enc;
 			xprintf(L_WARNING,
 				"The volume is currently in a secure state, "
-				"but don't resume the %sryption while using " PROGNAME " for the volume "
-				"would become instable, resulting in data corruption.\n",
+				"but don't resume the %sryption while using " PROGNAME " for "
+				"the volume would become instable, resulting in data "
+				"corruption.\n",
 				next_state
 			);
 			break;

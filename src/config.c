@@ -37,7 +37,7 @@ void usage()
 	fprintf(stderr,
 PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
 "\n"
-"Usage: " PROGNAME " [-hqrv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
+"Usage: " PROGNAME " [-hqrsv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
 "    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"
 "\n"
 "Options:\n"
@@ -54,6 +54,7 @@ PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
 "                          decrypt volume using the recovery password method\n"
 "    -q, --quiet           do NOT display anything\n"
 "    -r, --readonly        do not allow to write on the BitLocker volume\n"
+"    -s, --stateok         do not check the volume's state, assume it's ok to mount it"
 "    -u, --user-password   decrypt volume using the user password method\n"
 "    -v, --verbosity       increase verbosity (CRITICAL errors are displayed by default)\n"
 "    -V, --volume VOLUME   volume to get metadata and keys from\n"
@@ -104,7 +105,7 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 	};
 	
 	/* Options which could be passed as argument */
-	const char          short_opts[] = "cf:F::hk:l:o:p::qru::vV:";
+	const char          short_opts[] = "cf:F::hk:l:o:p::qrsu::vV:";
 	const struct option long_opts[] = {
 		{"clearkey",          NO_OPT,   NULL, 'c'},
 		{"bekfile",           NEED_OPT, NULL, 'f'},
@@ -116,6 +117,7 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 		{"recovery-password", MAY_OPT,  NULL, 'p'},
 		{"quiet",             NO_OPT,   NULL, 'q'},
 		{"readonly",          NO_OPT,   NULL, 'r'},
+		{"stateok",           NO_OPT,   NULL, 's'},
 		{"user-password",     MAY_OPT,  NULL, 'u'},
 		{"verbosity",         NO_OPT,   NULL, 'v'},
 		{"volume",            NEED_OPT, NULL, 'V'},
@@ -124,7 +126,8 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 	
 	
 	/* Some default settings */
-	cfg->verbosity       = L_CRITICAL;
+	cfg->verbosity   = L_CRITICAL;
+	cfg->check_state = TRUE;
 	
 	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
 	{
@@ -180,6 +183,9 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 				break;
 			case 'r':
 				cfg->is_ro |= READ_ONLY;
+				break;
+			case 's':
+				cfg->check_state = FALSE;
 				break;
 			case 'u':
 				if(optarg)

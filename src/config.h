@@ -84,6 +84,11 @@ typedef struct _dis_cfg {
 	off_t         offset;
 	/* Mount the BitLocker volume in read-only mode */
 	char          is_ro;
+	/*
+	 * By default, dislocker will check for unstable state that may corrupt data
+	 * if mounted using fuse
+	 */
+	char          check_state;
 } dis_config_t;
 
 

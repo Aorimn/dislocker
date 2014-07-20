@@ -4,7 +4,7 @@
 .SH NAME
 Dislocker - Read BitLocker encrypted volumes under Linux
 .SH SYNOPSIS
-dislocker [-hqrv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
+dislocker [-hqrsv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
 
 Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR |-u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
 .SH DESCRIPTION
@@ -49,6 +49,9 @@ This option has priority on any `\fB-v\fR'. One probably wants to check the retu
 .TP
 .B -r, --readonly
 do not allow to write on the BitLocker volume (read only mode)
+.TP
+.B -s, --stateok
+do not check the volume's state, assume it's ok to mount it. Do not use this if you don't know what you're doing.
 .TP
 .B -u, --user-password
 decrypt the volume using the user password method

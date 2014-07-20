@@ -404,7 +404,7 @@ FIRST_CLEAN:
 	
 #if defined(__RUN_FUSE)
 	/* Check the state the BitLocker volume is in */
-	if(!check_state((bitlocker_header_t*) bl_metadata))
+	if(cfg.check_state == TRUE && !check_state((bitlocker_header_t*) bl_metadata))
 	{
 		xprintf(L_CRITICAL, "Invalid state, can't run safely. Abort.\n");
 		ret = EXIT_FAILURE;

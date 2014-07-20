@@ -354,7 +354,8 @@ int check_state(bitlocker_header_t* metadata)
 		case SWITCHING_ENCRYPTION:
 			xprintf(L_ERROR,
 				"The volume is currently being %srypted, which is an unstable "
-				"state.\n",
+				"state. If you know what you're doing, pass `-s' to the command"
+				" line, but be aware it may result in data corruption.\n",
 				next_state
 			);
 			return FALSE;

@@ -368,6 +368,11 @@ int check_state(bitlocker_header_t* metadata)
 				next_state
 			);
 			break;
+		case DECRYPTED:
+			xprintf(L_WARNING,
+				"The disk is about to get encrypted. Don't use " PROGNAME " if "
+				"you're willing to do so, this may corrupt your data."
+			);
 	}
 	
 	return TRUE;

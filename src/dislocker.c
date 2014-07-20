@@ -228,8 +228,15 @@ int main(int argc, char** argv)
 	if(get_dataset(bl_metadata, &dataset) != TRUE)
 	{
 		xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
+		ret = EXIT_FAILURE;
 		goto FIRST_CLEAN;
 	}
+	
+	/*
+	 * If the state of the volume is currently decrypted, there's no key to grab
+	 */
+	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
+		goto FIRST_CLEAN;
 	
 	/*
 	 * First, get the VMK datum using either a clear key, a recovery password

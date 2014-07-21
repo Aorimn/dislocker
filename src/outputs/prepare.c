@@ -176,6 +176,11 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	xprintf(L_INFO, "Found volume's size: 0x%1$" F_U64_T " (%1$llu) bytes\n",
 	        disk_op_data.volume_size);
 	
+	/*
+	 * Alignment isn't the same for W$ Vista (size-of-a-cluster aligned on
+	 * 0x4000) and 7&8 (size-of-a-sector aligned on 0x10000).
+	 * This gives the metadata files' sizes in the NTFS layer.
+	 */
 	if(metadata->version == V_VISTA)
 	{
 		cluster_size   = (uint32_t)sector_size * sectors_per_cluster;
@@ -319,7 +324,7 @@ static uint64_t get_volume_size(volume_header_t* volume_header,
 		 */
 		
 		uint8_t* input = xmalloc(volume_header->sector_size);
-		memset(input , 0, volume_header->sector_size);
+		memset(input, 0, volume_header->sector_size);
 		
 		if(!read_decrypt_sectors(fd_volume, 1,  volume_header->sector_size, 0,
 		                         input))

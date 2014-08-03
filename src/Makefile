@@ -32,10 +32,11 @@ BIN		=	$(PROGNAME)
 
 EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/print_metadata.o \
 			metadata/vmk.o metadata/fvek.o metadata/extended_info.o \
+			metadata/guid.o \
 			accesses/rp/recovery_password.o accesses/bek/read_bekfile.o \
 			accesses/user_pass/user_pass.o accesses/stretch_key.o \
 			encryption/decrypt.o encryption/encrypt.o encryption/diffuser.o encryption/crc32.o \
-			ntfs/guid.o ntfs/clock.o ntfs/encoding.o
+			ntfs/clock.o ntfs/encoding.o
 
 
 INSTALL_PATH	=	$(DESTDIR)/usr/bin/

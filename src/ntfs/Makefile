@@ -1,7 +1,7 @@
 INC		+=	-I../
 CFLAGS		=	$(WFLAGS) $(INC) $(CHARDEN)
 
-SOURCES		=	guid.c clock.c encoding.c
+SOURCES		=	clock.c encoding.c
 OBJECTS		=	$(SOURCES:.c=.o)
 
 

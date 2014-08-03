@@ -71,9 +71,9 @@ typedef struct _volume_header
 	
 	guid_t   guid;                //                                                -- offset 0xa0
 	uint64_t offset_bl_header[3]; // NOT for Vista                                  -- offset 0xb0
+	uint64_t offset_eow_information[2]; // NOT for Vista nor 7                      -- offset 0xc8
 	
-	
-	uint8_t  unknown4[310];       // FIXME                                          -- offset 0xc8
+	uint8_t  unknown4[294];       // FIXME                                          -- offset 0xd8
 	
 	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
 } volume_header_t; // Size = 512

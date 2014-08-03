@@ -78,7 +78,10 @@ int main(int argc, char **argv)
 	recovery_key = xmalloc(32 * sizeof(uint8_t));
 	
 	if(!intermediate_key(recovery_password, salt, recovery_key))
+	{
+		xfree(recovery_key);
 		return 1;
+	}
 	
 	print_intermediate_key(recovery_key);
 	

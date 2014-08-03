@@ -80,6 +80,7 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 		}
 		
 		xprintf(L_CRITICAL, "Can't decrypt correctly the FVEK. Abort.\n");
+		xfree(*fvek_datum);
 		return FALSE;
 	}
 	

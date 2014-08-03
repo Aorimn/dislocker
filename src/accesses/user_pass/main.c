@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 	
 error:
 	if(user_password)
-		xfree(user_password);
+		free(user_password);
 	
 	xstdio_end();
 	

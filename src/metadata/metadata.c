@@ -344,7 +344,7 @@ int check_state(bitlocker_header_t* metadata)
 			"The next state of the volume is currently unknown of " PROGNAME
 			", but it would be awesome if you could spare some time to report "
 			"this state (%d) to the author and how did you do to have this. "
-			"Many thanks.",
+			"Many thanks.\n",
 			metadata->next_state
 		);
 	}
@@ -371,7 +371,7 @@ int check_state(bitlocker_header_t* metadata)
 		case DECRYPTED:
 			xprintf(L_WARNING,
 				"The disk is about to get encrypted. Don't use " PROGNAME " if "
-				"you're willing to do so, this may corrupt your data."
+				"you're willing to do so, this may corrupt your data.\n"
 			);
 	}
 	

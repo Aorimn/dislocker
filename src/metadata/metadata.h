@@ -26,8 +26,8 @@
 
 #include "common.h"
 #include "config.h"
+#include "guid.h"
 #include "ntfs/clock.h"
-#include "ntfs/guid.h"
 
 
 /** Known BitLocker versions */

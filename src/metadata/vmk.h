@@ -24,7 +24,7 @@
 #define VMK_H
 
 
-#include "ntfs/guid.h"
+#include "guid.h"
 #include "metadata.h"
 
 

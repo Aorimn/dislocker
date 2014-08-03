@@ -27,9 +27,9 @@
 #include "common.h"
 #include "metadata.h"
 #include "extended_info.h"
+#include "guid.h"
 #include "ntfs/clock.h"
 #include "ntfs/encoding.h"
-#include "ntfs/guid.h"
 
 
 

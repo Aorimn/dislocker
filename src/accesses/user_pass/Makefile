@@ -13,9 +13,10 @@ endif
 CC		=	cc
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 INC		=	-I/usr/include -I../../
+CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
+LHARDEN		=	-pie -fPIE -Wl,-z,relro -Wl,-z,now
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
-LHARDEN		=	-Wl,-z,relro
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS    +=	$(LIB) $(LHARDEN) -lpolarssl
 MAIN_OBJECT	=	
 SOURCES		=	user_pass.c ../stretch_key.c
@@ -39,6 +40,8 @@ DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
 CFLAGS		+=	$(DBGFLAGS)
 endif
 
+
+export
 
 .PHONY : all library $(BIN) clean
 

@@ -1,5 +1,5 @@
 INC		+=	-I../
-CFLAGS		=	$(WFLAGS) $(INC)
+CFLAGS		=	$(WFLAGS) $(INC) $(CHARDEN)
 
 SOURCES		=	guid.c clock.c encoding.c
 OBJECTS		=	$(SOURCES:.c=.o)

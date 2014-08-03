@@ -16,23 +16,25 @@ CC		=	gcc
 DEFINES		=	-D PROGNAME=\"$(PROGNAME)\" -D_FILE_OFFSET_BITS=64
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
+CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
+LHARDEN		=	-pie -fPIE -Wl,-z,relro -Wl,-z,now
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES)
-LHARDEN		=	-Wl,-z,relro
-override LDFLAGS	+=	$(LIB) $(LHARDEN)
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(CHARDEN)
+override LDFLAGS	+=	$(LHARDEN)
 SOURCES		=	main.c
-OBJECTS		=	$(SOURCES:.c=.o) ../../xstd/xstdio.o ../../xstd/xstdlib.o
+OBJECTS		=	main.o
+# OBJECTS		=	$(SOURCES:.c=.o) ../../xstd/xstdio.o ../../xstd/xstdlib.o
 BIN		=	$(PROGNAME)
 
-EXT_OBJ		=	../../common.o
+# EXT_OBJ		=	../../common.o
 
 
 
 # For MacOSX users
 ifeq ($(OS), Darwin)
-LDFLAGS		+=	-losxfuse_i64
+override LDFLAGS		+=	-losxfuse_i64
 else
-LDFLAGS		+=	-lfuse
+override LDFLAGS		+=	-lfuse
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
 endif
@@ -48,6 +50,8 @@ DEFINES		+=	-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26
 endif
 
 
+export
+
 .PHONY : all $(BIN) library clean
 
 .c.o :
@@ -56,7 +60,7 @@ endif
 all : $(BIN)
 
 $(BIN) : $(OBJECTS)
-	@make DEBUG=$(DEBUG) -C ../../ common
+# 	@make DEBUG=$(DEBUG) -C ../../ common
 	$(CC) $(CFLAGS) -o $@ $^ $(EXT_OBJ) $(LDFLAGS)
 
 library : fuse.o

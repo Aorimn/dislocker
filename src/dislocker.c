@@ -85,6 +85,7 @@ int main(int argc, char** argv)
 	
 	void* vmk_datum = NULL;
 	void* fvek_datum = NULL;
+	datum_key_t* fvek_typed_datum = NULL;
 	
 	contexts_t ctx;
 	memset(&ctx, 0, sizeof(ctx));
@@ -349,7 +350,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Just a check of the algo used to crypt data here */
-	datum_key_t* fvek_typed_datum = (datum_key_t*) fvek_datum;
+	fvek_typed_datum = (datum_key_t*) fvek_datum;
 	fvek_typed_datum->algo &= 0xffff;
 	
 	if(fvek_typed_datum->algo < AES_128_DIFFUSER ||
@@ -389,7 +390,7 @@ FIRST_CLEAN:
 		memclean(vmk_datum,
 		        ((datum_generic_type_t*)vmk_datum)->header.datum_size);
 	
-	if(fvek_datum)
+	if(fvek_typed_datum)
 		memclean(fvek_datum, fvek_typed_datum->header.datum_size);
 	
 	/* Goto finnishing to clean everything before returning */

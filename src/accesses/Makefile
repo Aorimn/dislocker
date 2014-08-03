@@ -1,5 +1,5 @@
 INC		+=	-I..
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 
 
 .PHONY : library clean

@@ -19,9 +19,10 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BI
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 INC		=	-I. -I/usr/local/include
+CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
+LHARDEN		=	-pie -fPIE -Wl,-z,relro -Wl,-z,now
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC)
-LHARDEN		=	-Wl,-z,relro
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 SOURCES		=	dislocker.c common.c sectors.c \
 			config.c xstd/xstdio.c xstd/xstdlib.c \
 			outputs/prepare.c

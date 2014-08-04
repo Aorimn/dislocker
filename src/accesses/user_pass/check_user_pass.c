@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "user_pass.h"
 
 
@@ -42,24 +45,17 @@ START_TEST (check_prompt_up)
 		size_t ck_password_len = strlen(ck_password);
 		ssize_t wret = 0;
 		
+		ret = 0;
+		
 		wret = write(new_stdin[1], ck_password, ck_password_len);
 		if(wret != (ssize_t)ck_password_len)
-		{
-			if(wret == -1)
-				ck_abort_msg("write(2) failed [1]: ", strerror(errno));
-			else
-				ck_abort_msg("write(2) failed [1]: %ld bytes written", wret);
-		}
+			ret = errno;
 		
 		wret = write(new_stdin[1], "\n", 1);
 		if(wret != 1)
-		{
-			if(wret == -1)
-				ck_abort_msg("write(2) failed [2]: ", strerror(errno));
-			else
-				ck_abort_msg("write(2) failed [2]: %ld bytes written", wret);
-		}
-		_exit(0);
+			ret = errno;
+		
+		_exit(ret);
 	}
 	
 	/* Tested unit */
@@ -83,6 +79,12 @@ START_TEST (check_prompt_up)
 	
 	close(old_stdin);
 	close(old_stdout);
+	
+	if(wait(&ret) == -1)
+		ck_abort_msg("Waiting for child failed: %s", strerror(errno));
+	
+	if(ret != 0)
+		ck_abort_msg("Child failed: %s", strerror(ret));
 }
 END_TEST
 

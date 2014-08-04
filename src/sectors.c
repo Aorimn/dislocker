@@ -335,6 +335,11 @@ static void* thread_decrypt(void* params)
 			if(offset >= metadata_offset &&
 				offset <= metadata_offset + size)
 			{
+				xprintf(L_DEBUG,
+					"  > Zeroing sector from 0x%" F_OFF_T
+					" (%" F_SIZE_T " bytes)\n",
+					offset, args->sector_size
+				);
 				memset(loop_output, 0, args->sector_size);
 				continue;
 			}
@@ -359,6 +364,11 @@ static void* thread_decrypt(void* params)
 		       (uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
 		{
 			/* Do not decrypt when there's nothing to */
+			xprintf(L_DEBUG,
+				"  > Copying sector from 0x%" F_OFF_T
+				" (%" F_SIZE_T " bytes)\n",
+				offset, args->sector_size
+			);
 			memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else if(version == V_VISTA && sector_offset < 16)
@@ -373,7 +383,14 @@ static void* thread_decrypt(void* params)
 					 loop_output
 				);
 			else
+			{
+				xprintf(L_DEBUG,
+					"  > Copying sector from 0x%" F_OFF_T
+					" (%" F_SIZE_T " bytes)\n",
+					offset, args->sector_size
+				);
 				memcpy(loop_output, loop_input, args->sector_size);
+			}
 		}
 		else
 		{

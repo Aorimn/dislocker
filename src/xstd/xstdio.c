@@ -111,10 +111,8 @@ void xstdio_init(LEVELS v, const char* file)
 			break;
 	}
 	
-	
-	if(verbosity > L_QUIET)
-		xprintf(L_DEBUG, "Verbosity level to %s (%d) into '%s'\n",
-				msg_tab[verbosity], verbosity, file == NULL ? "stdout" : file);
+	xprintf(L_DEBUG, "Verbosity level to %s (%d) into '%s'\n",
+	        msg_tab[verbosity], verbosity, file == NULL ? "stdout" : file);
 }
 
 

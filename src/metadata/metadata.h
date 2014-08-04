@@ -144,14 +144,8 @@ typedef struct _bitlocker_header
 
 
 
-typedef struct _bitlocker_validations_infos
-{
-	uint16_t  size;
-	version_t version;
-	uint32_t  crc32;
-} bitlocker_validations_infos_t; // Size = 8
 /*
- * This structure is followed by a datum of type 5 (DATUM_AES_CCM) or 1
+ * The following structure is followed by a datum of type 5 (DATUM_AES_CCM) or 1
  * (DATUM_KEY). When there's a DATUM_AES_CCM, this is actually the DATUM_KEY
  * encrypted using the VMK.
  * The key contained in the DATUM_KEY structure is the SHA-256 sum of the entire
@@ -159,6 +153,36 @@ typedef struct _bitlocker_validations_infos
  * 
  * Therefore, the size field contains 8 plus the size of the datum.
  */
+typedef struct _bitlocker_validations_infos
+{
+	uint16_t  size;
+	version_t version;
+	uint32_t  crc32;
+} bitlocker_validations_infos_t; // Size = 8
+
+
+
+/**
+ * The following structure is used when the volume GUID is
+ * EOW_INFORMATION_OFFSET_GUID (see guid.c).
+ * It's followed by some kind of payload I don't know about yet (but that
+ * explains header_size vs infos_size)
+ */
+typedef struct _bitlocker_eow_infos
+{
+	uint8_t  signature[8];    // = "FVE-EOW"                                    -- offset 0
+	uint16_t header_size;     // = 0x38                                         -- offset 8
+	uint16_t infos_size;      //                                                -- offset 0xa
+	uint32_t sector_size1;    //                                                -- offset 0xc
+	uint32_t sector_size2;    //                                                -- offset 0x10
+	uint32_t unknown_14;      // FIXME                                          -- offset 0x14
+	uint32_t convlog_size;    //                                                -- offset 0x18
+	uint32_t unknown_1c;      // FIXME                                          -- offset 0x1c
+	uint32_t nb_regions;      //                                                -- offset 0x20
+	uint32_t crc32;           //                                                -- offset 0x24
+	uint64_t disk_offsets[2]; //                                                -- offset 0x28
+} bitlocker_eow_infos_t; // Size = 0x38
+
 
 #pragma pack ()
 

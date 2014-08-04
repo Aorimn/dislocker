@@ -156,6 +156,33 @@ void print_dataset(LEVELS level, bitlocker_dataset_t* dataset)
 
 
 /**
+ * Print a BitLocker EOW information structure into human-readable format
+ * 
+ * @param eow_infos The EOW information structure to print
+ */
+void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos)
+{
+	xprintf(level, "=======================[ BitLocker EOW informations ]========================\n");
+	xprintf(level, "  Signature: '%.8s'\n", eow_infos->signature);
+	xprintf(level, "  Structure size: 0x%1$04x (%1$hu)\n", eow_infos->header_size);
+	xprintf(level, "  On-disk size: 0x%1$04x (%1$hu)\n", eow_infos->infos_size);
+	xprintf(level, "  Sector size (1): 0x%1$04x (%1$hu)\n", eow_infos->sector_size1);
+	xprintf(level, "  Sector size (2): 0x%1$04x (%1$hu)\n", eow_infos->sector_size2);
+	
+	xprintf(level, "  Unknown (0x14): 0x%1$08x (%1$u)\n", eow_infos->unknown_14);
+	
+	xprintf(level, "  Convlog size: 0x%1$08x (%1$u)\n", eow_infos->convlog_size);
+	
+	xprintf(level, "  Unknown (0x1c): 0x%1$08x (%1$u)\n", eow_infos->unknown_1c);
+	
+	xprintf(level, "  Number of regions: %u\n", eow_infos->nb_regions);
+	xprintf(level, "  Crc32: %x\n", eow_infos->crc32);
+	xprintf(level, "  On-disk offsets: %#" F_U64_T "\n", eow_infos->disk_offsets);
+	xprintf(level, "=============================================================================\n");
+}
+
+
+/**
  * Print data of a given metadata
  * 
  * @param metadata The metadata from where data will be printed

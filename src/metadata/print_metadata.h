@@ -32,6 +32,8 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header);
 
 void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header);
 
+void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos);
+
 void print_dataset(LEVELS level, bitlocker_dataset_t* dataset);
 
 void print_data(LEVELS level, void* metadata);

@@ -62,7 +62,7 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 	new.c_lflag &= (tcflag_t)~ECHO;
 	if(tcsetattr(fileno(stream), TCSAFLUSH, &new) != 0)
 		return -1;
-#endif
+#endif /* __CK_DOING_TESTS */
 
 	/* Read the password. */
 	nread = getline(lineptr, &n, stream);
@@ -71,7 +71,7 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 #ifndef __CK_DOING_TESTS
 	/* Restore terminal. */
 	(void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
-#endif
+#endif /* __CK_DOING_TESTS */
 
 	return nread;
 }
@@ -118,7 +118,7 @@ int user_key(const uint8_t *user_password,
 
 	/* We're not taking the '\0\0' end of the UTF-16 string */
 	SHA256((unsigned char *)utf16_password, utf16_length-2, user_hash);
-	SHA256((unsigned char *)user_hash,      32,           user_hash);
+	SHA256((unsigned char *)user_hash,      32,             user_hash);
 
 	/*
 	 * We then pass it to the key stretching manipulation
@@ -152,7 +152,7 @@ int prompt_up(uint8_t** up)
 #ifndef __CK_DOING_TESTS
 	printf("Enter the user password: ");
 	fflush(NULL);
-#endif
+#endif /* __CK_DOING_TESTS */
 
 	*up = NULL;
 

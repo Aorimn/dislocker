@@ -21,11 +21,11 @@ START_TEST (check_prompt_up)
 	uint8_t *up = NULL;
 	int ret = FALSE;
 	
-	/* TODO check syscalls' return values */
-	
 	/* Prepare file descriptors for testing */
-	pipe(new_stdin);
-	pipe(new_stdout);
+	if(pipe(new_stdin) == -1)
+		ck_abort_msg("pipe(2) failed [1]: ", strerror(errno));
+	if(pipe(new_stdout) == -1)
+		ck_abort_msg("pipe(2) failed [2]: ", strerror(errno));
 	
 	old_stdin  = dup(STDIN_FILENO);
 	old_stdout = dup(STDOUT_FILENO);
@@ -33,14 +33,32 @@ START_TEST (check_prompt_up)
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	
-	dup2(new_stdin[0], STDIN_FILENO);
+	dup2(new_stdin[0],  STDIN_FILENO);
 	dup2(new_stdout[1], STDOUT_FILENO);
 	
 	/* Write the password as if it comes from a user input */
 	if(fork() == 0)
 	{
-		write(new_stdin[1], ck_password, strlen(ck_password));
-		write(new_stdin[1], "\n", 1);
+		size_t ck_password_len = strlen(ck_password);
+		ssize_t wret = 0;
+		
+		wret = write(new_stdin[1], ck_password, ck_password_len);
+		if(wret != (ssize_t)ck_password_len)
+		{
+			if(wret == -1)
+				ck_abort_msg("write(2) failed [1]: ", strerror(errno));
+			else
+				ck_abort_msg("write(2) failed [1]: %ld bytes written", wret);
+		}
+		
+		wret = write(new_stdin[1], "\n", 1);
+		if(wret != 1)
+		{
+			if(wret == -1)
+				ck_abort_msg("write(2) failed [2]: ", strerror(errno));
+			else
+				ck_abort_msg("write(2) failed [2]: %ld bytes written", wret);
+		}
 		_exit(0);
 	}
 	
@@ -60,8 +78,8 @@ START_TEST (check_prompt_up)
 	close(new_stdout[0]);
 	close(new_stdout[1]);
 	
-	dup(old_stdin);
-	dup(old_stdout);
+	dup2(old_stdin,  STDIN_FILENO);
+	dup2(old_stdout, STDOUT_FILENO);
 	
 	close(old_stdin);
 	close(old_stdout);
@@ -112,11 +130,18 @@ START_TEST (check_user_key_nullargs)
 {
 	uint8_t *uint8_notnull = malloc(4);
 	
+	
 	ck_assert_int_eq(user_key(NULL, uint8_notnull, uint8_notnull), FALSE);
 	ck_assert_int_eq(user_key(uint8_notnull, NULL, uint8_notnull), FALSE);
 	ck_assert_int_eq(user_key(uint8_notnull, uint8_notnull, NULL), FALSE);
 	
 	free(uint8_notnull);
+}
+END_TEST
+
+START_TEST (check_prompt_up_nullargs)
+{
+	ck_assert_int_eq(prompt_up(NULL), FALSE);
 }
 END_TEST
 
@@ -137,6 +162,7 @@ Suite* user_pass_suite(void)
 	/* Limits tests case */
 	TCase *tc_limits = tcase_create("Limits");
 	tcase_add_test(tc_limits, check_user_key_nullargs);
+	tcase_add_test(tc_limits, check_prompt_up_nullargs);
 	/* TODO add more limits for more code coverage */
 	suite_add_tcase(s, tc_limits);
 	

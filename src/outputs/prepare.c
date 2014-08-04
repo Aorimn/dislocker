@@ -245,10 +245,6 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 		{
 			disk_op_data.xinfo = &datum->xinfo;
 			xprintf(L_DEBUG, "Got extended info\n");
-			
-			/* FIXME Windows 8 writing is not supported right now */
-			disk_op_data.cfg->is_ro |= READ_ONLY;
-			xprintf(L_WARNING, "Volume formated Win8, falling back to read-only.\n");
 		}
 		
 		/* Another area to report as filled with zeroes, new to W8 as well */
@@ -263,6 +259,24 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	{
 		/* Explicitly mark a BitLocker version as unsupported */
 		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", metadata->version);
+		return FALSE;
+	}
+	
+	/*
+	 * Check we can safely run without leaking information or breaking metadata
+	 */
+	extern guid_t INFORMATION_OFFSET_GUID, EOW_INFORMATION_OFFSET_GUID;
+	
+	if(!check_match_guid(volume_header->guid, INFORMATION_OFFSET_GUID))
+	{
+		if(check_match_guid(volume_header->guid, EOW_INFORMATION_OFFSET_GUID))
+		{
+			xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
+			
+			// TODO dump eow metadata
+		}
+		
+		xprintf(L_ERROR, "Unsupported volume GUID.\n");
 		return FALSE;
 	}
 	

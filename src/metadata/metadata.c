@@ -379,10 +379,9 @@ int get_metadata_check_validations(volume_header_t *volume_header, int fd, void 
 			xprintf(L_INFO, "We have a winner (n°%d)!\n", cfg->force_block);
 			break;
 		}
+		else
+			xfree(*metadata);
 	}
-	
-	if(current == 3)
-		xfree(*metadata);
 	
 	return TRUE;
 }

@@ -361,7 +361,6 @@ int get_metadata_check_validations(volume_header_t *volume_header, int fd, void 
 		}
 		
 		/* Check the validity */
-		metadata_crc32 = 0;
 		metadata_crc32 = crc32((unsigned char*)*metadata, metadata_size);
 		
 		/*
@@ -381,6 +380,87 @@ int get_metadata_check_validations(volume_header_t *volume_header, int fd, void 
 		}
 		else
 			xfree(*metadata);
+	}
+	
+	return TRUE;
+}
+
+
+/**
+ * Get the EOW information structure one by one, stop at the first valid
+ * 
+ * @param volume_header The volume header structure already taken
+ * @param fd The opened file descriptor of the volume
+ * @param eow_infos The EOW information resulting of this function
+ * @param cfg Configuration used
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos, dis_config_t* cfg)
+{
+	// Check parameters
+	if(!volume_header || fd < 0 || !eow_infos || !cfg)
+		return FALSE;
+	
+	xprintf(L_DEBUG, "Entering get_eow_check_valid\n");
+	
+	bitlocker_eow_infos_t *eow_infos_hdr = NULL;
+	unsigned char current = 0;
+	unsigned int  eow_infos_size = 0;
+	unsigned int  computed_crc32 = 0;
+	off_t         curr_offset = 0;
+	int           payload_size = 0;
+	
+	while(current < 2)
+	{
+		/* Compute the on-disk offset */
+		curr_offset = (off_t)volume_header->offset_eow_information[current]
+		            + cfg->offset;
+		++current;
+		
+		/* Get the EOW information */
+		if(!get_eow_information(curr_offset, eow_infos, fd))
+		{
+			xprintf(L_ERROR, "Can't get EOW information (n°%d)\n", current);
+			return FALSE;
+		}
+		
+		eow_infos_hdr = (bitlocker_eow_infos_t*) *eow_infos;
+		
+		
+		/* Check some small things */
+		
+		/* Check sizes */
+		if(eow_infos_hdr->infos_size <= eow_infos_hdr->header_size)
+		{
+			xfree(*eow_infos);
+			continue;
+		}
+		
+		/* Check size & number of regions */
+		payload_size = eow_infos_hdr->infos_size - eow_infos_hdr->header_size;
+		if((payload_size & 7)
+			|| eow_infos_hdr->nb_regions != (uint32_t)(payload_size >> 3))
+		{
+			xfree(*eow_infos);
+			continue;
+		}
+		
+		/* Check the crc32 validity */
+		eow_infos_size = eow_infos_hdr->infos_size;
+		computed_crc32 = crc32((unsigned char*)*eow_infos, eow_infos_size);
+		
+		xprintf(L_INFO, "Looking if %#x == %#x for EOW information validation\n",
+		        computed_crc32, eow_infos_hdr->crc32);
+		
+		if(computed_crc32 == eow_infos_hdr->crc32)
+		{
+			xprintf(L_INFO, "We have a winner (n°%d)!\n", current);
+			break;
+		}
+		else
+		{
+			xfree(*eow_infos);
+		}
 	}
 	
 	return TRUE;

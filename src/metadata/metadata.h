@@ -202,6 +202,8 @@ int get_eow_information(off_t source, void** eow_infos, int fd);
 
 int get_metadata_check_validations(volume_header_t* volume_header, int fd, void** metadata, dis_config_t* cfg);
 
+int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos, dis_config_t* cfg);
+
 int check_state(bitlocker_header_t* metadata);
 
 

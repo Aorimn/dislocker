@@ -69,7 +69,7 @@ int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
  */
 int get_metadata(off_t source, void **metadata, int fd)
 {
-	if(!source || fd <= 0)
+	if(!source || fd <= 0 || !metadata)
 		return FALSE;
 	
 	// Go to the beginning of the BitLocker header
@@ -112,7 +112,7 @@ int get_metadata(off_t source, void **metadata, int fd)
 	
 	*metadata = xmalloc(size);
 	
-	// Copy the header at thebeginning of the metadata
+	// Copy the header at the begining of the metadata
 	memcpy(*metadata, &bl_header, sizeof(bitlocker_header_t));
 	
 	xprintf(L_INFO, "Reading data...\n");
@@ -124,7 +124,7 @@ int get_metadata(off_t source, void **metadata, int fd)
 	if((size_t) nb_read != rest_size)
 	{
 		xprintf(L_ERROR, "get_metadata::Error, not all bytes read: %d, %d"
-				" expected (2).\n");
+				" expected (2).\n", nb_read, rest_size);
 		return FALSE;
 	}
 	

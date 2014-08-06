@@ -163,6 +163,78 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 
 
 /**
+ * This function reads the EOW information in two phases: first the header, then
+ * the payload.
+ * 
+ * @param source The beginning address of the EOW information
+ * @param eow_infos One of the EOW information, beginning at source
+ * @param fd A file descriptor to the volume
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_eow_information(off_t source, void** eow_infos, int fd)
+{
+	if(!source || fd <= 0 || !eow_infos)
+		return FALSE;
+	
+	/* Go to the beginning of the EOW Information header */
+	xlseek(fd, source, SEEK_SET);
+	
+	xprintf(L_DEBUG, "Reading EOW Information header at %#" F_OFF_T "...\n",
+	        source);
+	
+	bitlocker_eow_infos_t eow_infos_hdr;
+	
+	/*
+	 * Read and place data into the bitlocker_eow_infos_t structure,
+	 * this is the EOW information header
+	 */
+	ssize_t nb_read = xread(fd, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
+	
+	// Check if we read all we wanted
+	if(nb_read != sizeof(bitlocker_eow_infos_t))
+	{
+		xprintf(L_ERROR, "get_eow_information::Error, not all bytes read: %d,"
+		        " %d expected (1).\n", nb_read, sizeof(bitlocker_eow_infos_t));
+		return FALSE;
+	}
+	
+	size_t size = eow_infos_hdr.infos_size;
+	
+	if(size <= sizeof(bitlocker_eow_infos_t))
+	{
+		xprintf(L_ERROR, "get_eow_information::Error, EOW information size is"
+		        " lesser than the size of the header\n");
+		return FALSE;
+	}
+	
+	size_t rest_size = size - sizeof(bitlocker_header_t);
+	
+	*eow_infos = xmalloc(size);
+	
+	// Copy the header at the begining of the EOW information
+	memcpy(*eow_infos, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
+	
+	xprintf(L_INFO, "Reading EOW information's payload...\n");
+	
+	// Read the rest, the payload
+	nb_read = xread(fd, *eow_infos + sizeof(bitlocker_eow_infos_t), rest_size);
+	
+	// Check if we read all we wanted
+	if((size_t) nb_read != rest_size)
+	{
+		xprintf(L_ERROR, "get_eow_information::Error, not all bytes read: %d, "
+		        "%d expected (2).\n", nb_read, rest_size);
+		return FALSE;
+	}
+	
+	xprintf(L_INFO, "End get_eow_information.\n");
+	
+	
+	return TRUE;
+}
+
+
+/**
  * This function compute the real offsets when the metadata_lcn doesn't equal 0
  * This is because of Vista which compute offsets differently than Seven
  * 

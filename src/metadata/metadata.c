@@ -36,7 +36,7 @@
  */
 int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
 {
-	if(!volume_header)
+	if(!volume_header || fd < 0)
 		return FALSE;
 	
 	// Go to the beginning
@@ -69,7 +69,7 @@ int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
  */
 int get_metadata(off_t source, void **metadata, int fd)
 {
-	if(!source || fd <= 0 || !metadata)
+	if(!source || fd < 0 || !metadata)
 		return FALSE;
 	
 	// Go to the beginning of the BitLocker header
@@ -173,7 +173,7 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
  */
 int get_eow_information(off_t source, void** eow_infos, int fd)
 {
-	if(!source || fd <= 0 || !eow_infos)
+	if(!source || fd < 0 || !eow_infos)
 		return FALSE;
 	
 	/* Go to the beginning of the EOW Information header */
@@ -246,7 +246,7 @@ int get_eow_information(off_t source, void** eow_infos, int fd)
 static int compute_real_offsets(volume_header_t* vh, int fd, off_t offset)
 {
 	// Check parameters
-	if(!vh)
+	if(!vh || fd < 0)
 		return FALSE;
 	
 	/* This is when the volume has been encrypted with W$ 7 or 8 */
@@ -290,7 +290,7 @@ static int compute_real_offsets(volume_header_t* vh, int fd, off_t offset)
 int get_metadata_check_validations(volume_header_t *volume_header, int fd, void **metadata, dis_config_t* cfg)
 {
 	// Check parameters
-	if(!volume_header || fd < 0 || !cfg)
+	if(!volume_header || fd < 0 || !metadata || !cfg)
 		return FALSE;
 	
 	xprintf(L_DEBUG, "Entering get_metadata_check_validations\n");

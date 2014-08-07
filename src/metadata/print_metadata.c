@@ -84,8 +84,8 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header)
  */
 const char* get_bl_state(state_t state)
 {
-	if(state >= sizeof(states_str))
-		return states_str[sizeof(states_str) - 1];
+	if(state >= sizeof(states_str) / sizeof(char*))
+		return states_str[sizeof(states_str) / sizeof(char*) - 1];
 	
 	return states_str[state];
 }

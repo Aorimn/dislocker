@@ -54,6 +54,8 @@ FILE_ROOT	=	outputs/file/file
 ifneq ($(OS), Darwin)
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
+else
+WFLAGS		+=	 -Qunused-arguments
 endif
 
 ifeq ($(OS), FreeBSD)

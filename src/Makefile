@@ -20,7 +20,7 @@ DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 INC		=	-I. -I/usr/local/include
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
-LHARDEN		=	-pie -fPIE -Wl,-z,relro -Wl,-z,now
+LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 SOURCES		=	dislocker.c common.c sectors.c \
@@ -54,6 +54,8 @@ FILE_ROOT	=	outputs/file/file
 ifneq ($(OS), Darwin)
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
+# FIXME wtf with ld on OSX?
+LHARDEN		+=	-Wl,-z,relro -Wl,-z,now
 else
 WFLAGS		+=	 -Qunused-arguments
 endif

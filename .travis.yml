@@ -4,13 +4,13 @@ compiler:
     - clang
     - gcc
 
-before_script:
-    - sudo apt-get update
+install:
+    - sudo apt-get update -qq
     - sudo apt-get install -qq libfuse-dev libpolarssl-dev
 
 script: cd src && make
 
-after_script: ./dislocker --help
+after_script: ./src/dislocker --help
 
 notifications:
     email:

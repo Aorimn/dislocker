@@ -23,20 +23,23 @@ CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-SOURCES		=	dislocker.c common.c sectors.c \
-			config.c xstd/xstdio.c xstd/xstdlib.c \
+override LDFLAGS	+=	$(LIB) $(LHARDEN) -lpthread -lpolarssl
+
+SOURCES		=	dislocker.c common.c config.c sectors.c \
+			xstd/xstdio.c xstd/xstdlib.c \
+			metadata/datums.c metadata/metadata.c metadata/vmk.c \
+			metadata/fvek.c metadata/extended_info.c \
+			metadata/guid.c metadata/print_metadata.c \
+			accesses/rp/recovery_password.c accesses/stretch_key.c \
+			accesses/user_pass/user_pass.c \
+			accesses/bek/read_bekfile.c \
+			encryption/decrypt.c encryption/encrypt.c \
+			encryption/diffuser.c encryption/crc32.c \
+			ntfs/clock.c ntfs/encoding.c \
 			outputs/prepare.c
 OBJECTS		=	$(SOURCES:.c=.o)
-override LDFLAGS	+=	$(LIB) $(LHARDEN) -lpthread -lpolarssl
-BIN		=	$(PROGNAME)
 
-EXT_OBJ		=	metadata/datums.o metadata/metadata.o metadata/print_metadata.o \
-			metadata/vmk.o metadata/fvek.o metadata/extended_info.o \
-			metadata/guid.o \
-			accesses/rp/recovery_password.o accesses/bek/read_bekfile.o \
-			accesses/user_pass/user_pass.o accesses/stretch_key.o \
-			encryption/decrypt.o encryption/encrypt.o encryption/diffuser.o encryption/crc32.o \
-			ntfs/clock.o ntfs/encoding.o
+BIN		=	$(PROGNAME)
 
 
 INSTALL_PATH	=	$(DESTDIR)/usr/bin/
@@ -45,8 +48,8 @@ MAN_NUMBER	=	1
 MAN_PATH	=	$(DESTDIR)/usr/share/man/man$(MAN_NUMBER)/
 MAN_ROOT	=	../man/
 
-FUSE_ROOT	=	outputs/fuse/fuse
-FILE_ROOT	=	outputs/file/file
+FUSE_ROOT	:=	outputs/fuse/fuse
+FILE_ROOT	:=	outputs/file/file
 
 
 
@@ -83,22 +86,18 @@ export
 all : fuse
 
 libs: $(OBJECTS)
-	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C accesses/   library
-	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C metadata/   library
-	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C ntfs/       library
-	@$(MAKE) DEBUG=$(DEBUG) PROGNAME=$(PROGNAME) -C encryption/ library
-
+	@# Nothing to do here
 
 # Default rules for final binaries
 touch :
 	touch $(BIN).c
 
 $(BIN) : touch libs
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(EXT_OBJ) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LDFLAGS)
 
 
 static : touch libs
-	$(CC) -static  $(CFLAGS) -o $(BIN)-static $(OBJECTS) $(EXT_OBJ) $(LDFLAGS) -lz -ldl
+	$(CC) -static  $(CFLAGS) -o $(BIN)-static $(OBJECTS) $(LDFLAGS) -lz -ldl
 
 
 # Build the binary for the file output
@@ -154,7 +153,7 @@ uninstall: clean
 
 
 clean:
-	rm -rf -- $(EXT_OBJ) $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BIN)
+	rm -rf -- $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BIN)
 
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)

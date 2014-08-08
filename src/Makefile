@@ -56,12 +56,14 @@ ifneq ($(OS), Darwin)
 WFLAGS		+=	-Wconversion
 # FIXME wtf with ld on OSX?
 LHARDEN		+=	-Wl,-z,relro -Wl,-z,now
-else
-WFLAGS		+=	 -Qunused-arguments
 endif
 
 ifeq ($(OS), FreeBSD)
 LIB		+=	-L/usr/local/lib
+endif
+
+ifeq ($(CC), clang)
+WFLAGS		+=	 -Qunused-arguments
 endif
 
 ifdef DEBUG

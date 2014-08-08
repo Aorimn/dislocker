@@ -127,7 +127,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
  * @param cfg Invoked configuration
  * @param volume_header First-sector data
  * @param offset Where the real volume begins
- * @param fd The volume's file descriptor
+ * @param fd_volume The volume's file descriptor
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
@@ -265,17 +265,10 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	/*
 	 * Check we can safely run without leaking information or breaking metadata
 	 */
-	extern guid_t INFORMATION_OFFSET_GUID, EOW_INFORMATION_OFFSET_GUID;
+	extern guid_t INFORMATION_OFFSET_GUID;
 	
 	if(!check_match_guid(volume_header->guid, INFORMATION_OFFSET_GUID))
 	{
-		if(check_match_guid(volume_header->guid, EOW_INFORMATION_OFFSET_GUID))
-		{
-			xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
-			
-			// TODO dump eow metadata
-		}
-		
 		xprintf(L_ERROR, "Unsupported volume GUID.\n");
 		return FALSE;
 	}

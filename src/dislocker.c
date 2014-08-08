@@ -398,6 +398,48 @@ FIRST_CLEAN:
 		goto LAST_CLEAN;
 	
 	
+	/* Check if we're running under EOW mode */
+	extern guid_t EOW_INFORMATION_OFFSET_GUID;
+	
+	if(check_match_guid(volume_header.guid, EOW_INFORMATION_OFFSET_GUID))
+	{
+		xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
+		
+		// First: get the EOW informations no matter what
+		off_t source = (off_t)volume_header.offset_eow_information[0];
+		void* eow_infos = NULL;
+		
+		if(get_eow_information(source, &eow_infos, fd_volume))
+		{
+			// Second: print them
+			print_eow_infos(L_DEBUG, (bitlocker_eow_infos_t*)eow_infos);
+			
+			xfree(eow_infos);
+			
+			// Thid: check if this struct passes checks
+			if(get_eow_check_valid(&volume_header, fd_volume, &eow_infos, &cfg))
+			{
+				xprintf(L_INFO,
+				        "EOW information at offset % " F_OFF_T
+				        " passed the tests\n", source);
+				xfree(eow_infos);
+			}
+			else
+			{
+				xprintf(L_ERROR,
+				        "EOW information at offset % " F_OFF_T
+				        " failed to pass the tests\n", source);
+			}
+		}
+		else
+		{
+			xprintf(L_ERROR,
+			        "Getting EOW information at offset % " F_OFF_T
+			        " failed\n", source);
+		}
+	}
+	
+	
 	/*
 	 * Fill the data_t structure which will be used for decryption afterward
 	 */

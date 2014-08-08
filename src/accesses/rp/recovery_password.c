@@ -233,20 +233,38 @@ int prompt_rp(uint8_t** rp)
 	int block_nb = 1;
 	uint8_t digits[NB_DIGIT_BLOC + 1] = {0,};
 
+	uint8_t* blah = NULL;
+
+	fd_set rfds;
+	int    nfds = in + 1;
+	
+	if(in < 0)
+	{
+		fprintf(stderr, "Cannot open tty.\n");
+		return FALSE;
+	}
+	
+	if(in >= FD_SETSIZE)
+	{
+		fprintf(stderr,
+		        "Terminal file descriptor (%d) is equal to or larger than "
+		        "FD_SETSIZE (%d).\n", in, FD_SETSIZE);
+		close_input_fd();
+		return FALSE;
+	}
+	
+	
 	/* 8 = 7 hyphens separating the blocks + 1 '\0' at the end of the string */
 	*rp = malloc(NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
 	memset(*rp, 0, NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
 
-	uint8_t* blah = *rp;
+	blah = *rp;
 
 	printf("%s", prompt);
 	fflush(NULL);
 
-	fd_set rfds;
-	int    nfds = in + 1;
-
 	FD_ZERO(&rfds);
-	FD_SET(in, &rfds);
+	FD_SET((unsigned) in, &rfds);
 
 	while(1)
 	{

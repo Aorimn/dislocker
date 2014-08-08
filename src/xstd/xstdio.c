@@ -129,13 +129,13 @@ int get_input_fd()
 	struct termios ti;
 	
 	if ((tty_fd = open("/dev/tty", O_RDONLY | O_NONBLOCK)) < 0)
-		return -1;                                             
+		return -1;
 	
 	tcgetattr(tty_fd, &ti);
 	ti_save = ti;
 	ti.c_lflag    &= (typeof(tcflag_t)) ~(ICANON | ECHO);
 	ti.c_cc[VMIN]  = 1;
-	ti.c_cc[VTIME] = 0;                                        
+	ti.c_cc[VTIME] = 0;
 	tcsetattr(tty_fd, TCSANOW, &ti);
 	
 	return tty_fd;

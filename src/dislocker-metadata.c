@@ -33,8 +33,8 @@
 
 #include "common.h"
 #include "config.h"
-#include "print_metadata.h"
-#include "metadata.h"
+#include "metadata/print_metadata.h"
+#include "metadata/metadata.h"
 
 
 void usage()

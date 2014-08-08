@@ -10,7 +10,7 @@ install:
 
 script: cd src && make
 
-after_script: ./src/dislocker --help
+after_script: LD_LIBRARY_PATH=`pwd`/src/ ./src/dislocker --help
 
 notifications:
     email:

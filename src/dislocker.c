@@ -57,7 +57,7 @@
 
 
 /** Data used globally for operation on disk (encryption/decryption) */
-data_t disk_op_data;
+extern data_t disk_op_data;
 
 
 

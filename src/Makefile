@@ -19,13 +19,18 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BI
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 INC		=	-I. -I/usr/local/include
+LIB		=	-lpthread -lpolarssl -l$(PROGNAME) -L.
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-override LDFLAGS	+=	$(LIB) $(LHARDEN) -lpthread -lpolarssl
+override LDFLAGS	+=	$(LIB) $(LHARDEN)
+LIBNAME		=	lib$(PROGNAME).so
 
-SOURCES		=	dislocker.c common.c config.c sectors.c \
+BINS		=	dislocker dislocker-metadata dislocker-bek
+BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
+
+SOURCES		=	common.c config.c sectors.c \
 			xstd/xstdio.c xstd/xstdlib.c \
 			metadata/datums.c metadata/metadata.c metadata/vmk.c \
 			metadata/fvek.c metadata/extended_info.c \
@@ -42,7 +47,12 @@ OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)
 
 
-INSTALL_PATH	=	$(DESTDIR)/usr/bin/
+BINARIES_PATH	=	$(DESTDIR)/usr/bin/
+ifeq ($(ARCH), x86_64)
+LIBRARY_PATH	=	$(DESTDIR)/usr/lib64/
+else
+LIBRARY_PATH	=	$(DESTDIR)/usr/lib/
+endif
 
 MAN_NUMBER	=	1
 MAN_PATH	=	$(DESTDIR)/usr/share/man/man$(MAN_NUMBER)/
@@ -86,14 +96,16 @@ export
 all : fuse
 
 libs: $(OBJECTS)
-	@# Nothing to do here
+	$(CC) -shared $(CFLAGS) -o $(LIBNAME) $(OBJECTS)
 
 # Default rules for final binaries
 touch :
 	touch $(BIN).c
 
-$(BIN) : touch libs
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LDFLAGS)
+$(BIN) : touch libs $(BINS_OBJECTS)
+	for prog in $(BINS); do \
+		$(CC) $(CFLAGS) -o $${prog} $${prog}.o $(LDFLAGS); \
+	done
 
 
 static : touch libs
@@ -125,15 +137,12 @@ fuse: $(BIN)
 
 
 # Check if the installed binary is present, make it if it isn't
-check-install :
+check-install:
 	@[ -e $(BIN) ] && echo "Found $(BIN) binary, installing it" || make clean fuse
 
-# Classic rules
-common : common.o xstd/xstdio.o xstd/xstdlib.o metadata/datums.o metadata/print_metadata.o metadata/extended_info.o
-	@$(MAKE) -C ntfs/
-
 install: check-install
-	install -pm755 $(BIN) $(INSTALL_PATH)$(BIN)
+	install -pm755 $(BINS) $(BINARIES_PATH)
+	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
 	if [ "$(OS)" = "Darwin" ]; then                                       \
 		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
 	else                                                                  \
@@ -142,18 +151,21 @@ install: check-install
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
 	@echo "==========================================================="
-	@echo "'$(BIN)' installed into" $(INSTALL_PATH)
+	@echo "'$(BIN)' installed into" $(BINARIES_PATH)
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
 uninstall: clean
-	[ -f $(INSTALL_PATH)$(BIN) ]              && rm $(INSTALL_PATH)$(BIN)
+	for prog in $(BINS); do \
+		[ -f $(BINARIES_PATH)$${prog} ]   && rm $(BINARIES_PATH)$${prog}; \
+	done
+	[ -f $(LIBRARY_PATH)$(LIBNAME) ]          && rm $(LIBRARY_PATH)$(LIBNAME)
 	[ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 
 
 clean:
-	rm -rf -- $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BIN)
+	rm -rf -- $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME)
 
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)

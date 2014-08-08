@@ -29,7 +29,7 @@
 #include "common.h"
 #include "metadata/print_metadata.h"
 #include "metadata/metadata.h"
-#include "read_bekfile.h"
+#include "accesses/bek/read_bekfile.h"
 
 
 void usage(char* prog) 

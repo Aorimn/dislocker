@@ -162,6 +162,16 @@ uninstall: clean
 clean:
 	rm -rf -- $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME)
 
+travis-install:
+	if [ "$$TRAVIS_OS_NAME" = "linux" ]; then                     \
+		sudo apt-get update -qq;                              \
+		sudo apt-get install -qq libfuse-dev libpolarssl-dev; \
+	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
+		cd src/;                                              \
+		brew install dislocker.rb;                            \
+		cd ../;                                                \
+	fi
+
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)
 

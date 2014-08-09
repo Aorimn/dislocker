@@ -4,9 +4,12 @@ compiler:
     - clang
     - gcc
 
+os:
+    - linux
+    - osx
+
 install:
-    - sudo apt-get update -qq
-    - sudo apt-get install -qq libfuse-dev libpolarssl-dev
+    - make travis-install
 
 before_script:
     - cd src

@@ -24,7 +24,7 @@ CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-override LDFLAGS	+=	$(LIB) $(LHARDEN)
+override LDFLAGS +=	$(LIB) $(LHARDEN)
 LIBNAME		=	lib$(PROGNAME).so
 
 BINS		=	dislocker dislocker-metadata dislocker-bek

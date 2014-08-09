@@ -8,11 +8,11 @@ os:
     - linux
     - osx
 
+before_install:
+    - cd src
+
 install:
     - make travis-install
-
-before_script:
-    - cd src
 
 script:
     - make CC=$CC

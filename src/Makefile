@@ -167,9 +167,7 @@ travis-install:
 		sudo apt-get update -qq;                              \
 		sudo apt-get install -qq libfuse-dev libpolarssl-dev; \
 	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
-		cd src/;                                              \
 		brew install dislocker.rb;                            \
-		cd ../;                                                \
 	fi
 
 valgrind: clean $(BIN)

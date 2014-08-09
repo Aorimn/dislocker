@@ -8,7 +8,13 @@ install:
     - sudo apt-get update -qq
     - sudo apt-get install -qq libfuse-dev libpolarssl-dev
 
-script: cd src && make CC=$CC && LD_LIBRARY_PATH=`pwd` ./dislocker --help
+before_script:
+    - cd src
+
+script:
+    - make CC=$CC
+    - make install
+    - dislocker --help
 
 notifications:
     email:

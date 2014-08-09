@@ -15,8 +15,6 @@ install:
     - make travis-install
 
 script:
-    - make CC=$CC
-    - sudo make install
     - dislocker --help
 
 notifications:

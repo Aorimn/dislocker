@@ -57,6 +57,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
+	int ret = EXIT_SUCCESS;
+	
 	int optchar = 0;
 	char *volume_path = NULL;
 	
@@ -114,7 +116,11 @@ int main(int argc, char **argv)
 	
 	// Getting volume infos
 	if(!get_volume_header(&volume_header, fd, cfg.offset))
+	{
 		xprintf(L_ERROR, "Error during reading the volume: not enough byte read.\n");
+		ret = EXIT_FAILURE;
+		goto error;
+	}
 	
 	// Printing them
 	print_volume_header(L_INFO, &volume_header);
@@ -127,20 +133,23 @@ int main(int argc, char **argv)
 		        "The signature of the volume (%.8s) doesn't match the "
 				"BitLocker's one (-FVE-FS-). Abort.\n",
 				volume_header.signature);
-		exit(EXIT_FAILURE);
+		ret = EXIT_FAILURE;
+		goto error;
 	}
 	
 	// Getting BitLocker metadata and validate them
 	if(!get_metadata_check_validations(&volume_header, fd, &bl_metadata, &cfg))
 	{
 		xprintf(L_CRITICAL, "A problem occured during the retrieving of metadata. Abort.\n");
-		exit(EXIT_FAILURE);
+		ret = EXIT_FAILURE;
+		goto error;
 	}
 	
 	if(cfg.force_block == 0 || !bl_metadata)
 	{
 		xprintf(L_CRITICAL, "Can't find a valid set of metadata on the disk. Abort.\n");
-		exit(EXIT_FAILURE);
+		ret = EXIT_FAILURE;
+		goto error;
 	}
 	
 	// Printing BitLocker metadata
@@ -156,7 +165,8 @@ int main(int argc, char **argv)
 	if(!get_dataset(bl_metadata, &dataset))
 	{
 		xprintf(L_CRITICAL, "Can't find a valid dataset. Abort.\n");
-		exit(EXIT_FAILURE);
+		ret = EXIT_FAILURE;
+		goto error;
 	}
 	
 	// Search for a clear key
@@ -170,7 +180,7 @@ int main(int argc, char **argv)
 		xprintf(L_INFO, "No clear key found.\n");
 	
 	
-	
+error:
 	// Do some cleaning stuff
 	if(volume_path)
 		xfree(volume_path);
@@ -181,5 +191,5 @@ int main(int argc, char **argv)
 	xclose(fd);
 	xstdio_end();
 	
-	return EXIT_SUCCESS;
+	return ret;
 }

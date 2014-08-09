@@ -13,7 +13,7 @@ before_script:
 
 script:
     - make CC=$CC
-    - make install
+    - sudo make install
     - dislocker --help
 
 notifications:

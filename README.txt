@@ -43,16 +43,7 @@ Feel free to send comments and feedbacks to <dislocker __AT__ hsc __DOT__ fr>.
 NOTE
 `----
 
-In many directories included into the sources, there's a Makefile with rules to
-build a standalone binary. To build these standalone binaries, cd to the
-directory and type `make`, thus creating a binary which you can use to do some
-process separately.
-
-Binary capable directories:
-- accesses/bek/: read a .bek file and display information about it;
-- accesses/rp/: calculate the intermediate key for a given recovery password;
-- encryption/: test encryption/decryption on a test case;
-- metadata/: read a BitLocker volume and display information about its metadata;
-- outputs/fuse/: FUSE's hello world example.
-
+Two more binaries are build when compiling dislocker:
+- One for disecting a .bek file and printing information about it;
+- The other one for printing information about a BitLocker-encrypted volume.
 

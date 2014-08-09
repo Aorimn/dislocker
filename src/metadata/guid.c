@@ -46,7 +46,7 @@ const guid_t EOW_INFORMATION_OFFSET_GUID = {
  * Get raw GUID data and format it in a formated GUID
  * 
  * @param raw_guid GUID directly extracted
- * @param formated_guid A GUID ready to be printed
+ * @param formated_guid (out) A GUID ready to be printed (needs 37 bytes)
  */
 void format_guid(uint8_t *raw_guid, char* formated_guid)
 {

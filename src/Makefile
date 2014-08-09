@@ -48,11 +48,7 @@ BIN		=	$(PROGNAME)
 
 
 BINARIES_PATH	=	$(DESTDIR)/usr/bin/
-ifeq ($(ARCH), x86_64)
-LIBRARY_PATH	=	$(DESTDIR)/usr/lib64/
-else
 LIBRARY_PATH	=	$(DESTDIR)/usr/lib/
-endif
 
 MAN_NUMBER	=	1
 MAN_PATH	=	$(DESTDIR)/usr/share/man/man$(MAN_NUMBER)/

@@ -14,7 +14,7 @@ class Dislocker < Formula
   depends_on "osxfuse"
 
   def install
-    system "make fuse"
-    system "make install INSTALL_PATH=#{prefix}/ MAN_PATH=#{prefix}/"
+    system "make -C src fuse"
+    system "make -C src install INSTALL_PATH=#{prefix}/ MAN_PATH=#{prefix}/"
   end
 end

@@ -29,13 +29,12 @@
 #include "common.h"
 #include "metadata/print_metadata.h"
 #include "metadata/metadata.h"
-#include "accesses/bek/read_bekfile.h"
+#include "accesses/bek/bekfile.h"
 
 
-void usage(char* prog) 
+void usage(char* prog)
 {
 	fprintf(stderr, "usage: %s [-h] [-f file.bek]\n", prog);
-	exit(1);
 }
 
 
@@ -54,7 +53,7 @@ int main (int argc, char **argv)
 		{
 			case 'h':
 				usage(argv[0]);
-				break;
+				return EXIT_SUCCESS;
 			case 'f':
 				filename = optarg;
 				break;
@@ -66,6 +65,7 @@ int main (int argc, char **argv)
 				return EXIT_FAILURE;
 			default:
 				usage(argv[0]);
+				return EXIT_FAILURE;
 		}
 	
 	xstdio_init(L_INFO, NULL);

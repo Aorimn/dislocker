@@ -27,12 +27,16 @@
 #include "common.h"
 #include "../stretch_key.h"
 #include "ntfs/encoding.h"
+#include "metadata/metadata.h"
 
 
 
 /*
  * Prototypes
  */
+
+int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
+
 int user_key(const uint8_t *user_password, const uint8_t *salt, uint8_t *result_key);
 
 int prompt_up(uint8_t** up);

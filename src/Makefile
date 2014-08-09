@@ -36,8 +36,7 @@ SOURCES		=	common.c config.c sectors.c \
 			metadata/fvek.c metadata/extended_info.c \
 			metadata/guid.c metadata/print_metadata.c \
 			accesses/rp/recovery_password.c accesses/stretch_key.c \
-			accesses/user_pass/user_pass.c \
-			accesses/bek/read_bekfile.c \
+			accesses/user_pass/user_pass.c accesses/bek/bekfile.c \
 			encryption/decrypt.c encryption/encrypt.c \
 			encryption/diffuser.c encryption/crc32.c \
 			ntfs/clock.c ntfs/encoding.c \

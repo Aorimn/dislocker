@@ -27,11 +27,15 @@
 #include "metadata/guid.h"
 #include "metadata/datums.h"
 #include "metadata/extended_info.h"
+#include "metadata/metadata.h"
 
 
 /*
  * Prototypes
  */
+
+int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
+
 int get_bek_dataset(int fd, void** bek_dataset);
 
 

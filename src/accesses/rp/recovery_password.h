@@ -26,6 +26,7 @@
 
 #include "common.h"
 #include "../stretch_key.h"
+#include "metadata/metadata.h"
 
 // Specifications of the recovery password
 #define NB_RP_BLOCS   8
@@ -37,6 +38,8 @@
 /*
  * Prototypes
  */
+
+int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
 
 int is_valid_key(const uint8_t *recovery_password, uint16_t *short_password);
 

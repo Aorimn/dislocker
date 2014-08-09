@@ -25,6 +25,9 @@
 
 #define _GNU_SOURCE
 
+#include "accesses/bek/bekfile.h"
+#include "accesses/rp/recovery_password.h"
+#include "accesses/user_pass/user_pass.h"
 
 #include "encommon.h"
 #include "metadata/datums.h"

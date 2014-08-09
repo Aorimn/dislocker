@@ -24,6 +24,7 @@
 #define VMK_H
 
 
+#include "datums.h"
 #include "guid.h"
 #include "metadata.h"
 
@@ -34,17 +35,12 @@
  */
 int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum);
 
-int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
-
-int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
-
-int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
-
 int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum);
 
 int get_vmk_datum_from_range(void* dataset, uint16_t min_range, uint16_t max_range, void** vmk_datum);
 
-
+int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
+            size_t key_size, datum_key_t** vmk);
 
 
 #endif /* VMK_H */

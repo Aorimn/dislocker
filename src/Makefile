@@ -46,11 +46,13 @@ OBJECTS		=	$(SOURCES:.c=.o)
 BIN		=	$(PROGNAME)
 
 
-BINARIES_PATH	=	$(DESTDIR)/usr/bin/
-LIBRARY_PATH	=	$(DESTDIR)/usr/lib/
+DESTDIR		=	/usr
+
+BINARIES_PATH	=	$(DESTDIR)/bin/
+LIBRARY_PATH	=	$(DESTDIR)/lib/
 
 MAN_NUMBER	=	1
-MAN_PATH	=	$(DESTDIR)/usr/share/man/man$(MAN_NUMBER)/
+MAN_PATH	=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
 MAN_ROOT	=	../man/
 
 FUSE_ROOT	:=	outputs/fuse/fuse

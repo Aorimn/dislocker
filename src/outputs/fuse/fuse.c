@@ -38,7 +38,7 @@
 
 
 /** Data used globally for operation on disk (encryption/decryption) */
-extern data_t disk_op_data;
+extern dis_iodata_t disk_op_data;
 
 
 static int fs_getattr(const char *path, struct stat *stbuf)

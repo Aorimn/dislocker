@@ -39,7 +39,7 @@
 
 
 /** Data used globally for operation on disk (encryption/decryption) */
-extern data_t disk_op_data;
+extern dis_iodata_t disk_op_data;
 
 
 int file_main(char* ntfs_file)

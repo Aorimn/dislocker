@@ -60,7 +60,7 @@
 
 
 /** Data used globally for operation on disk (encryption/decryption) */
-extern data_t disk_op_data;
+extern dis_iodata_t disk_op_data;
 
 
 
@@ -444,7 +444,8 @@ FIRST_CLEAN:
 	
 	
 	/*
-	 * Fill the data_t structure which will be used for decryption afterward
+	 * Fill the dis_iodata_t structure which will be used for encryption &
+	 * decryption afterward
 	 */
 	if(!prepare_crypt((bitlocker_header_t*) bl_metadata, &ctx, &cfg,
 	                  &volume_header, cfg.offset, fd_volume))

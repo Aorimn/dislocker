@@ -100,7 +100,7 @@ typedef struct _data {
 	
 	/* FUSE uses threads. We need to protect our "lseek/read" and "lseek/write" sequences */
 	pthread_mutex_t     mutex_lseek_rw;
-} data_t;
+} dis_iodata_t;
 
 
 

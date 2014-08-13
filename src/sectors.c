@@ -32,17 +32,17 @@
 
 
 /** Data used globally for operation on disk (encryption/decryption) */
-data_t disk_op_data;
+dis_iodata_t disk_op_data;
 
 
 /** Prototype of functions used internally */
 static void* thread_decrypt(void* args);
 static void* thread_encrypt(void* args);
-static void fix_read_sector_seven(data_t* disk_op_data,
+static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
                                   off_t sector_address, uint8_t *output);
-static void fix_read_sector_vista(data_t* disk_op_data, uint8_t* input,
+static void fix_read_sector_vista(dis_iodata_t* disk_op_data, uint8_t* input,
                                   uint8_t *output);
-static void fix_write_sector_vista(data_t* disk_op_data, uint8_t* input,
+static void fix_write_sector_vista(dis_iodata_t* disk_op_data, uint8_t* input,
                                    uint8_t *output);
 
 
@@ -502,7 +502,7 @@ static void* thread_encrypt(void* params)
  * @param sector_address Address of the sector to decrypt
  * @param output The buffer where to put fixed data
  */
-static void fix_read_sector_seven(data_t* disk_op_data,
+static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
                                   off_t sector_address, uint8_t *output)
 { 
 	// Check parameter
@@ -594,7 +594,7 @@ static void fix_read_sector_seven(data_t* disk_op_data,
  * @param input The sector which needs a fix
  * @param output The buffer where to put fixed data
  */
-static void fix_read_sector_vista(data_t* disk_op_data,
+static void fix_read_sector_vista(dis_iodata_t* disk_op_data,
                                   uint8_t* input, uint8_t *output)
 { 
 	// Check parameter
@@ -629,7 +629,7 @@ static void fix_read_sector_vista(data_t* disk_op_data,
  * @param input The sector which needs a fix
  * @param output The buffer where to put fixed data
  */
-static void fix_write_sector_vista(data_t* disk_op_data,
+static void fix_write_sector_vista(dis_iodata_t* disk_op_data,
                                    uint8_t* input, uint8_t *output)
 { 
 	// Check parameter

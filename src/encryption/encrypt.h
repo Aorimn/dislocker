@@ -32,7 +32,7 @@
 /*
  * Prototypes
  */
-int encrypt_sector(data_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+int encrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
 #endif /* ENCRYPT_H */

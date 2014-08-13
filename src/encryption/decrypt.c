@@ -391,7 +391,7 @@ void decrypt_with_diffuser   (contexts_t* ctx, uint16_t sector_size, uint8_t* se
  * @param buffer The place where we have to put decrypted data
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int decrypt_sector(data_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+int decrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	// Check parameters
 	if(!global_data || !sector || !buffer)

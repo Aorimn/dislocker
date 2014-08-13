@@ -38,7 +38,7 @@
  */
 int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size);
 
-int decrypt_sector(data_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+int decrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
 

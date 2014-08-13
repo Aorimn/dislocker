@@ -141,9 +141,9 @@ int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
 	uint64_t metafiles_size      = 0;
 	
 	/** @see dislocker.c */
-	extern data_t disk_op_data;
+	extern dis_iodata_t disk_op_data;
 	
-	memset(&disk_op_data, 0, sizeof(data_t));
+	memset(&disk_op_data, 0, sizeof(dis_iodata_t));
 	
 	disk_op_data.metadata       = metadata;
 	disk_op_data.xinfo          = NULL;

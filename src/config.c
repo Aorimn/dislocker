@@ -269,39 +269,39 @@ void free_args(dis_config_t* cfg)
  */
 void print_args(dis_config_t* cfg)
 {
-	xprintf(L_INFO, "--- Config...\n");
-	xprintf(L_INFO, "   Verbosity: %d\n", cfg->verbosity);
-	xprintf(L_INFO, "   Trying to decrypt '%s'\n", cfg->volume_path);
+	xprintf(L_DEBUG, "--- Config...\n");
+	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
+	xprintf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
 	
 	switch(cfg->decryption_mean)
 	{
 		case USE_CLEAR_KEY:
-			xprintf(L_INFO,"   \tusing a clear key on the volume.\n");
+			xprintf(L_DEBUG,"   \tusing a clear key on the volume.\n");
 			break;
 		case USE_RECOVERY_PASSWORD:
-			xprintf(L_INFO,"   \tusing the recovery password method\n");
+			xprintf(L_DEBUG,"   \tusing the recovery password method\n");
 			xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
 			break;
 		case USE_BEKFILE:
-			xprintf(L_INFO,"   \tusing the bek file at '%s'\n", cfg->bek_file);
+			xprintf(L_DEBUG,"   \tusing the bek file at '%s'\n", cfg->bek_file);
 			break;
 		case USE_FVEKFILE:
-			xprintf(L_INFO,"   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
+			xprintf(L_DEBUG,"   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
 			break;
 		default:
 			break;
 	}
 	
 	if(cfg->force_block)
-		xprintf(L_INFO, "   Forced to be using metadata block n°%d\n",
+		xprintf(L_DEBUG, "   Forced to be using metadata block n°%d\n",
 				cfg->force_block);
 	else
-		xprintf(L_INFO, "   Using the first valid metadata block\n");
+		xprintf(L_DEBUG, "   Using the first valid metadata block\n");
 	
 	if(cfg->is_ro & READ_ONLY)
-		xprintf(L_INFO, "   Not allowing any write on the BitLocker volume "
+		xprintf(L_DEBUG, "   Not allowing any write on the BitLocker volume "
 		                "(read only mode)\n");
 	
-	xprintf(L_INFO, "... End config ---\n");
+	xprintf(L_DEBUG, "... End config ---\n");
 }
 

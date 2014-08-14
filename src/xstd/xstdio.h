@@ -45,7 +45,7 @@
 /** Messages debug level */
 typedef enum {
 	L_QUIET    = -1,
-	L_CRITICAL = 0,
+	L_CRITICAL = 0, /* default level is 0, whatever 0 is */
 	L_ERROR,
 	L_WARNING,
 	L_INFO,

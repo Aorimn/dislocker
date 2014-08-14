@@ -125,10 +125,6 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 	};
 	
 	
-	/* Some default settings */
-	cfg->verbosity   = L_CRITICAL;
-	cfg->check_state = TRUE;
-	
 	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
 	{
 		switch(optchar)
@@ -185,7 +181,7 @@ int parse_args(dis_config_t* cfg, int argc, char** argv)
 				cfg->is_ro |= READ_ONLY;
 				break;
 			case 's':
-				cfg->check_state = FALSE;
+				cfg->dont_check_state = TRUE;
 				break;
 			case 'u':
 				if(optarg)

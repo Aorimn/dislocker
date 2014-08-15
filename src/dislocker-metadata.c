@@ -39,7 +39,7 @@
 
 void usage()
 {
-	fprintf(stderr, "Usage: "PROGNAME" [-h] [-V VOLUME]\n"
+	fprintf(stderr, "Usage: " PROGNAME " [-ho] [-V VOLUME]\n"
 					"\n"
 					"    -h         print this help and exit\n"
 					"    -o         partition offset\n"

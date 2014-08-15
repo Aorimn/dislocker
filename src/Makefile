@@ -99,7 +99,8 @@ $(BIN) : libs $(SUFFIXES)
 
 
 # Build the binary for the file output
-file: libs $(BIN)-file
+file: libs $(BIN)-file.o
+	$(CC) $(CFLAGS) -o $(BIN)-file $(BIN)-file.o $(LDFLAGS)
 
 # Build the binary for the fuse output
 fuse: CFLAGS  += -DFUSE_USE_VERSION=26
@@ -111,14 +112,17 @@ else
 fuse: LDFLAGS += -lfuse
 endif # Darwin
 
-fuse: libs $(BIN)-fuse
+fuse: libs $(BIN)-fuse.o
+	$(CC) $(CFLAGS) -o $(BIN)-fuse $(BIN)-fuse.o $(LDFLAGS)
 
 
 # Build the binary for getting metadata only
-metadata: libs $(BIN)-metadata
+metadata: libs $(BIN)-metadata.o
+	$(CC) $(CFLAGS) -o $(BIN)-metadata $(BIN)-metadata.o $(LDFLAGS)
 
 # Build the binary for getting bek information only
-bek: libs $(BIN)-bek
+bek: libs $(BIN)-bek.o
+	$(CC) $(CFLAGS) -o $(BIN)-bek $(BIN)-bek.o $(LDFLAGS)
 
 
 

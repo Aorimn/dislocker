@@ -3,11 +3,11 @@
 *~
 *.swp
 dislocker
-recovery_password
-read_bekfile
-encryption
-getmetadata
-fuse
+dislocker-bek
+dislocker-file
+dislocker-fuse
+dislocker-metadata
+libdislocker.so
 
 # Unit test files
 *.gcno

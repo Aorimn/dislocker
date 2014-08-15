@@ -27,10 +27,11 @@ CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	$(LIB) $(LHARDEN)
 LIBNAME		=	lib$(PROGNAME).so
 
-BINS		=	dislocker dislocker-metadata dislocker-bek
+SUFFIXES	=	fuse file metadata bek
+BINS		=	$(foreach suf, $(SUFFIXES), $(BIN)-$(suf))
 BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
 
-SOURCES		=	common.c config.c sectors.c \
+SOURCES		=	dislocker.c common.c config.c sectors.c \
 			xstd/xstdio.c xstd/xstdlib.c \
 			metadata/datums.c metadata/metadata.c metadata/vmk.c \
 			metadata/fvek.c metadata/extended_info.c \
@@ -55,8 +56,6 @@ MAN_NUMBER	=	1
 MAN_PATH	=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
 MAN_ROOT	=	../man/
 
-FUSE_ROOT	:=	outputs/fuse/fuse
-FILE_ROOT	:=	outputs/file/file
 
 
 
@@ -85,41 +84,25 @@ endif
 
 export
 
-.PHONY : all libs static $(BIN) file fuse common clean
+.PHONY : all libs $(BIN) $(SUFFIXES) install uninstall clean travis-install valgrind snapshot release
 
 .c.o :
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-all : fuse
+all : $(BIN)
 
 libs: $(OBJECTS)
 	$(CC) -shared $(CFLAGS) -o $(LIBNAME) $(OBJECTS)
 
 # Default rules for final binaries
-touch :
-	touch $(BIN).c
-
-$(BIN) : touch libs $(BINS_OBJECTS)
-	for prog in $(BINS); do \
-		$(CC) $(CFLAGS) -o $${prog} $${prog}.o $(LDFLAGS); \
-	done
-
-
-static : touch libs
-	$(CC) -static  $(CFLAGS) -o $(BIN)-static $(OBJECTS) $(LDFLAGS) -lz -ldl
+$(BIN) : libs $(SUFFIXES)
 
 
 # Build the binary for the file output
-file: CFLAGS  += -D__RUN_FILE
-file: SOURCES += $(FILE_ROOT).c
-file: $(FILE_ROOT).o
-
-file: $(BIN)
-
+file: libs $(BIN)-file
 
 # Build the binary for the fuse output
-fuse: CFLAGS  += -D__RUN_FUSE -DFUSE_USE_VERSION=26
-fuse: SOURCES += $(FUSE_ROOT).c
+fuse: CFLAGS  += -DFUSE_USE_VERSION=26
 
 # Don't link with the same library on MacOSX
 ifeq ($(OS), Darwin)
@@ -128,17 +111,28 @@ else
 fuse: LDFLAGS += -lfuse
 endif # Darwin
 
-fuse: $(FUSE_ROOT).o
+fuse: libs $(BIN)-fuse
 
-fuse: $(BIN)
+
+# Build the binary for getting metadata only
+metadata: libs $(BIN)-metadata
+
+# Build the binary for getting bek information only
+bek: libs $(BIN)-bek
+
 
 
 # Check if the installed binary is present, make it if it isn't
 check-install:
-	@[ -e $(BIN) ] && echo "Found $(BIN) binary, installing it" || make clean fuse
+	@if [ -e $(BIN)-fuse ] ; then                      \
+		echo "Found $(BIN) binary, installing it"; \
+	else                                               \
+		make clean all;                            \
+	fi
 
-install: check-install
+install: all
 	install -pm755 $(BINS) $(BINARIES_PATH)
+	cd $(BINARIES_PATH) && ln $(BIN)-fuse $(BIN) && cd -
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
 	if [ "$(OS)" = "Darwin" ]; then                                       \
 		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
@@ -162,7 +156,7 @@ uninstall: clean
 
 
 clean:
-	rm -rf -- $(OBJECTS) $(FILE_ROOT).o $(FUSE_ROOT).o *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME)
+	rm -rf -- $(OBJECTS) *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME)
 
 travis-install:
 	if [ "$$TRAVIS_OS_NAME" = "linux" ]; then                     \

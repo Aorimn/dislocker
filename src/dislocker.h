@@ -23,13 +23,95 @@
 #ifndef DISLOCKER_MAIN_H
 #define DISLOCKER_MAIN_H
 
+#include <stdint.h>
 
-#if defined(__RUN_FUSE)
-#  include "outputs/fuse/fuse.h"
-#elif defined(__RUN_FILE)
-#  include "outputs/file/file.h"
-#endif
+#include "config.h"
+#include "encommon.h"
 
+
+
+/**
+ * dis_initialize() function does a lot of things. So, in order to provide
+ * flexibility, place some kind of breakpoint after majors steps.
+ */
+typedef enum {
+	COMPLETE_EVERYTHING = 0,
+	AFTER_OPEN_VOLUME,
+	AFTER_VOLUME_HEADER,
+	AFTER_VOLUME_CHECK,
+	AFTER_BITLOCKER_INFORMATION,
+	AFTER_BITLOCKER_INFORMATION_CHECK,
+	AFTER_VMK,
+	AFTER_FVEK,
+	BEFORE_DECRYPTION_CHECKING,
+} dis_stopat_e;
+
+
+/**
+ * Main structure to pass to dislocker functions. These keeps various
+ * information in it.
+ */
+typedef struct _dis_ctx {
+	
+	dis_config_t cfg;
+	
+	dis_iodata_t io_data;
+	
+	dis_stopat_e stop_at;
+} dis_context_t;
+
+
+
+/**
+ * Public prototypes
+ */
+
+/**
+ * Initialize dislocker. As stated above, the initialisation process may be
+ * stopped at any major step in order to retrieve different information. Note
+ * that you have to provide an already allocated dis_ctx with an already filled
+ * dis_ctx->cfg with parameters for dislocker to initialize correctly.
+ * This function malloc(3)s structures, see dis_destroy() below for free(3)ing
+ * it.
+ * dislock() & enlock() function may not be called before executing this
+ * function.
+ * 
+ * @param dis_ctx The dislocker context needed for all operations. As stated
+ * above, this parameter has to be pre-allocated. Furthermore, the dis_ctx->cfg
+ * structure has to be filled with parameters to properly initialize dislocker.
+ */
+int dis_initialize(dis_context_t* dis_ctx);
+
+/**
+ * Once dis_initialize() has been called, this function is able to decrypt the
+ * BitLocker-encrypted volume.
+ * 
+ * @param dis_ctx The same parameter passed to dis_initialize.
+ * @param offset The offset from where to start decrypting.
+ * @param buffer The buffer to put decrypted data to.
+ * @param size The size of a region to decrypt.
+ */
+int dislock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size);
+
+/**
+ * Once dis_initialize() has been called, this function is able to encrypt data
+ * to the BitLocker-encrypted volume.
+ * 
+ * @param dis_ctx The same parameter passed to dis_initialize.
+ * @param offset The offset where to put the data.
+ * @param buffer The buffer from where to take data to encrypt.
+ * @param size The size of a region to decrypt.
+ */
+int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size);
+
+/**
+ * Destroy dislocker structures. This is important to call this function after
+ * dislocker is not needed -- if dis_initialize() has been called -- in order
+ * for dislocker to free(3) the used memory.
+ * dislock() & enlock() functions may not be called anymore after executing this
+ * function.
+ */
+int dis_destroy(dis_context_t* dis_ctx);
 
 
 #endif /* DISLOCKER_MAIN_H */

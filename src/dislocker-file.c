@@ -21,28 +21,22 @@
  * USA.
  */
 
-
+/* This define is for the O_LARGEFILE definition */
 #define _GNU_SOURCE
 
-
-#include "encommon.h"
 #include "dislocker.h"
-#include "encryption/decrypt.h"
-#include "sectors.h"
-#include "metadata/metadata.h"
-#include "file.h"
 
-
-#ifdef __DARWIN
+#if defined(__DARWIN) || defined(__FREEBSD)
 #  define O_LARGEFILE 0
-#endif /* __DARWIN */
+#endif /* __DARWIN || __FREEBSD */
 
 
-/** Data used globally for operation on disk (encryption/decryption) */
-extern dis_iodata_t disk_op_data;
+/* Number of sectors we're reading at a time */
+#define NB_READ_SECTOR 16
 
 
-int file_main(char* ntfs_file)
+
+int file_main(char* ntfs_file, dis_context_t* dis_ctx)
 {
 	// Check parameter
 	if(!ntfs_file)
@@ -51,11 +45,18 @@ int file_main(char* ntfs_file)
 		return EXIT_FAILURE;
 	}
 	
+	if(!dis_ctx)
+	{
+		xprintf(L_ERROR, "Error, no context given. Abort.\n");
+		return EXIT_FAILURE;
+	}
 	
-	uint8_t* buffer = xmalloc((size_t)(NB_READ_SECTOR * disk_op_data.sector_size));
+	dis_iodata_t io_data = dis_ctx->io_data;
+	size_t buf_size = (size_t)(NB_READ_SECTOR * io_data.sector_size);
+	uint8_t* buffer = xmalloc(buf_size);
 	
 	mode_t mode = S_IRUSR|S_IWUSR;
-	if(disk_op_data.cfg->is_ro & READ_ONLY)
+	if(dis_ctx->cfg.is_ro & READ_ONLY)
 		mode = S_IRUSR;
 	
 	int fd_ntfs = xopen2(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
@@ -64,30 +65,24 @@ int file_main(char* ntfs_file)
 	off_t offset          = 0;
 	long long int percent = 0;
 	
-	xprintf(L_INFO, "File size: %llu bytes\n", disk_op_data.volume_size);
+	xprintf(L_INFO, "File size: %llu bytes\n", io_data.volume_size);
 	
 	/* Read all sectors and decrypt them if necessary */
 	xprintf(L_INFO, "\rDecrypting... 0%%");
 	fflush(stdout);
 	
-	off_t decrypting_size = (off_t)disk_op_data.volume_size;
+	off_t decrypting_size = (off_t)io_data.volume_size;
 	
 	while(offset < decrypting_size)
 	{
 		/* Read and decrypt an entire region of the disk */
-		disk_op_data.decrypt_region(
-			disk_op_data.volume_fd, 
-			NB_READ_SECTOR,
-			disk_op_data.sector_size, 
-			offset,
-			buffer
-		);
+		dislock(dis_ctx, buffer, offset, buf_size);
 		
-		offset += NB_READ_SECTOR * disk_op_data.sector_size;
+		offset += (off_t) buf_size;
 		
 		
 		/* Now copy the required amount of data to the user file */
-		xwrite(fd_ntfs, buffer, (size_t)(NB_READ_SECTOR * disk_op_data.sector_size));
+		xwrite(fd_ntfs, buffer, buf_size);
 		
 		/* Screen update */
 		if(percent != (offset*100)/decrypting_size)
@@ -104,4 +99,58 @@ int file_main(char* ntfs_file)
 	xclose(fd_ntfs);
 	
 	return EXIT_SUCCESS;
+}
+
+
+
+
+/**
+ * Main function ran initially
+ */
+int main(int argc, char** argv)
+{
+	// Check parameters number
+	if(argc < 2)
+	{
+		usage();
+		exit(EXIT_FAILURE);
+	}
+	
+	int param_idx = 0;
+	int ret       = 0;
+	
+	dis_context_t dis_ctx;
+	memset(&dis_ctx, 0, sizeof(dis_context_t));
+	
+	
+	/* Get command line options */
+	param_idx = parse_args(&dis_ctx.cfg, argc, argv);
+	
+	/* Check that we have the file where to put NTFS data */
+	if(param_idx >= argc || param_idx <= 0)
+	{
+		fprintf(stderr, "Error, no file given. Abort.\n");
+		return EXIT_FAILURE;
+	}
+	
+	/* Initialize dislocker */
+	if(dis_initialize(&dis_ctx) == EXIT_FAILURE)
+	{
+		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		return EXIT_FAILURE;
+	}
+	
+	/*
+	 * Create a NTFS file which could be mounted using `mount -o loop...`
+	 */
+	
+	char* ntfs_file = argv[param_idx];
+	xprintf(L_INFO, "Putting NTFS data into '%s'...\n", ntfs_file);
+	
+	/* Run the decryption */
+	ret = file_main(ntfs_file, &dis_ctx);
+	
+	dis_destroy(&dis_ctx);
+	
+	return ret;
 }

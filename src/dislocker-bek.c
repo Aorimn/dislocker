@@ -74,18 +74,19 @@ int main (int argc, char **argv)
 	{
 		xprintf(L_CRITICAL, "Filename must be provided\n");
 		usage(argv[0]);
+		return EXIT_FAILURE;
 	}
 	
 	if(( fd = open(filename, O_RDONLY) ) < 0) 
 	{
 		xprintf(L_CRITICAL, "Failed to open file %s\n", filename);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 	
 	if(!get_bek_dataset(fd, &bek_dataset))
 	{
 		xprintf(L_CRITICAL, "Unable to get the dataset from the BEK file\n");
-		exit(1);
+		return EXIT_FAILURE;
 	}
 	
 	close(fd);

@@ -31,19 +31,25 @@
 #include "sectors.h"
 
 
-/** Data used globally for operation on disk (encryption/decryption) */
-dis_iodata_t disk_op_data;
-
 
 /** Prototype of functions used internally */
 static void* thread_decrypt(void* args);
 static void* thread_encrypt(void* args);
-static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
-                                  off_t sector_address, uint8_t *output);
-static void fix_read_sector_vista(dis_iodata_t* disk_op_data, uint8_t* input,
-                                  uint8_t *output);
-static void fix_write_sector_vista(dis_iodata_t* disk_op_data, uint8_t* input,
-                                   uint8_t *output);
+static void fix_read_sector_seven(
+	dis_iodata_t* io_data,
+	off_t sector_address,
+	uint8_t *output
+);
+static void fix_read_sector_vista(
+	dis_iodata_t* io_data,
+	uint8_t* input,
+	uint8_t *output
+);
+static void fix_write_sector_vista(
+	dis_iodata_t* io_data,
+	uint8_t* input,
+	uint8_t *output
+);
 
 
 
@@ -52,7 +58,7 @@ static void fix_write_sector_vista(dis_iodata_t* disk_op_data, uint8_t* input,
  * Read and decrypt one or more sectors
  * @warning The sector_start has to be correctly aligned
  * 
- * @param fd The file descriptor to the volume
+ * @param io_data The data structure containing volume's information
  * @param nb_read_sector The number of sectors to read
  * @param sector_size The size of one sector
  * @param sector_start The offset of the first sector to read; See the warning
@@ -60,8 +66,12 @@ static void fix_write_sector_vista(dis_iodata_t* disk_op_data, uint8_t* input,
  * @param output The output buffer where to put decrypted data
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
-                         off_t sector_start, uint8_t* output)
+int read_decrypt_sectors(
+	dis_iodata_t* io_data,
+	size_t nb_read_sector,
+	uint16_t sector_size,
+	off_t sector_start,
+	uint8_t* output)
 {
 	// Check parameters
 	if(!output)
@@ -77,7 +87,7 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 	
 	
 	/* Be sure to lock for lseek/read */
-	if(pthread_mutex_lock(&disk_op_data.mutex_lseek_rw) != 0)
+	if(pthread_mutex_lock(&io_data->mutex_lseek_rw) != 0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Can't lock rw mutex: %s\n", strerror(errno));
@@ -86,8 +96,8 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 	
 	
 	/* Go where we need to read data */
-	off_t off = sector_start + disk_op_data.part_off;
-	if(lseek(fd, off, SEEK_SET) < 0)
+	off_t off = sector_start + io_data->part_off;
+	if(lseek(io_data->volume_fd, off, SEEK_SET) < 0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", off);
@@ -95,7 +105,7 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 	}
 	
 	/* Read the sectors we need */
-	ssize_t read_size = read(fd, input, size);
+	ssize_t read_size = read(io_data->volume_fd, input, size);
 	
 	if(read_size <= 0)
 	{
@@ -106,7 +116,7 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 	}
 	
 	/* Unlock the previously locked mutex */
-	if(pthread_mutex_unlock(&disk_op_data.mutex_lseek_rw) != 0)
+	if(pthread_mutex_unlock(&io_data->mutex_lseek_rw) != 0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Can't unlock rw mutex: %s\n", strerror(errno));
@@ -140,6 +150,8 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 			args[loop].modulo        = NB_THREAD;
 			args[loop].modulo_result = loop;
 			
+			args[loop].io_data       = io_data;
+			
 			pthread_create( &thread[loop], NULL,
 			                thread_decrypt, (void*) &args[loop] );
 		}
@@ -160,6 +172,8 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
 		arg.modulo        = 0;
 		arg.modulo_result = 42;
 		
+		args.io_data      = io_data;
+		
 		thread_decrypt(&arg);
 	}
 #endif
@@ -175,7 +189,7 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
  * Encrypt and write one or more sectors
  * @warning The sector_start has to be correctly aligned
  * 
- * @param fd The file descriptor to the volume
+ * @param io_data The data structure containing volume's information
  * @param nb_write_sector The number of sectors to write
  * @param sector_size The size of one sector
  * @param sector_start The offset of the first sector to write; See the warning
@@ -183,8 +197,12 @@ int read_decrypt_sectors(int fd, size_t nb_read_sector, uint16_t sector_size,
  * @param output The input buffer which has to be encrypted and written
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size,
-                          off_t sector_start, uint8_t* input)
+int encrypt_write_sectors(
+	dis_iodata_t* io_data,
+	size_t nb_write_sector,
+	uint16_t sector_size,
+	off_t sector_start,
+	uint8_t* input)
 {
 	// Check parameter
 	if(!input)
@@ -213,6 +231,8 @@ int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size,
 			args[loop].modulo        = NB_THREAD;
 			args[loop].modulo_result = loop;
 			
+			args[loop].io_data       = io_data;
+			
 			pthread_create( &thread[loop], NULL,
 			                thread_encrypt, (void*) &args[loop] );
 		}
@@ -233,12 +253,14 @@ int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size,
 		arg.modulo        = 0;
 		arg.modulo_result = 42;
 		
+		args.io_data      = io_data;
+		
 		thread_encrypt(&arg);
 	}
 #endif
 	
 	/* Be sure to lock for lseek/write */
-	if(pthread_mutex_lock(&disk_op_data.mutex_lseek_rw) != 0)
+	if(pthread_mutex_lock(&io_data->mutex_lseek_rw) != 0)
 	{
 		free(output);
 		xprintf(L_ERROR, "Can't lock rw mutex: %s\n", strerror(errno));
@@ -246,8 +268,8 @@ int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size,
 	}
 	
 	/* Go where we need to write data */
-	off_t off = sector_start + disk_op_data.part_off;
-	if(lseek(fd, off, SEEK_SET) < 0)
+	off_t off = sector_start + io_data->part_off;
+	if(lseek(io_data->volume_fd, off, SEEK_SET) < 0)
 	{
 		free(output);
 		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", off);
@@ -255,13 +277,17 @@ int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size,
 	}
 	
 	/* Write the sectors we want */
-	ssize_t write_size = write(fd, output, nb_write_sector * sector_size);
+	ssize_t write_size = write(
+		io_data->volume_fd,
+		output,
+		nb_write_sector * sector_size
+	);
 	
 	/* Unlock the previously locked mutex */
-	if(pthread_mutex_unlock(&disk_op_data.mutex_lseek_rw) != 0)
+	if(pthread_mutex_unlock(&io_data->mutex_lseek_rw) != 0)
 	{
-		free(output);
 		xprintf(L_ERROR, "Can't unlock rw mutex: %s\n", strerror(errno));
+		free(output);
 		return FALSE;
 	}
 	
@@ -283,7 +309,8 @@ static void* thread_decrypt(void* params)
 	if(!params)
 		return NULL;
 	
-	thread_arg_t* args = (thread_arg_t*)params;
+	thread_arg_t* args    = (thread_arg_t*)params;
+	dis_iodata_t* io_data = args->io_data;
 	
 	off_t loop               = 0;
 	off_t offset             = args->sector_start;
@@ -293,7 +320,7 @@ static void* thread_decrypt(void* params)
 	
 	size_t   virt_loop       = 0;
 	off_t    metadata_offset = 0;
-	uint16_t version         = disk_op_data.metadata->version;
+	uint16_t version         = io_data->metadata->version;
 	
 	off_t size               = 0;
 	
@@ -325,13 +352,13 @@ static void* thread_decrypt(void* params)
 		off_t sector_offset = args->sector_start / args->sector_size + loop;
 		
 		/* Check for zero out areas */
-		for(virt_loop = 0; virt_loop < disk_op_data.nb_virt_region; virt_loop++)
+		for(virt_loop = 0; virt_loop < io_data->nb_virt_region; virt_loop++)
 		{
-			size = (off_t)disk_op_data.virt_region[virt_loop].size;
+			size = (off_t)io_data->virt_region[virt_loop].size;
 			if(size == 0)
 				continue;
 			
-			metadata_offset = (off_t)disk_op_data.virt_region[virt_loop].addr;
+			metadata_offset = (off_t)io_data->virt_region[virt_loop].addr;
 			if(offset >= metadata_offset &&
 				offset <= metadata_offset + size)
 			{
@@ -348,20 +375,20 @@ static void* thread_decrypt(void* params)
 		
 		/* Check for sectors fixing and non-encrypted sectors */
 		if(version == V_SEVEN &&
-		   (uint64_t)sector_offset < disk_op_data.metadata->nb_backup_sectors)
+		   (uint64_t)sector_offset < io_data->metadata->nb_backup_sectors)
 		{
 			/*
 			 * The firsts sectors are encrypted in a different place on a
 			 * Windows 7 volume
 			 */
 			fix_read_sector_seven(
-				&disk_op_data,
+				io_data,
 				offset,
 				loop_output
 			);
 		}
 		else if(version == V_SEVEN &&
-		       (uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
+		       (uint64_t)offset >= io_data->metadata->encrypted_volume_size)
 		{
 			/* Do not decrypt when there's nothing to */
 			xprintf(L_DEBUG,
@@ -378,9 +405,9 @@ static void* thread_decrypt(void* params)
 			 */
 			if(sector_offset < 1)
 				fix_read_sector_vista(
-					&disk_op_data,
-					 loop_input,
-					 loop_output
+					io_data,
+					loop_input,
+					loop_output
 				);
 			else
 			{
@@ -396,7 +423,7 @@ static void* thread_decrypt(void* params)
 		{
 			/* Decrypt the sector */
 			if(!decrypt_sector(
-				&disk_op_data,
+				io_data,
 				loop_input,
 				offset,
 				loop_output
@@ -420,7 +447,8 @@ static void* thread_encrypt(void* params)
 	if(!params)
 		return NULL;
 	
-	thread_arg_t* args = (thread_arg_t*)params;
+	thread_arg_t* args    = (thread_arg_t*)params;
+	dis_iodata_t* io_data = args->io_data;
 	
 	off_t   loop         = 0;
 	off_t offset         = args->sector_start;
@@ -428,7 +456,7 @@ static void* thread_encrypt(void* params)
 	uint8_t* loop_input  = args->input;
 	uint8_t* loop_output = args->output;
 	
-	uint16_t version     = disk_op_data.metadata->version;
+	uint16_t version     = io_data->metadata->version;
 	
 	
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
@@ -451,7 +479,7 @@ static void* thread_encrypt(void* params)
 		
 		/*
 		 * NOTE: Seven specificities are dealt with earlier in the process
-		 * see fuse.c:fs_write()
+		 * see dislocker.c:enlock()
 		 */
 		if(version == V_VISTA && sector_offset < 16)
 		{
@@ -460,22 +488,22 @@ static void* thread_encrypt(void* params)
 			 */
 			if(sector_offset < 1)
 				fix_write_sector_vista(
-					&disk_op_data,
-					 loop_input,
-					 loop_output
+					io_data,
+					loop_input,
+					loop_output
 				);
 			else
 				memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else if(version == V_SEVEN &&
-		       (uint64_t)offset >= disk_op_data.metadata->encrypted_volume_size)
+		       (uint64_t)offset >= io_data->metadata->encrypted_volume_size)
 		{
 			memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else
 		{
 			if(!encrypt_sector(
-				&disk_op_data,
+				io_data,
 				loop_input,
 				offset,
 				loop_output
@@ -497,12 +525,11 @@ static void* thread_encrypt(void* params)
  * "Fix" the firsts sectors of a BitLocker volume encrypted with W$ Seven for
  * read operation
  * 
- * @param disk_op_data Data needed by FUSE and the decryption to deal with
- * encrypted data
+ * @param io_data Data needed by the decryption to deal with encrypted data
  * @param sector_address Address of the sector to decrypt
  * @param output The buffer where to put fixed data
  */
-static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
+static void fix_read_sector_seven(dis_iodata_t* io_data,
                                   off_t sector_address, uint8_t *output)
 { 
 	// Check parameter
@@ -515,19 +542,19 @@ static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
 	 * So we can use them here to give a good NTFS partition's beginning.
 	 */
 	off_t from = sector_address;
-	off_t to   = from + (off_t)disk_op_data->metadata->boot_sectors_backup;
+	off_t to   = from + (off_t)io_data->metadata->boot_sectors_backup;
 	
 	xprintf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
 	                 "\n", from, to);
 	
-	to += disk_op_data->part_off;
+	to += io_data->part_off;
 	
 	
-	uint8_t* input = malloc(disk_op_data->sector_size);
-	memset(input, 0, disk_op_data->sector_size);
+	uint8_t* input = malloc(io_data->sector_size);
+	memset(input, 0, io_data->sector_size);
 	
 	/* Be sure to lock for lseek/read */
-	if(pthread_mutex_lock(&disk_op_data->mutex_lseek_rw) != 0)
+	if(pthread_mutex_lock(&io_data->mutex_lseek_rw) != 0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Can't lock rw mutex: %s\n", strerror(errno));
@@ -535,7 +562,7 @@ static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
 	}
 	
 	/* Go where we need to read the new sector */
-	if(lseek(disk_op_data->volume_fd, to, SEEK_SET) <0)
+	if(lseek(io_data->volume_fd, to, SEEK_SET) <0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", to);
@@ -543,12 +570,11 @@ static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
 	}
 	
 	/* Read the real sector we need */
-	ssize_t read_size = read(disk_op_data->volume_fd, input,
-	                         disk_op_data->sector_size);
+	ssize_t read_size = read(io_data->volume_fd, input, io_data->sector_size);
 	
 	
 	/* Unlock the previously locked mutex */
-	if(pthread_mutex_unlock(&disk_op_data->mutex_lseek_rw) != 0)
+	if(pthread_mutex_unlock(&io_data->mutex_lseek_rw) != 0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Can't unlock rw mutex: %s\n", strerror(errno));
@@ -560,21 +586,21 @@ static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
 	{
 		free(input);
 		xprintf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
-		                 "\n", disk_op_data->sector_size, to);
+		                 "\n", io_data->sector_size, to);
 		return;
 	}
 	
-	to -= disk_op_data->part_off;
+	to -= io_data->part_off;
 	
 	/* If the sector wasn't yet encrypted, don't decrypt it */
-	if((uint64_t)to >= disk_op_data->metadata->encrypted_volume_size)
+	if((uint64_t)to >= io_data->metadata->encrypted_volume_size)
 	{
-		memcpy(output, input, disk_op_data->sector_size);
+		memcpy(output, input, io_data->sector_size);
 	}
 	else
 	{
 		decrypt_sector(
-			disk_op_data,
+			io_data,
 			input,
 			to,
 			output
@@ -589,12 +615,11 @@ static void fix_read_sector_seven(dis_iodata_t* disk_op_data,
  * "Fix" the firsts sectors of a BitLocker volume encrypted with W$ Vista for
  * read operation
  * 
- * @param disk_op_data Data needed by FUSE and the decryption to deal with
- * encrypted data
+ * @param io_data Data needed by the decryption to deal with encrypted data
  * @param input The sector which needs a fix
  * @param output The buffer where to put fixed data
  */
-static void fix_read_sector_vista(dis_iodata_t* disk_op_data,
+static void fix_read_sector_vista(dis_iodata_t* io_data,
                                   uint8_t* input, uint8_t *output)
 { 
 	// Check parameter
@@ -603,12 +628,12 @@ static void fix_read_sector_vista(dis_iodata_t* disk_op_data,
 	
 	xprintf(L_DEBUG, "  Fixing sector (Vista): replacing signature "
 	                 "and MFTMirror field by: %#llx\n",
-	                 disk_op_data->metadata->mftmirror_backup);
+	                 io_data->metadata->mftmirror_backup);
 	
 	/* 
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
 	 */
-	memcpy(output, input, disk_op_data->sector_size);
+	memcpy(output, input, io_data->sector_size);
 	
 	volume_header_t* formatted_output = (volume_header_t*)output;
 	
@@ -616,7 +641,7 @@ static void fix_read_sector_vista(dis_iodata_t* disk_op_data,
 	memcpy(formatted_output->signature, NTFS_SIGNATURE, NTFS_SIGNATURE_SIZE);
 	
 	/* And this is for the MFT Mirror field */
-	formatted_output->mft_mirror = disk_op_data->metadata->mftmirror_backup;
+	formatted_output->mft_mirror = io_data->metadata->mftmirror_backup;
 }
 
 
@@ -624,12 +649,11 @@ static void fix_read_sector_vista(dis_iodata_t* disk_op_data,
  * "Fix" the firsts sectors of a BitLocker volume encrypted with W$ Vista for
  * write operation
  * 
- * @param disk_op_data Data needed by FUSE and the decryption to deal with
- * encrypted data
+ * @param io_data Data needed by the decryption to deal with encrypted data
  * @param input The sector which needs a fix
  * @param output The buffer where to put fixed data
  */
-static void fix_write_sector_vista(dis_iodata_t* disk_op_data,
+static void fix_write_sector_vista(dis_iodata_t* io_data,
                                    uint8_t* input, uint8_t *output)
 { 
 	// Check parameter
@@ -639,7 +663,7 @@ static void fix_write_sector_vista(dis_iodata_t* disk_op_data,
 	/* 
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
 	 */
-	memcpy(output, input, disk_op_data->sector_size);
+	memcpy(output, input, io_data->sector_size);
 	
 	volume_header_t* formatted_output = (volume_header_t*)output;
 	
@@ -649,15 +673,17 @@ static void fix_write_sector_vista(dis_iodata_t* disk_op_data,
 	
 	/* And this is for the metadata LCN */
 	formatted_output->metadata_lcn =
-		disk_op_data->metadata->offset_bl_header[0] /
+		io_data->metadata->offset_bl_header[0] /
 		(uint64_t)(
 			formatted_output->sectors_per_cluster *
 			formatted_output->sector_size
 		);
 	
-	xprintf(L_DEBUG, "  Fixing sector (Vista): replacing signature "
-	                 "and MFTMirror field by: %#llx\n",
-	                 formatted_output->metadata_lcn);
-	
+	xprintf(
+		L_DEBUG,
+		"  Fixing sector (Vista): replacing signature "
+		"and MFTMirror field by: %#llx\n",
+		formatted_output->metadata_lcn
+	);
 }
 

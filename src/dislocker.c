@@ -29,7 +29,8 @@
 #include "accesses/rp/recovery_password.h"
 #include "accesses/user_pass/user_pass.h"
 
-#include "encommon.h"
+
+#include "sectors.h"
 #include "metadata/datums.h"
 #include "metadata/metadata.h"
 #include "metadata/print_metadata.h"
@@ -41,9 +42,6 @@
 #include "xstd/xstdio.h"
 
 #include "config.h"
-
-
-
 #include "dislocker.h"
 
 #include <locale.h>
@@ -59,29 +57,8 @@
 
 
 
-/** Data used globally for operation on disk (encryption/decryption) */
-extern dis_iodata_t disk_op_data;
-
-
-
-/**
- * Main function ran initially
- */
-int main(int argc, char** argv)
+int dis_initialize(dis_context_t* dis_ctx)
 {
-	// Check parameters number
-	if(argc < 2)
-	{
-		usage();
-		exit(EXIT_FAILURE);
-	}
-	
-	
-	int param_idx = 0;
-	
-	int fd_volume = 0;
-	
-	volume_header_t volume_header;
 	void* bl_metadata = NULL;
 	
 	bitlocker_dataset_t* dataset= NULL;
@@ -90,60 +67,68 @@ int main(int argc, char** argv)
 	void* fvek_datum = NULL;
 	datum_key_t* fvek_typed_datum = NULL;
 	
-	contexts_t ctx;
-	memset(&ctx, 0, sizeof(ctx));
-	
 	int ret = EXIT_SUCCESS;
 	
-	dis_config_t cfg;
-	memset(&cfg, 0, sizeof(cfg));
 	
+	dis_ctx->io_data.enc_ctx = xmalloc(sizeof(contexts_t));
+	memset(dis_ctx->io_data.enc_ctx, 0, sizeof(contexts_t));
 	
-	/* Get command line options */
-	param_idx = parse_args(&cfg, argc, argv);
 	
 	/* Initialize outputs */
-	xstdio_init(cfg.verbosity, cfg.log_file);
+	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
 	
-	if(cfg.verbosity >= L_INFO)
-		print_args(&cfg);
-	
+	if(dis_ctx->cfg.verbosity >= L_DEBUG)
+		print_args(&dis_ctx->cfg);
 	
 	
 	/*
 	 * Check parameters given
 	 */
-	if(!cfg.volume_path)
+	if(!dis_ctx->cfg.volume_path)
 	{
 		usage();
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
 	}
 	
 	
 	
 	/* Open the volume as a (big) normal file */
-	fd_volume = open(cfg.volume_path, O_RDWR|O_LARGEFILE);
-	if(fd_volume < 0)
+	xprintf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
+	dis_ctx->io_data.volume_fd = open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
+	if(dis_ctx->io_data.volume_fd < 0)
 	{
 		/* Trying to open it in read-only if O_RDWR doesn't work */
-		fd_volume = xopen(cfg.volume_path, O_RDONLY|O_LARGEFILE);
-		if(fd_volume < 0)
+		dis_ctx->io_data.volume_fd = xopen(
+			dis_ctx->cfg.volume_path,
+			O_RDONLY|O_LARGEFILE
+		);
+		
+		if(dis_ctx->io_data.volume_fd < 0)
 		{
-			xprintf(L_CRITICAL,
-					"Failed to open %s: %s\n",
-					cfg.volume_path, strerror(errno));
-			ret = EXIT_FAILURE;
-			goto FIRST_CLEAN;
+			xprintf(
+				L_CRITICAL,
+				"Failed to open %s: %s\n",
+				dis_ctx->cfg.volume_path, strerror(errno)
+			);
+			dis_destroy(dis_ctx);
+			return EXIT_FAILURE;
 		}
-		cfg.is_ro |= READ_ONLY;
-		xprintf(L_WARNING,
-				"Failed to open %s for writing. Falling back to read-only.\n",
-				cfg.volume_path);
+		
+		dis_ctx->cfg.is_ro |= READ_ONLY;
+		xprintf(
+			L_WARNING,
+			"Failed to open %s for writing. Falling back to read-only.\n",
+			dis_ctx->cfg.volume_path
+		);
 	}
-	else
-		xprintf(L_DEBUG, "Opened (fd #%d).\n", fd_volume);
 	
+	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->io_data.volume_fd);
+	
+	if(dis_ctx->stop_at == AFTER_OPEN_VOLUME)
+	{
+		return EXIT_SUCCESS;
+	}
 	
 	
 	/* To print UTF-32 strings */
@@ -157,262 +142,66 @@ int main(int argc, char** argv)
 	xprintf(L_INFO, "Looking for BitLocker metadata...\n");
 	
 	/* Initialize structures */
-	memset(&volume_header, 0, sizeof(volume_header_t));
+	dis_ctx->io_data.volume_header = xmalloc(sizeof(volume_header_t));
+	memset(dis_ctx->io_data.volume_header, 0, sizeof(volume_header_t));
 	
 	
 	/* Getting volume infos */
-	if(!get_volume_header(&volume_header, fd_volume, cfg.offset))
+	if(!get_volume_header(
+		dis_ctx->io_data.volume_header,
+		dis_ctx->io_data.volume_fd,
+		dis_ctx->cfg.offset))
 	{
-		xprintf(L_CRITICAL,
-		        "Error during reading the volume: not enough byte read.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
+		xprintf(
+			L_CRITICAL,
+			"Error during reading the volume: not enough byte read.\n"
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
 	}
 	
 	/* For debug purpose, print the volume header retrieved */
-	print_volume_header(L_DEBUG, &volume_header);
+	print_volume_header(L_DEBUG, dis_ctx->io_data.volume_header);
+	
+	if(dis_ctx->stop_at == AFTER_VOLUME_HEADER)
+	{
+		return EXIT_SUCCESS;
+	}
 	
 	/* Checking the signature */
-	if(memcmp(BITLOCKER_SIGNATURE, volume_header.signature,
+	if(memcmp(BITLOCKER_SIGNATURE, dis_ctx->io_data.volume_header->signature,
 	          BITLOCKER_SIGNATURE_SIZE) != 0)
 	{
-		xprintf(L_CRITICAL,
-		        "The signature of the volume (%.8s) doesn't match the "
-				"BitLocker's one (-FVE-FS-). Abort.\n",
-				volume_header.signature);
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
+		xprintf(
+			L_CRITICAL,
+			"The signature of the volume (%.8s) doesn't match the "
+			"BitLocker's one (-FVE-FS-). Abort.\n",
+			dis_ctx->io_data.volume_header->signature
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
 	}
 	
 	/* Checking sector size */
-	if(volume_header.sector_size == 0)
+	if(dis_ctx->io_data.volume_header->sector_size == 0)
 	{
 		xprintf(L_CRITICAL, "The sector size found is null. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
 	}
-	
-	/* Getting BitLocker metadata and validate them */
-	if(!get_metadata_check_validations(&volume_header, fd_volume, &bl_metadata,
-	   &cfg))
-	{
-		xprintf(L_CRITICAL,
-		       "A problem occured during the retrieving of metadata. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	if(cfg.force_block == 0 || !bl_metadata)
-	{
-		xprintf(L_CRITICAL,
-		        "Can't find a valid set of metadata on the disk. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	/* Checking BitLocker version */
-	if(((bitlocker_header_t*)bl_metadata)->version > V_SEVEN)
-	{
-		xprintf(L_CRITICAL,
-		        "Program designed only for BitLocker version 2 and less, "
-		        "the version here is %hd. Abort.\n",
-		        ((bitlocker_header_t*)bl_metadata)->version);
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	
-	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
-	
-	/* For debug purpose, print the metadata */
-	print_bl_metadata(L_DEBUG, bl_metadata);
-	print_data(L_DEBUG, bl_metadata);
-	
-	/* Now that we have the metadata, get the dataset within it */
-	if(get_dataset(bl_metadata, &dataset) != TRUE)
-	{
-		xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	/*
-	 * If the state of the volume is currently decrypted, there's no key to grab
-	 */
-	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
-		goto FIRST_CLEAN;
-	
-	/*
-	 * First, get the VMK datum using either a clear key, a recovery password
-	 * or a bek file
-	 */
-	while(cfg.decryption_mean)
-	{
-		if(cfg.decryption_mean & USE_CLEAR_KEY)
-		{
-			if(!get_vmk_from_clearkey(dataset, &vmk_datum))
-			{
-				cfg.decryption_mean &= (unsigned) ~USE_CLEAR_KEY;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used clear key decryption method\n");
-				cfg.decryption_mean = USE_CLEAR_KEY;
-				break;
-			}
-		}
-		else if(cfg.decryption_mean & USE_USER_PASSWORD)
-		{
-			if(!get_vmk_from_user_pass(dataset, &cfg, &vmk_datum))
-			{
-				cfg.decryption_mean &= (unsigned) ~USE_USER_PASSWORD;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used user password decryption method\n");
-				cfg.decryption_mean = USE_USER_PASSWORD;
-				break;
-			}
-		}
-		else if(cfg.decryption_mean & USE_RECOVERY_PASSWORD)
-		{
-			if(!get_vmk_from_rp(dataset, &cfg, &vmk_datum))
-			{
-				cfg.decryption_mean &= (unsigned) ~USE_RECOVERY_PASSWORD;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used recovery password decryption method\n");
-				cfg.decryption_mean = USE_RECOVERY_PASSWORD;
-				break;
-			}
-		}
-		else if(cfg.decryption_mean & USE_BEKFILE)
-		{
-			if(!get_vmk_from_bekfile(dataset, &cfg, &vmk_datum))
-			{
-				cfg.decryption_mean &= (unsigned) ~USE_BEKFILE;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used bek file decryption method\n");
-				cfg.decryption_mean = USE_BEKFILE;
-				break;
-			}
-		}
-		else if(cfg.decryption_mean & USE_FVEKFILE)
-		{
-			if(!build_fvek_from_file(&cfg, &fvek_datum))
-			{
-				cfg.decryption_mean &= (unsigned) ~USE_FVEKFILE;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used FVEK file decryption method\n");
-				cfg.decryption_mean = USE_FVEKFILE;
-				break;
-			}
-		}
-		else
-		{
-			xprintf(L_CRITICAL, "Wtf!? Abort.\n");
-			ret = EXIT_FAILURE;
-			goto FIRST_CLEAN;
-		}
-	}
-	
-	if(!cfg.decryption_mean)
-	{
-		xprintf(L_CRITICAL, "None of the provided decryption mean is "
-		                    "decrypting the keys. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	
-	/*
-	 * NOTE -- We could here validate bl_metadata in a more precise way
-	 * using the VMK and the validations infos after the informations
-	 * 
-	 * NOTE -- We could here get all of the other key a user could use
-	 * using the VMK and the reverse encrypted data
-	 */
-	
-	
-	/*
-	 * And then, use the VMK to decrypt the FVEK
-	 */
-	if(cfg.decryption_mean != USE_FVEKFILE)
-	{
-		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
-		{
-			ret = EXIT_FAILURE;
-			goto FIRST_CLEAN;
-		}
-	}
-	
-	
-	/* Just a check of the algo used to crypt data here */
-	fvek_typed_datum = (datum_key_t*) fvek_datum;
-	fvek_typed_datum->algo &= 0xffff;
-	
-	if(fvek_typed_datum->algo < AES_128_DIFFUSER ||
-	   fvek_typed_datum->algo > AES_256_NO_DIFFUSER)
-	{
-		xprintf(L_CRITICAL,
-		        "Can't recognize the encryption algorithm used: %#x. Abort\n",
-		        fvek_typed_datum->algo);
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	
-	
-	/*
-	 * Init the decrypt keys' contexts
-	 */
-	if(!init_keys(dataset, fvek_typed_datum, &ctx))
-	{
-		xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto FIRST_CLEAN;
-	}
-	
-	
-	
-	/*
-	 * We have everything we need to run in fuse or whatever now
-	 * Let's clean things we don't need here
-	 */
-	ret = EXIT_SUCCESS;
-	
-FIRST_CLEAN:
-	
-	/* Free them all! */
-	if(vmk_datum)
-		memclean(vmk_datum,
-		        ((datum_generic_type_t*)vmk_datum)->header.datum_size);
-	
-	if(fvek_typed_datum)
-		memclean(fvek_datum, fvek_typed_datum->header.datum_size);
-	
-	/* Goto finnishing to clean everything before returning */
-	if(ret == EXIT_FAILURE)
-		goto LAST_CLEAN;
-	
 	
 	/* Check if we're running under EOW mode */
-	extern guid_t EOW_INFORMATION_OFFSET_GUID;
+	extern guid_t INFORMATION_OFFSET_GUID, EOW_INFORMATION_OFFSET_GUID;
 	
-	if(check_match_guid(volume_header.guid, EOW_INFORMATION_OFFSET_GUID))
+	if(check_match_guid(dis_ctx->io_data.volume_header->guid, EOW_INFORMATION_OFFSET_GUID))
 	{
 		xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
 		
 		// First: get the EOW informations no matter what
-		off_t source = (off_t)volume_header.offset_eow_information[0];
+		off_t source = (off_t)dis_ctx->io_data.volume_header->offset_eow_information[0];
 		void* eow_infos = NULL;
 		
-		if(get_eow_information(source, &eow_infos, fd_volume))
+		if(get_eow_information(source, &eow_infos, dis_ctx->io_data.volume_fd))
 		{
 			// Second: print them
 			print_eow_infos(L_DEBUG, (bitlocker_eow_infos_t*)eow_infos);
@@ -420,7 +209,7 @@ FIRST_CLEAN:
 			xfree(eow_infos);
 			
 			// Thid: check if this struct passes checks
-			if(get_eow_check_valid(&volume_header, fd_volume, &eow_infos, &cfg))
+			if(get_eow_check_valid(dis_ctx->io_data.volume_header, dis_ctx->io_data.volume_fd, &eow_infos, &dis_ctx->cfg))
 			{
 				xprintf(L_INFO,
 				        "EOW information at offset % " F_OFF_T
@@ -440,6 +229,247 @@ FIRST_CLEAN:
 			        "Getting EOW information at offset % " F_OFF_T
 			        " failed\n", source);
 		}
+		
+		xprintf(L_CRITICAL, "EOW volume GUID not supported.\n");
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	else if(check_match_guid(dis_ctx->io_data.volume_header->guid, INFORMATION_OFFSET_GUID))
+	{
+		xprintf(L_INFO, "Volume GUID supported\n");
+	}
+	else
+	{
+		xprintf(L_CRITICAL, "Unknown volume GUID not supported.\n");
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	if(dis_ctx->stop_at == AFTER_VOLUME_CHECK)
+	{
+		return EXIT_SUCCESS;
+	}
+	
+	
+	/* Getting BitLocker metadata and validate them */
+	// TODO give the whole dis_ctx here for stopping at first INFORMATION (for stop_at)
+	if(!get_metadata_check_validations(
+		dis_ctx->io_data.volume_header,
+		dis_ctx->io_data.volume_fd,
+		&bl_metadata,
+		&dis_ctx->cfg))
+	{
+		xprintf(
+			L_CRITICAL,
+			"A problem occured during the retrieving of metadata. Abort.\n"
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	if(dis_ctx->cfg.force_block == 0 || !bl_metadata)
+	{
+		xprintf(
+			L_CRITICAL,
+			"Can't find a valid set of metadata on the disk. Abort.\n"
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	/* Checking BitLocker version */
+	if(((bitlocker_header_t*)bl_metadata)->version > V_SEVEN)
+	{
+		xprintf(
+			L_CRITICAL,
+			"Program designed only for BitLocker version 2 and less, "
+			"the version here is %hd. Abort.\n",
+			((bitlocker_header_t*)bl_metadata)->version
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
+	
+	/* For debug purpose, print the metadata */
+	print_bl_metadata(L_DEBUG, bl_metadata);
+	print_data(L_DEBUG, bl_metadata);
+	
+	dis_ctx->io_data.metadata = bl_metadata;
+	
+	if(dis_ctx->stop_at == AFTER_BITLOCKER_INFORMATION_CHECK)
+	{
+		return EXIT_SUCCESS;
+	}
+	
+	
+	/* Now that we have the metadata, get the dataset within it */
+	if(get_dataset(bl_metadata, &dataset) != TRUE)
+	{
+		xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	/*
+	 * If the state of the volume is currently decrypted, there's no key to grab
+	 */
+	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
+		return EXIT_SUCCESS;
+	
+	
+	/*
+	 * First, get the VMK datum using either any necessary mean
+	 */
+	while(dis_ctx->cfg.decryption_mean)
+	{
+		if(dis_ctx->cfg.decryption_mean & USE_CLEAR_KEY)
+		{
+			if(!get_vmk_from_clearkey(dataset, &vmk_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_CLEAR_KEY;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used clear key decryption method\n");
+				dis_ctx->cfg.decryption_mean = USE_CLEAR_KEY;
+				break;
+			}
+		}
+		else if(dis_ctx->cfg.decryption_mean & USE_USER_PASSWORD)
+		{
+			if(!get_vmk_from_user_pass(dataset, &dis_ctx->cfg, &vmk_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_USER_PASSWORD;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used user password decryption method\n");
+				dis_ctx->cfg.decryption_mean = USE_USER_PASSWORD;
+				break;
+			}
+		}
+		else if(dis_ctx->cfg.decryption_mean & USE_RECOVERY_PASSWORD)
+		{
+			if(!get_vmk_from_rp(dataset, &dis_ctx->cfg, &vmk_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_RECOVERY_PASSWORD;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used recovery password decryption method\n");
+				dis_ctx->cfg.decryption_mean = USE_RECOVERY_PASSWORD;
+				break;
+			}
+		}
+		else if(dis_ctx->cfg.decryption_mean & USE_BEKFILE)
+		{
+			if(!get_vmk_from_bekfile(dataset, &dis_ctx->cfg, &vmk_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_BEKFILE;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used bek file decryption method\n");
+				dis_ctx->cfg.decryption_mean = USE_BEKFILE;
+				break;
+			}
+		}
+		else if(dis_ctx->cfg.decryption_mean & USE_FVEKFILE)
+		{
+			if(!build_fvek_from_file(&dis_ctx->cfg, &fvek_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_FVEKFILE;
+			}
+			else
+			{
+				xprintf(L_INFO, "Used FVEK file decryption method\n");
+				dis_ctx->cfg.decryption_mean = USE_FVEKFILE;
+				break;
+			}
+		}
+		else
+		{
+			xprintf(L_CRITICAL, "Wtf!? Abort.\n");
+			dis_destroy(dis_ctx);
+			return EXIT_FAILURE;
+		}
+	}
+	
+	if(!dis_ctx->cfg.decryption_mean)
+	{
+		xprintf(
+			L_CRITICAL,
+			"None of the provided decryption mean is "
+			"decrypting the keys. Abort.\n"
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	dis_ctx->io_data.vmk = vmk_datum;
+	
+	if(dis_ctx->stop_at == AFTER_VMK)
+	{
+		return EXIT_SUCCESS;
+	}
+	
+	
+	/*
+	 * NOTE -- We could here validate bl_metadata in a more precise way
+	 * using the VMK and the validations infos after the informations
+	 * 
+	 * NOTE -- We could here get all of the other key a user could use
+	 * using the VMK and the reverse encrypted data
+	 */
+	
+	
+	/*
+	 * And then, use the VMK to decrypt the FVEK
+	 */
+	if(dis_ctx->cfg.decryption_mean != USE_FVEKFILE)
+	{
+		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
+		{
+			dis_destroy(dis_ctx);
+			return EXIT_FAILURE;
+		}
+	}
+	
+	
+	/* Just a check of the algo used to crypt data here */
+	fvek_typed_datum = (datum_key_t*) fvek_datum;
+	fvek_typed_datum->algo &= 0xffff;
+	
+	if(fvek_typed_datum->algo < AES_128_DIFFUSER ||
+	   fvek_typed_datum->algo > AES_256_NO_DIFFUSER)
+	{
+		xprintf(
+			L_CRITICAL,
+			"Can't recognize the encryption algorithm used: %#x. Abort\n",
+			fvek_typed_datum->algo
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	dis_ctx->io_data.fvek = fvek_typed_datum;
+	
+	if(dis_ctx->stop_at == AFTER_FVEK)
+	{
+		return EXIT_SUCCESS;
+	}
+	
+	
+	/*
+	 * Init the decrypt keys' contexts
+	 */
+	if(!init_keys(dataset, fvek_typed_datum, dis_ctx->io_data.enc_ctx))
+	{
+		xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
 	}
 	
 	
@@ -447,113 +477,424 @@ FIRST_CLEAN:
 	 * Fill the dis_iodata_t structure which will be used for encryption &
 	 * decryption afterward
 	 */
-	if(!prepare_crypt((bitlocker_header_t*) bl_metadata, &ctx, &cfg,
-	                  &volume_header, cfg.offset, fd_volume))
+	if(!prepare_crypt(dis_ctx))
 	{
 		xprintf(L_CRITICAL, "Can't prepare the crypt structure. Abort.\n");
 		ret = EXIT_FAILURE;
-		goto LAST_CLEAN;
 	}
 	
 	
-#if defined(__RUN_FUSE)
+	// TODO add the BEFORE_DECRYPTION_CHECKING event here, so add the check here too
+	
+	
+	/* Clean everything before returning if there's an error */
+	if(ret == EXIT_FAILURE)
+		dis_destroy(dis_ctx);
+	
+	return ret;
+}
+
+
+
+
+int dislock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
+{
+	uint8_t* buf = NULL;
+	
+	size_t sector_count;
+	off_t  sector_start;
+	size_t sector_to_add = 0;
+	uint16_t sector_size = dis_ctx->io_data.sector_size;
+	
+	
 	/* Check the state the BitLocker volume is in */
-	if(cfg.check_state == TRUE && !check_state((bitlocker_header_t*) bl_metadata))
+	if(dis_ctx->cfg.dont_check_state == FALSE &&
+		!check_state(dis_ctx->io_data.metadata))
 	{
-		xprintf(L_CRITICAL, "Invalid state, can't run safely. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto LAST_CLEAN;
+		xprintf(L_ERROR, "Invalid state, can't run safely. Abort.\n");
+		return -EFAULT;
 	}
 	
-	/** @see fuse.c */
-	extern struct fuse_operations fs_oper;
+	/* Check requested size */
+	if(size == 0)
+	{
+		xprintf(L_DEBUG, "Received a request with a null size\n");
+		return 0;
+	}
 	
-	/*
-	 * Create the parameters table needed for FUSE and run it
-	 * This is as we're running argv[0] followed by ARGS (see usage())
+	/* Check requested offset */
+	if(offset < 0)
+	{
+		xprintf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
+		return -EFAULT;
+	}
+	
+	if(offset >= (off_t)dis_ctx->io_data.volume_size)
+	{
+		xprintf(
+			L_ERROR,
+			"Offset (%#" F_OFF_T ") exceeds volume's size (%#" F_OFF_T ")\n",
+			offset,
+			(off_t)dis_ctx->io_data.volume_size
+		);
+		return -EFAULT;
+	}
+	
+	
+	/* 
+	 * The offset may not be at a sector limit, so we need to decrypt the entire
+	 * sector where it starts. Idem for the end.
+	 * 
+	 * 
+	 * Example:
+	 * Sector number:              1   2   3   4   5   6   7...
+	 * Data, continuous sectors: |___|___|___|___|___|___|__...
+	 * The data the user want:         |__________|
+	 * 
+	 * The user don't want all of the data from sectors 2 and 5, but as the data
+	 * are encrypted sector by sector, we have to decrypt them even though we
+	 * won't give him the beginning of the sector 2 and the end of the sector 5.
+	 * 
+	 * 
+	 * 
+	 * Logic to do this is below :
+	 *  - count the number of full sectors
+	 *  - decode all sectors
+	 *  - select and copy the data to user and deallocate all buffers
 	 */
 	
-	/* Get the new value for argc */
-	if(param_idx >= argc || param_idx <= 0)
-	{
-		xprintf(L_CRITICAL, "Error, no mount point given. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto LAST_CLEAN;
-	}
+	/* Do not add sectors if we're at the edge of one already */
+	if((offset % sector_size) != 0)
+		sector_to_add += 1;
+	if(((offset + (off_t)size) % sector_size) != 0)
+		sector_to_add += 1;
 	
-	size_t new_argc = (size_t)(argc - param_idx + 1);
-	xprintf(L_DEBUG, "New value for argc: %d\n", new_argc);
+	sector_count = ( size / sector_size ) + sector_to_add;
+	sector_start = offset / sector_size;
 	
-	char** new_argv = xmalloc(new_argc * sizeof(char*));
+	xprintf(L_DEBUG,
+	        "--------------------{ Fuse reading }-----------------------\n");
+	xprintf(L_DEBUG, "  Offset and size needed: %#" F_OFF_T
+	                 " and %#" F_SIZE_T "\n", offset, size);
+	xprintf(L_DEBUG, "  Start sector number: %#" F_OFF_T
+	                 " || Number of sectors: %#" F_SIZE_T "\n",
+	                 sector_start, sector_count);
 	
-	
-	/* Get argv[0] */
-	size_t lg = strlen(argv[0]) + 1;
-	*new_argv = xmalloc(lg);
-	memcpy(*new_argv, argv[0], lg);
-	
-	
-	/* Get all of the parameters from param_idx till the end */
-	size_t loop = 0;
-	for(loop = 1; loop < new_argc; ++loop)
-	{
-		lg = strlen(argv[(size_t)param_idx + loop - 1]) + 1;
-		*(new_argv + loop) = xmalloc(lg);
-		memcpy(*(new_argv + loop), argv[(size_t)param_idx + loop - 1], lg);
-	}
-	
-	
-	xprintf(L_INFO, "Running FUSE with these arguments: \n");
-	for(loop = 0; loop < new_argc; ++loop)
-		xprintf(L_INFO, "  `--> '%s'\n", *(new_argv + loop));
-	
-	
-	/* Run FUSE */
-	ret = fuse_main((int)new_argc, new_argv, &fs_oper, NULL);
-	
-	/* Free FUSE params */
-	for(loop = 0; loop < new_argc; ++loop)
-		xfree(new_argv[loop]);
-	xfree(new_argv);
-	
-#elif defined(__RUN_FILE)
 	
 	/*
-	 * Create a NTFS file which could be mounted using `mount -o loop...`
+	 * NOTE: DO NOT use xmalloc() here, we don't want to mess everything up!
+	 * In general, do not use xfunctions() but xprintf() here.
 	 */
 	
-	/* Check that we have the file where to put NTFS data */
-	if(argc <= param_idx)
+	size_t to_allocate = size + sector_to_add*sector_size;
+	xprintf(L_DEBUG, "  Trying to allocate %#" F_SIZE_T " bytes\n",to_allocate);
+	buf = malloc(to_allocate);
+	
+	/* If buffer could not be allocated, return an error */
+	if(!buf)
 	{
-		xprintf(L_CRITICAL, "Error, no file given. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto LAST_CLEAN;
+		xprintf(L_ERROR, "Cannot allocate buffer for reading, abort.\n");
+		xprintf(L_DEBUG,
+		       "-----------------------------------------------------------\n");
+		if(errno < 0)
+			return errno;
+		else
+			return -ENOMEM;
 	}
 	
-	char* ntfs_file = argv[param_idx];
-	xprintf(L_INFO, "Putting NTFS data into '%s'...\n", ntfs_file);
 	
-	/* Run the decryption */
-	ret = file_main(ntfs_file);
+	if(!dis_ctx->io_data.decrypt_region(
+		&dis_ctx->io_data,
+		sector_count,
+		sector_size,
+		sector_start * sector_size,
+		buf))
+	{
+		free(buf);
+		xprintf(L_ERROR, "Cannot decrypt sectors, abort.\n");
+		xprintf(L_DEBUG,
+		       "-----------------------------------------------------------\n");
+		return -EIO;
+	}
 	
-#else /* no __RUN_FUSE, nor __RUN_FILE */
-	xprintf(L_ERROR, "Neither __RUN_FILE nor __RUN_FUSE was enabled. "
-	                 "Nothing to do.\n");
-#endif
+	/* Now copy the required amount of data to the user buffer */
+	memcpy(buffer, buf + (offset % sector_size), size);
 	
-LAST_CLEAN:
-	/* Finnish cleaning things */
-	if(bl_metadata)
-		xfree(bl_metadata);
+	free(buf);
 	
-	pthread_mutex_destroy(&disk_op_data.mutex_lseek_rw);
+	xprintf(L_DEBUG, "  Outsize which will be returned: %d\n", (int)size);
+	xprintf(L_DEBUG,
+	        "-----------------------------------------------------------\n");
 	
-	free_args(&cfg);
+	return (int)size;
+}
+
+
+
+
+int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
+{
+	uint8_t* buf = NULL;
+	int      ret = 0;
 	
-	xclose(fd_volume);
+	uint16_t sector_size = dis_ctx->io_data.sector_size;
+	size_t sector_count;
+	off_t  sector_start;
+	size_t sector_to_add = 0;
+	
+	
+	/* Perform basic checks */
+	if(dis_ctx->cfg.is_ro & READ_ONLY)
+	{
+		xprintf(L_DEBUG, "Only decrypting (-r or --read-only option passed)\n");
+		return -EACCES;
+	}
+	
+	if(size == 0)
+	{
+		xprintf(L_DEBUG, "Received a request with a null size\n");
+		return 0;
+	}
+	
+	if(offset < 0)
+	{
+		xprintf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
+		return -EFAULT;
+	}
+	
+	if(offset >= (off_t)dis_ctx->io_data.volume_size)
+	{
+		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
+		                 F_OFF_T ")\n",
+		        offset, (off_t)dis_ctx->io_data.volume_size);
+		return -EFAULT;
+	}
+	
+	if((size_t)offset + size >= (size_t)dis_ctx->io_data.volume_size)
+	{
+		size_t nsize = (size_t)dis_ctx->io_data.volume_size
+		               - (size_t)offset;
+		xprintf(L_WARNING, "Size modified as exceeding volume's end (offset=%#"
+		                   F_SIZE_T " + size=%#" F_SIZE_T " >= volume_size=%#"
+		                   F_SIZE_T ") ; new size: %#" F_SIZE_T "\n",
+		        (size_t)offset, size, (size_t)dis_ctx->io_data.volume_size, nsize);
+		size = nsize;
+	}
+	
+	
+	/*
+	 * Don't authorize to write on metadata, NTFS firsts sectors and on another
+	 * area we shouldn't write to (don't know its signification yet).
+	 */
+	off_t metadata_offset = 0;
+	off_t metadata_size   = 0;
+	size_t virt_loop      = 0;
+	
+	for(virt_loop = 0; virt_loop < dis_ctx->io_data.nb_virt_region; virt_loop++)
+	{
+		metadata_size = (off_t)dis_ctx->io_data.virt_region[virt_loop].size;
+		if(metadata_size == 0)
+			continue;
+		
+		metadata_offset = (off_t)dis_ctx->io_data.virt_region[virt_loop].addr;
+		
+		if(offset >= metadata_offset &&
+		   offset <= metadata_offset + metadata_size)
+		{
+			xprintf(L_INFO, "Denying write request on the metadata (1:%#"
+			        F_OFF_T ")\n", offset);
+			return -EFAULT;
+		}
+		
+		if(offset < metadata_offset &&
+		   offset + (off_t)size >= metadata_offset)
+		{
+			xprintf(L_INFO, "Denying write request on the metadata (2:%#"
+			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
+			return -EFAULT;
+		}
+	}
+	
+	
+	/*
+	 * For BitLocker 7's volume, redirect writes to firsts sectors to the backed
+	 * up ones
+	 */
+	if(dis_ctx->io_data.metadata->version == V_SEVEN &&
+	   offset < dis_ctx->io_data.virtualized_size)
+	{
+		xprintf(L_DEBUG, "  Entering virtualized area\n");
+		if(offset + (off_t)size <= dis_ctx->io_data.virtualized_size)
+		{
+			/*
+			 * If all the request is within the virtualized area, just change
+			 * the offset
+			 */
+			offset = offset + (off_t)dis_ctx->io_data.metadata->boot_sectors_backup;
+			xprintf(L_DEBUG, "  `-> Just redirecting to %#"F_OFF_T"\n", offset);
+		}
+		else
+		{
+			/*
+			 * But if the buffer is within the virtualized area and overflow it,
+			 * split the request in two:
+			 * - One for the virtualized area completely (which will be handled
+			 *   by "recursing" and entering the case above)
+			 * - One for the rest by changing the offset to the end of the
+			 *   virtualized area and the size to the rest to be dec/encrypted
+			 */
+			xprintf(L_DEBUG, "  `-> Splitting the request in two, recursing\n");
+			
+			size_t nsize = (size_t)(dis_ctx->io_data.virtualized_size - offset);
+			ret = enlock(dis_ctx, buffer, offset, nsize);
+			if(ret < 0)
+				return ret;
+			
+			offset  = dis_ctx->io_data.virtualized_size;
+			size   -= nsize;
+			buffer += nsize;
+		}
+	}
+	
+	
+	/* 
+	 * As in the read function, the offset may not be at a sector limit, so we
+	 * need to decrypt the entire sector where it starts till the entire sector
+	 * where it ends, then push the changes into the sectors at correct offset
+	 * and finally encrypt all of these sectors and write them back to the disk.
+	 * 
+	 * 
+	 * Example:
+	 * Sector number:                    1   2   3   4   5   6   7...
+	 * Data, continuous sectors:       |___|___|___|___|___|___|__...
+	 * Where the user want to write:         |__________|
+	 * 
+	 * The user don't want to write everywhere, just from the middle of sector 2
+	 * till a part of sector 5. But we're writing sectors by sectors to be able
+	 * to encrypt using AES. So we'll need entire sectors 2 to 5 included.
+	 * 
+	 * 
+	 * 
+	 * Logic to do this is below :
+	 *  - read and decrypt all sectors completely (2 to 5 in the example above)
+	 *  - replace some data by the user's one
+	 *  - encrypt and write the read sectors
+	 */
+	
+	/* Do not add sectors if we're at the edge of one already */
+	if((offset % sector_size) != 0)
+		sector_to_add += 1;
+	if(((offset + (off_t)size) % sector_size) != 0)
+		sector_to_add += 1;
+	
+	
+	sector_count = ( size / sector_size ) + sector_to_add;
+	sector_start = offset / sector_size;
+	
+	xprintf(L_DEBUG,
+	        "--------------------{ Fuse writing }-----------------------\n");
+	xprintf(L_DEBUG, "  Offset and size requested: %#" F_OFF_T " and %#"
+	        F_SIZE_T "\n", offset, size);
+	xprintf(L_DEBUG, "  Start sector number: %#" F_OFF_T
+	        " || Number of sectors: %#" F_SIZE_T "\n",
+	        sector_start, sector_count);
+	
+	
+	/*
+	 * NOTE: DO NOT use xmalloc() here, we don't want to mess everything up!
+	 * In general, do not use xfunctions() but xprintf() here.
+	 */
+	
+	buf = malloc(size + sector_to_add * (size_t)sector_size);
+	
+	/* If buffer could not be allocated */
+	if(!buf)
+	{
+		xprintf(L_ERROR, "Cannot allocate buffer for writing, abort.\n");
+		xprintf(L_DEBUG,
+		       "-----------------------------------------------------------\n");
+		return -ENOMEM;
+	}
+	
+	
+	if(!dis_ctx->io_data.decrypt_region(
+		&dis_ctx->io_data,
+		sector_count,
+		sector_size,
+		sector_start * sector_size,
+		buf
+	))
+	{
+		free(buf);
+		xprintf(L_ERROR, "Cannot decrypt sectors, abort.\n");
+		xprintf(L_DEBUG,
+		       "-----------------------------------------------------------\n");
+		return -EIO;
+	}
+	
+	
+	/* Now copy the user's buffer to the received data */
+	memcpy(buf + (offset % sector_size), buffer, size);
+	
+	
+	/* Finally, encrypt the buffer and write it to the disk */
+	if(!dis_ctx->io_data.encrypt_region(
+		&dis_ctx->io_data,
+		sector_count,
+		sector_size,
+		sector_start * sector_size,
+		buf
+	))
+	{
+		free(buf);
+		xprintf(L_ERROR, "Cannot encrypt sectors, abort.\n");
+		xprintf(L_DEBUG,
+		       "-----------------------------------------------------------\n");
+		return -EIO;
+	}
+	
+	
+	free(buf);
+	
+	
+	/* Note that ret is zero when no recursion occurs */
+	int outsize = (int)size + ret;
+	
+	xprintf(L_DEBUG, "  Outsize which will be returned: %d\n", outsize);
+	xprintf(L_DEBUG,
+	        "-----------------------------------------------------------\n");
+	
+	return outsize;
+}
+
+
+
+
+int dis_destroy(dis_context_t* dis_ctx)
+{
+	/* Finish cleaning things */
+	if(dis_ctx->io_data.metadata)
+		xfree(dis_ctx->io_data.metadata);
+	
+	if(dis_ctx->io_data.volume_header)
+		xfree(dis_ctx->io_data.volume_header);
+	
+	if(dis_ctx->io_data.vmk)
+		xfree(dis_ctx->io_data.vmk);
+	
+	if(dis_ctx->io_data.fvek)
+		xfree(dis_ctx->io_data.fvek);
+	
+	if(dis_ctx->io_data.enc_ctx)
+		xfree(dis_ctx->io_data.enc_ctx);
+	
+	pthread_mutex_destroy(&dis_ctx->io_data.mutex_lseek_rw);
+	
+	free_args(&dis_ctx->cfg);
+	
+	xclose(dis_ctx->io_data.volume_fd);
 	
 	xstdio_end();
 	
-	
-	return ret;
+	return EXIT_SUCCESS;
 }

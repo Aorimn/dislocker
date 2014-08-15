@@ -34,6 +34,8 @@
 
 #include <pthread.h>
 
+#include "dislocker.h"
+
 
 /* Struct we pass to a thread for buffer enc/decryption */
 typedef struct _thread_arg
@@ -48,6 +50,8 @@ typedef struct _thread_arg
 	
 	unsigned int modulo;
 	unsigned int modulo_result;
+	
+	dis_iodata_t* io_data;
 } thread_arg_t;
 
 
@@ -56,7 +60,19 @@ typedef struct _thread_arg
 /*
  * Functions prototypes
  */
-int read_decrypt_sectors( int fd, size_t nb_read_sector,  uint16_t sector_size, off_t sector_start, uint8_t* output);
-int encrypt_write_sectors(int fd, size_t nb_write_sector, uint16_t sector_size, off_t sector_start, uint8_t* input);
+int read_decrypt_sectors(
+	dis_iodata_t* io_data,
+	size_t nb_read_sector,
+	uint16_t sector_size,
+	off_t sector_start,
+	uint8_t* output
+);
+int encrypt_write_sectors(
+	dis_iodata_t* io_data,
+	size_t nb_write_sector,
+	uint16_t sector_size,
+	off_t sector_start,
+	uint8_t* input
+);
 
 #endif /* SECTORS_H */

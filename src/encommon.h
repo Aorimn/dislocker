@@ -26,6 +26,7 @@
 
 #include "common.h"
 #include "config.h"
+#include "metadata/vmk.h"
 #include "metadata/metadata.h"
 #include "metadata/extended_info.h"
 
@@ -59,6 +60,15 @@ typedef struct _data {
 	/* Volume metadata */
 	bitlocker_header_t* metadata;
 	
+	/* The volume header, 512 bytes */
+	volume_header_t* volume_header;
+	
+	/* The VMK */
+	datum_key_t* vmk;
+	
+	/* The FVEK */
+	datum_key_t* fvek;
+	
 	/*
 	 * Virtualized regions are presented as zeroes when queried from the NTFS
 	 * layer. In these virtualized regions, we find the 3 BitLocker metadata
@@ -88,17 +98,29 @@ typedef struct _data {
 	int                 volume_fd;
 	
 	/* Contexts used to encrypt or decrypt */
-	contexts_t*         ctx;
-	
-	/* Configuration parameters */
-	dis_config_t*       cfg;
+	contexts_t*         enc_ctx;
 	
 	/* Function to decrypt a region of the volume */
-	int(*decrypt_region)(int fd, size_t nb_read_sector,  uint16_t sector_size, off_t sector_start, uint8_t* output);
+	int(*decrypt_region)(
+		struct _data* io_data,
+		size_t nb_read_sector,
+		uint16_t sector_size,
+		off_t sector_start,
+		uint8_t* output
+	);
 	/* Function to encrypt a region of the volume */
-	int(*encrypt_region)(int fd, size_t nb_write_sector, uint16_t sector_size, off_t sector_start, uint8_t* input);
+	int(*encrypt_region)(
+		struct _data* io_data,
+		size_t nb_write_sector,
+		uint16_t sector_size,
+		off_t sector_start,
+		uint8_t* input
+	);
 	
-	/* FUSE uses threads. We need to protect our "lseek/read" and "lseek/write" sequences */
+	/*
+	 * FUSE uses threads. We need to protect our "lseek/read" and "lseek/write"
+	 * sequences
+	 */
 	pthread_mutex_t     mutex_lseek_rw;
 } dis_iodata_t;
 

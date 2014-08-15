@@ -27,9 +27,9 @@
 #define _GNU_SOURCE
 
 #include <getopt.h>
-
 #include <locale.h>
 
+#include "dislocker.h"
 
 #include "common.h"
 #include "config.h"
@@ -57,21 +57,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	int ret = EXIT_SUCCESS;
-	
 	int optchar = 0;
 	char *volume_path = NULL;
-	
-	int fd = 0;
-	volume_header_t volume_header;
-	
-	void* bl_metadata = NULL;
 	
 	bitlocker_dataset_t* dataset = NULL;
 	datum_vmk_t* vmk_clear_key_datum = NULL;
 	
-	dis_config_t cfg;
-	memset(&cfg, 0, sizeof(cfg));
+	off_t offset = 0;
 	
 	while((optchar = getopt(argc, argv, "o:V:h")) != -1)
 	{
@@ -81,7 +73,7 @@ int main(int argc, char **argv)
 				usage();
 				return EXIT_SUCCESS;
 			case 'o':
-				cfg.offset = (off_t) strtoll(optarg, NULL, 10);
+				offset = (off_t) strtoll(optarg, NULL, 10);
 				break;
 			case 'V':
 				volume_path = strdup(optarg);
@@ -94,102 +86,65 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	xstdio_init(L_INFO, NULL);
-	
 	if(!volume_path)
 	{
 		usage();
 		exit(EXIT_FAILURE);
 	}
 	
-	// Open the volume as a normal file
-	fd = xopen(volume_path, O_RDONLY|O_LARGEFILE);
+	dis_context_t dis_ctx;
+	memset(&dis_ctx, 0, sizeof(dis_context_t));
 	
+	/*
+	 * Initialize dislocker's configuration
+	 */
+	dis_ctx.cfg.volume_path = volume_path;
+	dis_ctx.cfg.verbosity = L_INFO;
+	dis_ctx.cfg.offset = offset;
 	
-	/* To print UTF-32 strings */
-	setlocale(LC_ALL, "");
+	/* We don't want to give decryption mean, we only want the metadata */
+	dis_ctx.stop_at = AFTER_BITLOCKER_INFORMATION_CHECK;
 	
-	
-	// Initialize structures
-	memset(&volume_header, 0, sizeof(volume_header_t));
-	
-	
-	// Getting volume infos
-	if(!get_volume_header(&volume_header, fd, cfg.offset))
+	/* Initialize dislocker */
+	if(dis_initialize(&dis_ctx) == EXIT_FAILURE)
 	{
-		xprintf(L_ERROR, "Error during reading the volume: not enough byte read.\n");
-		ret = EXIT_FAILURE;
-		goto error;
+		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		return EXIT_FAILURE;
 	}
 	
-	// Printing them
-	print_volume_header(L_INFO, &volume_header);
 	
-	// Checking the volume signature
-	if(memcmp(BITLOCKER_SIGNATURE, volume_header.signature,
-	          BITLOCKER_SIGNATURE_SIZE) != 0)
-	{
-		xprintf(L_CRITICAL,
-		        "The signature of the volume (%.8s) doesn't match the "
-				"BitLocker's one (-FVE-FS-). Abort.\n",
-				volume_header.signature);
-		ret = EXIT_FAILURE;
-		goto error;
-	}
-	
-	// Getting BitLocker metadata and validate them
-	if(!get_metadata_check_validations(&volume_header, fd, &bl_metadata, &cfg))
-	{
-		xprintf(L_CRITICAL, "A problem occured during the retrieving of metadata. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto error;
-	}
-	
-	if(cfg.force_block == 0 || !bl_metadata)
-	{
-		xprintf(L_CRITICAL, "Can't find a valid set of metadata on the disk. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto error;
-	}
-	
-	// Printing BitLocker metadata
-	print_bl_metadata(L_INFO, bl_metadata);
+	// Printing volume header
+	print_volume_header(L_INFO, dis_ctx.io_data.volume_header);
 	xprintf(L_INFO, "\n");
 	
+	// Printing BitLocker metadata
+	print_bl_metadata(L_INFO, dis_ctx.io_data.metadata);
+	xprintf(L_INFO, "\n");
 	
-	// Now we're looking at the data
-	print_data(L_INFO, bl_metadata);
+	// Now we're looking at the data themselves
+	print_data(L_INFO, dis_ctx.io_data.metadata);
 	
 	
 	// Get the metadata's dataset
-	if(!get_dataset(bl_metadata, &dataset))
+	if(!get_dataset(dis_ctx.io_data.metadata, &dataset))
 	{
 		xprintf(L_CRITICAL, "Can't find a valid dataset. Abort.\n");
-		ret = EXIT_FAILURE;
-		goto error;
+		dis_destroy(&dis_ctx);
+		return EXIT_FAILURE;
 	}
 	
 	// Search for a clear key
 	if(has_clear_key(dataset, &vmk_clear_key_datum))
 	{
-		xprintf(L_INFO, "\n===== There's a clear key here!\n===== Take a look at it:\n");
+		xprintf(L_INFO, "=======[ There's a clear key here ]========\n");
 		print_one_datum(L_INFO, (void*)vmk_clear_key_datum);
-		xprintf(L_INFO, "============[ Clear key end ]============\n");
+		xprintf(L_INFO, "=============[ Clear key end ]=============\n");
 	}
 	else
 		xprintf(L_INFO, "No clear key found.\n");
 	
 	
-error:
-	// Do some cleaning stuff
-	if(volume_path)
-		xfree(volume_path);
+	dis_destroy(&dis_ctx);
 	
-	if(bl_metadata)
-		xfree(bl_metadata);
-	
-	xclose(fd);
-	xstdio_end();
-	
-	return ret;
+	return EXIT_SUCCESS;
 }

@@ -57,11 +57,11 @@ int encrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_addr
 	{
 		case AES_128_DIFFUSER:
 		case AES_256_DIFFUSER:
-			encrypt_with_diffuser(global_data->ctx, global_data->sector_size, sector, sector_address, buffer);
+			encrypt_with_diffuser(global_data->enc_ctx, global_data->sector_size, sector, sector_address, buffer);
 			break;
 		case AES_128_NO_DIFFUSER:
 		case AES_256_NO_DIFFUSER:
-			encrypt_without_diffuser(global_data->ctx, global_data->sector_size, sector, sector_address, buffer);
+			encrypt_without_diffuser(global_data->enc_ctx, global_data->sector_size, sector, sector_address, buffer);
 			break;
 	}
 	

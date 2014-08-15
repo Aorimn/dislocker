@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 
+#include "dislocker.h"
 #include "config.h"
 #include "encommon.h"
 #include "metadata/datums.h"
@@ -42,9 +43,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, contexts_t* ctx);
  * Function used to prepare a structure which hold data used for
  * decryption/encryption
  */
-int prepare_crypt(bitlocker_header_t* metadata, contexts_t* ctx,
-                  dis_config_t* cfg, volume_header_t* volume_header,
-                  off_t offset, int fd_volume);
+int prepare_crypt(dis_context_t* dis_ctx);
 
 
 #endif /* PREPARE_H */

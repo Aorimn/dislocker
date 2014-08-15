@@ -54,7 +54,7 @@ PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
 "                          decrypt volume using the recovery password method\n"
 "    -q, --quiet           do NOT display anything\n"
 "    -r, --readonly        do not allow to write on the BitLocker volume\n"
-"    -s, --stateok         do not check the volume's state, assume it's ok to mount it"
+"    -s, --stateok         do not check the volume's state, assume it's ok to mount it\n"
 "    -u, --user-password   decrypt volume using the user password method\n"
 "    -v, --verbosity       increase verbosity (CRITICAL errors are displayed by default)\n"
 "    -V, --volume VOLUME   volume to get metadata and keys from\n"
@@ -92,7 +92,7 @@ static void hide_opt(char* opt)
  * @param argv Arguments given to the program
  * @return Return the number of arguments which are still waiting to be studied
  */
-int parse_args(dis_config_t* cfg, int argc, char** argv)
+int parse_args(dis_config_t* cfg, int argc, char** argv) // TODO change into dis_parge_args()
 {
 	/** See man getopt_long(3) */
 	extern int optind;
@@ -269,6 +269,7 @@ void print_args(dis_config_t* cfg)
 	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
 	xprintf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
 	
+	// FIXME decryption_mean is a bitfield
 	switch(cfg->decryption_mean)
 	{
 		case USE_CLEAR_KEY:

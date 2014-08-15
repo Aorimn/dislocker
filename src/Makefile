@@ -27,6 +27,7 @@ CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	$(LIB) $(LHARDEN)
 LIBNAME		=	lib$(PROGNAME).so
 
+BIN		=	$(PROGNAME)
 SUFFIXES	=	fuse file metadata bek
 BINS		=	$(foreach suf, $(SUFFIXES), $(BIN)-$(suf))
 BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
@@ -44,7 +45,6 @@ SOURCES		=	dislocker.c common.c config.c sectors.c \
 			outputs/prepare.c
 OBJECTS		=	$(SOURCES:.c=.o)
 
-BIN		=	$(PROGNAME)
 
 
 DESTDIR		=	/usr
@@ -171,6 +171,14 @@ travis-install:
 	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
 		brew install dislocker.rb;                            \
 	fi
+
+travis-test:
+	@echo "Testing dislocker..."
+	dislocker -h
+	for prog in $(BINS); do             \
+		echo "Testing $${prog}..."; \
+		$${prog} -h;                \
+	done
 
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)

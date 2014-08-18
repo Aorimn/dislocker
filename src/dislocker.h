@@ -44,7 +44,17 @@ typedef enum {
 	AFTER_VMK,
 	AFTER_FVEK,
 	BEFORE_DECRYPTION_CHECKING,
-} dis_stopat_e;
+} dis_state_e;
+
+
+#define checkupdate_dis_state(ctx, state)                       \
+	do {                                                        \
+		(ctx)->curr_state = (state);                            \
+		if((state) == (ctx)->stop_at) {                         \
+			xprintf(L_DEBUG, "Exiting at state %d\n", (state)); \
+			return EXIT_SUCCESS;                                \
+		}                                                       \
+	} while(0);
 
 
 /**
@@ -57,7 +67,8 @@ typedef struct _dis_ctx {
 	
 	dis_iodata_t io_data;
 	
-	dis_stopat_e stop_at;
+	dis_state_e curr_state;
+	dis_state_e stop_at;
 } dis_context_t;
 
 

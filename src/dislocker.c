@@ -125,10 +125,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->io_data.volume_fd);
 	
-	if(dis_ctx->stop_at == AFTER_OPEN_VOLUME)
-	{
-		return EXIT_SUCCESS;
-	}
+	checkupdate_dis_state(dis_ctx, AFTER_OPEN_VOLUME);
 	
 	
 	/* To print UTF-32 strings */
@@ -163,10 +160,8 @@ int dis_initialize(dis_context_t* dis_ctx)
 	/* For debug purpose, print the volume header retrieved */
 	print_volume_header(L_DEBUG, dis_ctx->io_data.volume_header);
 	
-	if(dis_ctx->stop_at == AFTER_VOLUME_HEADER)
-	{
-		return EXIT_SUCCESS;
-	}
+	checkupdate_dis_state(dis_ctx, AFTER_VOLUME_HEADER);
+	
 	
 	/* Checking the signature */
 	if(memcmp(BITLOCKER_SIGNATURE, dis_ctx->io_data.volume_header->signature,
@@ -245,10 +240,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 		return EXIT_FAILURE;
 	}
 	
-	if(dis_ctx->stop_at == AFTER_VOLUME_CHECK)
-	{
-		return EXIT_SUCCESS;
-	}
+	checkupdate_dis_state(dis_ctx, AFTER_VOLUME_CHECK);
 	
 	
 	/* Getting BitLocker metadata and validate them */
@@ -298,10 +290,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	dis_ctx->io_data.metadata = bl_metadata;
 	
-	if(dis_ctx->stop_at == AFTER_BITLOCKER_INFORMATION_CHECK)
-	{
-		return EXIT_SUCCESS;
-	}
+	checkupdate_dis_state(dis_ctx, AFTER_BITLOCKER_INFORMATION_CHECK);
 	
 	
 	/* Now that we have the metadata, get the dataset within it */
@@ -410,10 +399,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	dis_ctx->io_data.vmk = vmk_datum;
 	
-	if(dis_ctx->stop_at == AFTER_VMK)
-	{
-		return EXIT_SUCCESS;
-	}
+	checkupdate_dis_state(dis_ctx, AFTER_VMK);
 	
 	
 	/*
@@ -456,10 +442,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	dis_ctx->io_data.fvek = fvek_typed_datum;
 	
-	if(dis_ctx->stop_at == AFTER_FVEK)
-	{
-		return EXIT_SUCCESS;
-	}
+	checkupdate_dis_state(dis_ctx, AFTER_FVEK);
 	
 	
 	/*
@@ -490,6 +473,8 @@ int dis_initialize(dis_context_t* dis_ctx)
 	/* Clean everything before returning if there's an error */
 	if(ret == EXIT_FAILURE)
 		dis_destroy(dis_ctx);
+	else
+		dis_ctx->curr_state = COMPLETE_EVERYTHING;
 	
 	return ret;
 }

@@ -659,10 +659,13 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	{
 		size_t nsize = (size_t)dis_ctx->io_data.volume_size
 		               - (size_t)offset;
-		xprintf(L_WARNING, "Size modified as exceeding volume's end (offset=%#"
-		                   F_SIZE_T " + size=%#" F_SIZE_T " >= volume_size=%#"
-		                   F_SIZE_T ") ; new size: %#" F_SIZE_T "\n",
-		        (size_t)offset, size, (size_t)dis_ctx->io_data.volume_size, nsize);
+		xprintf(
+			L_WARNING,
+			"Size modified as exceeding volume's end (offset=%#"
+			F_SIZE_T " + size=%#" F_SIZE_T " >= volume_size=%#"
+			F_SIZE_T ") ; new size: %#" F_SIZE_T "\n",
+			(size_t)offset, size, (size_t)dis_ctx->io_data.volume_size, nsize
+		);
 		size = nsize;
 	}
 	
@@ -684,7 +687,7 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		metadata_offset = (off_t)dis_ctx->io_data.virt_region[virt_loop].addr;
 		
 		if(offset >= metadata_offset &&
-		   offset <= metadata_offset + metadata_size)
+		   offset < metadata_offset + metadata_size)
 		{
 			xprintf(L_INFO, "Denying write request on the metadata (1:%#"
 			        F_OFF_T ")\n", offset);
@@ -692,7 +695,7 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		}
 		
 		if(offset < metadata_offset &&
-		   offset + (off_t)size >= metadata_offset)
+		   offset + (off_t)size > metadata_offset)
 		{
 			xprintf(L_INFO, "Denying write request on the metadata (2:%#"
 			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);

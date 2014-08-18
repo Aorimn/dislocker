@@ -43,6 +43,7 @@ void usage()
 					"\n"
 					"    -h         print this help and exit\n"
 					"    -o         partition offset\n"
+					"    -v         increase verbosity to debug level\n"
 					"    -V VOLUME  volume to get metadata from\n"
 		   );
 }
@@ -63,9 +64,10 @@ int main(int argc, char **argv)
 	bitlocker_dataset_t* dataset = NULL;
 	datum_vmk_t* vmk_clear_key_datum = NULL;
 	
-	off_t offset = 0;
+	off_t offset     = 0;
+	LEVELS verbosity = L_INFO;
 	
-	while((optchar = getopt(argc, argv, "o:V:h")) != -1)
+	while((optchar = getopt(argc, argv, "o:V:hv")) != -1)
 	{
 		switch(optchar)
 		{
@@ -74,6 +76,9 @@ int main(int argc, char **argv)
 				return EXIT_SUCCESS;
 			case 'o':
 				offset = (off_t) strtoll(optarg, NULL, 10);
+				break;
+			case 'v':
+				verbosity = L_DEBUG;
 				break;
 			case 'V':
 				volume_path = strdup(optarg);
@@ -99,7 +104,7 @@ int main(int argc, char **argv)
 	 * Initialize dislocker's configuration
 	 */
 	dis_ctx.cfg.volume_path = volume_path;
-	dis_ctx.cfg.verbosity = L_INFO;
+	dis_ctx.cfg.verbosity = verbosity;
 	dis_ctx.cfg.offset = offset;
 	
 	/* We don't want to give decryption mean, we only want the metadata */

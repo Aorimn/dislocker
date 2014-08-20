@@ -136,7 +136,7 @@ check-install:
 
 install: all
 	install -pm755 $(BINS) $(BINARIES_PATH)
-	cd $(BINARIES_PATH) && ln $(BIN)-fuse $(BIN) && cd -
+	ln -s $(BIN)-fuse $(BINARIES_PATH)$(BIN)
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
 	if [ "$(OS)" = "Darwin" ]; then                                       \
 		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
@@ -150,11 +150,12 @@ install: all
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
 uninstall: clean
+	if [ -f $(BINARIES_PATH)$(BIN) ]; then rm $(BINARIES_PATH)$(BIN); fi
 	for prog in $(BINS); do \
-		[ -f $(BINARIES_PATH)$${prog} ]   && rm $(BINARIES_PATH)$${prog}; \
+		if [ -f $(BINARIES_PATH)$${prog} ]; then rm $(BINARIES_PATH)$${prog}; fi \
 	done
-	[ -f $(LIBRARY_PATH)$(LIBNAME) ]          && rm $(LIBRARY_PATH)$(LIBNAME)
-	[ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ] && rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz
+	if [ -f $(LIBRARY_PATH)$(LIBNAME) ]; then          rm $(LIBRARY_PATH)$(LIBNAME); fi
+	if [ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ]; then rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz; fi
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 

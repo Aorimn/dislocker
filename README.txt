@@ -11,15 +11,19 @@ decided at compilation time within the Makefile.
 With FUSE, you have to give the program a mount point. Once keys are decrypted,
 a file named `dislocker-file' appears into this provided mount point. This file
 is a virtual NTFS partition, so you can mount it as any NTFS partition and then
-read from it or write to it.
+read from it or write to it. Note that writing to the NTFS virtual file will
+change the underlying BitLocker partition's content.
 
 Without FUSE, you have to give a file name where the BitLocker encrypted
-partition will be decrypted. This may take a long time, depending on the size of
-the encrypted partition. But afterward, once the partition is decrypted, the
-access to the NTFS partition will be faster. Another thing to think about is the
-size on your disk this method need (same size as the volume you're trying to
-decrypt). Nethertheless, once the partition is decrypted, you can mount your
-file as any NTFS partition.
+partition will be decrypted. This file will be the decrypted partition,
+probably formatted in NTFS. It won't have any link to the original BitLocker
+partition. Therefore, if you write on this file, the BitLocker volume won't
+change, only the NTFS file will. Note that this may take a long time, depending
+on the size of the encrypted partition. But afterward, once the partition is
+decrypted, the access to the NTFS partition will be faster. Another thing to
+think about is the size on your disk this method need (same size as the volume
+you're trying to decrypt). Nethertheless, once the partition is decrypted, you
+can mount your file as any NTFS partition.
 
 
 

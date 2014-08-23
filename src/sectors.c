@@ -368,9 +368,15 @@ static void* thread_decrypt(void* params)
 					offset, args->sector_size
 				);
 				memset(loop_output, 0, args->sector_size);
-				continue;
+				break;
 			}
 		}
+		
+		/*
+		 * If we've broke from the previous loop, that means we have to continue
+		 */
+		if(virt_loop != io_data->nb_virt_region)
+			continue;
 		
 		
 		/* Check for sectors fixing and non-encrypted sectors */

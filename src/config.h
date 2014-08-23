@@ -32,12 +32,15 @@
  * Different methods to decrypt the VMK
  */
 typedef enum {
-	USE_CLEAR_KEY         = 0x01,
-	USE_USER_PASSWORD     = 0x02,
-	USE_RECOVERY_PASSWORD = 0x04,
-	USE_BEKFILE           = 0x08,
-	USE_FVEKFILE          = 0x10
+	USE_CLEAR_KEY         = (1 << 0),
+	USE_USER_PASSWORD     = (1 << 1),
+	USE_RECOVERY_PASSWORD = (1 << 2),
+	USE_BEKFILE           = (1 << 3),
+	USE_FVEKFILE          = (1 << 4)
 } DECRYPT_MEAN;
+
+/* Don't use this as a decryption mean, but as the last one */
+#define LAST_MEAN (1 << 5)
 
 
 /**

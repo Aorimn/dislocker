@@ -269,35 +269,48 @@ void dis_print_args(dis_config_t* cfg)
 	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
 	xprintf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
 	
-	// FIXME decryption_mean is a bitfield
-	switch(cfg->decryption_mean)
+	unsigned int mean = 0;
+	for(mean = LAST_MEAN; mean > 0; mean >>= 1)
 	{
-		case USE_CLEAR_KEY:
-			xprintf(L_DEBUG,"   \tusing a clear key on the volume.\n");
-			break;
-		case USE_RECOVERY_PASSWORD:
-			xprintf(L_DEBUG,"   \tusing the recovery password method\n");
-			xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
-			break;
-		case USE_BEKFILE:
-			xprintf(L_DEBUG,"   \tusing the bek file at '%s'\n", cfg->bek_file);
-			break;
-		case USE_FVEKFILE:
-			xprintf(L_DEBUG,"   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
-			break;
-		default:
-			break;
+		switch(cfg->decryption_mean & mean)
+		{
+			case USE_CLEAR_KEY:
+				xprintf(L_DEBUG,"   \tusing a clear key on the volume\n");
+				break;
+			case USE_USER_PASSWORD:
+				xprintf(L_DEBUG,"   \tusing the user's password method\n");
+				xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->user_password);
+				break;
+			case USE_RECOVERY_PASSWORD:
+				xprintf(L_DEBUG,"   \tusing the recovery password method\n");
+				xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
+				break;
+			case USE_BEKFILE:
+				xprintf(L_DEBUG,"   \tusing the bek file at '%s'\n", cfg->bek_file);
+				break;
+			case USE_FVEKFILE:
+				xprintf(L_DEBUG,"   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
+				break;
+			default:
+				break;
+		}
 	}
 	
 	if(cfg->force_block)
-		xprintf(L_DEBUG, "   Forced to be using metadata block n°%d\n",
-				cfg->force_block);
+		xprintf(
+			L_DEBUG,
+			"   Forced to be using metadata block n°%d\n",
+			cfg->force_block
+		);
 	else
 		xprintf(L_DEBUG, "   Using the first valid metadata block\n");
 	
 	if(cfg->is_ro & READ_ONLY)
-		xprintf(L_DEBUG, "   Not allowing any write on the BitLocker volume "
-		                "(read only mode)\n");
+		xprintf(
+			L_DEBUG,
+			"   Not allowing any write on the BitLocker volume "
+			"(read only mode)\n"
+		);
 	
 	xprintf(L_DEBUG, "... End config ---\n");
 }

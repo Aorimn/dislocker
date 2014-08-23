@@ -25,9 +25,7 @@
 
 #define _GNU_SOURCE
 
-#include "accesses/bek/bekfile.h"
-#include "accesses/rp/recovery_password.h"
-#include "accesses/user_pass/user_pass.h"
+#include "accesses/accesses.h"
 
 
 #include "sectors.h"
@@ -61,11 +59,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 {
 	void* bl_metadata = NULL;
 	
-	bitlocker_dataset_t* dataset= NULL;
-	
-	void* vmk_datum = NULL;
-	void* fvek_datum = NULL;
-	datum_key_t* fvek_typed_datum = NULL;
+	bitlocker_dataset_t* dataset = NULL;
 	
 	int ret = EXIT_SUCCESS;
 	
@@ -293,6 +287,13 @@ int dis_initialize(dis_context_t* dis_ctx)
 	checkupdate_dis_state(dis_ctx, AFTER_BITLOCKER_INFORMATION_CHECK);
 	
 	
+	/*
+	 * If the state of the volume is currently decrypted, there's no key to grab
+	 */
+	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
+		return EXIT_SUCCESS;
+	
+	
 	/* Now that we have the metadata, get the dataset within it */
 	if(get_dataset(bl_metadata, &dataset) != TRUE)
 	{
@@ -302,153 +303,20 @@ int dis_initialize(dis_context_t* dis_ctx)
 	}
 	
 	/*
-	 * If the state of the volume is currently decrypted, there's no key to grab
+	 * Get the keys -- VMK & FVEK -- for dec/encryption operations
 	 */
-	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
-		return EXIT_SUCCESS;
-	
-	
-	/*
-	 * First, get the VMK datum using either any necessary mean
-	 */
-	while(dis_ctx->cfg.decryption_mean)
+	if(dis_get_access(dis_ctx, dataset) == EXIT_FAILURE)
 	{
-		if(dis_ctx->cfg.decryption_mean & USE_CLEAR_KEY)
-		{
-			if(!get_vmk_from_clearkey(dataset, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_CLEAR_KEY;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used clear key decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_CLEAR_KEY;
-				break;
-			}
-		}
-		else if(dis_ctx->cfg.decryption_mean & USE_USER_PASSWORD)
-		{
-			if(!get_vmk_from_user_pass(dataset, &dis_ctx->cfg, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_USER_PASSWORD;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used user password decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_USER_PASSWORD;
-				break;
-			}
-		}
-		else if(dis_ctx->cfg.decryption_mean & USE_RECOVERY_PASSWORD)
-		{
-			if(!get_vmk_from_rp(dataset, &dis_ctx->cfg, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_RECOVERY_PASSWORD;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used recovery password decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_RECOVERY_PASSWORD;
-				break;
-			}
-		}
-		else if(dis_ctx->cfg.decryption_mean & USE_BEKFILE)
-		{
-			if(!get_vmk_from_bekfile(dataset, &dis_ctx->cfg, &vmk_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_BEKFILE;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used bek file decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_BEKFILE;
-				break;
-			}
-		}
-		else if(dis_ctx->cfg.decryption_mean & USE_FVEKFILE)
-		{
-			if(!build_fvek_from_file(&dis_ctx->cfg, &fvek_datum))
-			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_FVEKFILE;
-			}
-			else
-			{
-				xprintf(L_INFO, "Used FVEK file decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_FVEKFILE;
-				break;
-			}
-		}
-		else
-		{
-			xprintf(L_CRITICAL, "Wtf!? Abort.\n");
-			dis_destroy(dis_ctx);
-			return EXIT_FAILURE;
-		}
-	}
-	
-	if(!dis_ctx->cfg.decryption_mean)
-	{
-		xprintf(
-			L_CRITICAL,
-			"None of the provided decryption mean is "
-			"decrypting the keys. Abort.\n"
-		);
+		xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
 		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
-	
-	dis_ctx->io_data.vmk = vmk_datum;
-	
-	checkupdate_dis_state(dis_ctx, AFTER_VMK);
-	
-	
-	/*
-	 * NOTE -- We could here validate bl_metadata in a more precise way
-	 * using the VMK and the validations infos after the informations
-	 * 
-	 * NOTE -- We could here get all of the other key a user could use
-	 * using the VMK and the reverse encrypted data
-	 */
-	
-	
-	/*
-	 * And then, use the VMK to decrypt the FVEK
-	 */
-	if(dis_ctx->cfg.decryption_mean != USE_FVEKFILE)
-	{
-		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
-		{
-			dis_destroy(dis_ctx);
-			return EXIT_FAILURE;
-		}
-	}
-	
-	
-	/* Just a check of the algo used to crypt data here */
-	fvek_typed_datum = (datum_key_t*) fvek_datum;
-	fvek_typed_datum->algo &= 0xffff;
-	
-	if(fvek_typed_datum->algo < AES_128_DIFFUSER ||
-	   fvek_typed_datum->algo > AES_256_NO_DIFFUSER)
-	{
-		xprintf(
-			L_CRITICAL,
-			"Can't recognize the encryption algorithm used: %#x. Abort\n",
-			fvek_typed_datum->algo
-		);
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
-	
-	dis_ctx->io_data.fvek = fvek_typed_datum;
-	
-	checkupdate_dis_state(dis_ctx, AFTER_FVEK);
 	
 	
 	/*
 	 * Init the decrypt keys' contexts
 	 */
-	if(!init_keys(dataset, fvek_typed_datum, dis_ctx->io_data.enc_ctx))
+	if(!init_keys(dataset, dis_ctx->io_data.fvek, dis_ctx->io_data.enc_ctx))
 	{
 		xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
 		dis_destroy(dis_ctx);

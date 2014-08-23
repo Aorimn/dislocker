@@ -32,7 +32,7 @@
 /**
  * Print program's usage
  */
-void usage()
+void dis_usage()
 {
 	fprintf(stderr,
 PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
@@ -92,7 +92,7 @@ static void hide_opt(char* opt)
  * @param argv Arguments given to the program
  * @return Return the number of arguments which are still waiting to be studied
  */
-int parse_args(dis_config_t* cfg, int argc, char** argv) // TODO change into dis_parge_args()
+int dis_parse_args(dis_config_t* cfg, int argc, char** argv) // TODO change into dis_parge_args()
 {
 	/** See man getopt_long(3) */
 	extern int optind;
@@ -146,8 +146,8 @@ int parse_args(dis_config_t* cfg, int argc, char** argv) // TODO change into dis
 					cfg->force_block = 1;
 				break;
 			case 'h':
-				usage();
-				free_args(cfg);
+				dis_usage();
+				dis_free_args(cfg);
 				exit(EXIT_SUCCESS);
 			case 'k':
 				if(cfg->fvek_file != NULL)
@@ -205,8 +205,8 @@ int parse_args(dis_config_t* cfg, int argc, char** argv) // TODO change into dis
 				break;
 			case '?':
 			default:
-				usage();
-				free_args(cfg);
+				dis_usage();
+				dis_free_args(cfg);
 				exit(EXIT_FAILURE);
 		}
 	}
@@ -236,7 +236,7 @@ int parse_args(dis_config_t* cfg, int argc, char** argv) // TODO change into dis
  * 
  * @param cfg Dislocker's config
  */
-void free_args(dis_config_t* cfg)
+void dis_free_args(dis_config_t* cfg)
 {
 	if(cfg->recovery_password)
 		memclean(cfg->recovery_password,
@@ -263,7 +263,7 @@ void free_args(dis_config_t* cfg)
 /**
  * Print read configuration
  */
-void print_args(dis_config_t* cfg)
+void dis_print_args(dis_config_t* cfg)
 {
 	xprintf(L_DEBUG, "--- Config...\n");
 	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);

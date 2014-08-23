@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 	// Check parameters number
 	if(argc < 2)
 	{
-		usage();
+		dis_usage();
 		exit(EXIT_FAILURE);
 	}
 	
@@ -203,7 +203,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Get command line options */
-	param_idx = parse_args(&dis_ctx.cfg, argc, argv);
+	param_idx = dis_parse_args(&dis_ctx.cfg, argc, argv);
 	
 	/* Check we got enough arguments for at least one more, the mount point */
 	if(param_idx >= argc || param_idx <= 0)

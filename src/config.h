@@ -97,10 +97,10 @@ typedef struct _dis_cfg {
 /*
  * Function's prototypes
  */
-void usage();
-int  parse_args(dis_config_t* cfg, int argc, char** argv);
-void free_args (dis_config_t* cfg);
-void print_args(dis_config_t* cfg);
+void dis_usage();
+int  dis_parse_args(dis_config_t* cfg, int argc, char** argv);
+void dis_free_args(dis_config_t* cfg);
+void dis_print_args(dis_config_t* cfg);
 
 
 

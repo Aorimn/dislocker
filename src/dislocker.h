@@ -62,11 +62,20 @@ typedef enum {
  * information in it.
  */
 typedef struct _dis_ctx {
-	
+	/*
+	 * Dislocker's configuration.
+	 * Note that there's the dis_parse_args() function to fill this structure.
+	 */
 	dis_config_t cfg;
 	
+	/*
+	 * Structure needed for dec/encryption processes.
+	 */
 	dis_iodata_t io_data;
 	
+	/*
+	 * States dislocker initialisation is at or will be stopped at.
+	 */
 	dis_state_e curr_state;
 	dis_state_e stop_at;
 } dis_context_t;

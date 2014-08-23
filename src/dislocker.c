@@ -72,7 +72,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
 	
 	if(dis_ctx->cfg.verbosity >= L_DEBUG)
-		print_args(&dis_ctx->cfg);
+		dis_print_args(&dis_ctx->cfg);
 	
 	
 	/*
@@ -80,7 +80,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	 */
 	if(!dis_ctx->cfg.volume_path)
 	{
-		usage();
+		xprintf(L_CRITICAL, "No BitLocker volume path given. Abort.\n");
 		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
@@ -746,7 +746,7 @@ int dis_destroy(dis_context_t* dis_ctx)
 	
 	pthread_mutex_destroy(&dis_ctx->io_data.mutex_lseek_rw);
 	
-	free_args(&dis_ctx->cfg);
+	dis_free_args(&dis_ctx->cfg);
 	
 	xclose(dis_ctx->io_data.volume_fd);
 	

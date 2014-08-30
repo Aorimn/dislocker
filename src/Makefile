@@ -127,14 +127,6 @@ bek: libs $(BIN)-bek.o
 
 
 
-# Check if the installed binary is present, make it if it isn't
-check-install:
-	@if [ -e $(BIN)-fuse ] ; then                      \
-		echo "Found $(BIN) binary, installing it"; \
-	else                                               \
-		make clean all;                            \
-	fi
-
 install: all
 	install -pm755 $(BINS) $(BINARIES_PATH)
 	ln -s $(BIN)-fuse $(BINARIES_PATH)$(BIN)

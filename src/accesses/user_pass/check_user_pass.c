@@ -80,6 +80,7 @@ START_TEST (check_prompt_up)
 	close(old_stdin);
 	close(old_stdout);
 	
+	/* Check for child's status */
 	if(wait(&ret) == -1)
 		ck_abort_msg("Waiting for child failed: %s", strerror(errno));
 	

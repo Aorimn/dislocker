@@ -197,7 +197,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 			
 			xfree(eow_infos);
 			
-			// Thid: check if this struct passes checks
+			// Third: check if this struct passes checks
 			if(get_eow_check_valid(dis_ctx->io_data.volume_header, dis_ctx->io_data.volume_fd, &eow_infos, &dis_ctx->cfg))
 			{
 				xprintf(L_INFO,

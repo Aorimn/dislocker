@@ -88,7 +88,11 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	 * We need the recovery key id which can be found in the bek file
 	 * to find its match in a datum of the volume's metadata
 	 */
-	get_bek_dataset(fd_bek, (void**)&bek_dataset);
+	if(!get_bek_dataset(fd_bek, (void**)&bek_dataset))
+	{
+		xprintf(L_ERROR, "Unable to retrieve the dataset. Abort.\n");
+		return FALSE;
+	}
 	
 	/* We have what we wanted, so close the file */
 	xclose(fd_bek);
@@ -222,6 +226,7 @@ int get_bek_dataset(int fd, void** bek_dataset)
 	if((size_t) nb_read != rest)
 	{
 		xprintf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset content).\n");
+		xfree(*bek_dataset);
 		return FALSE;
 	}
 	

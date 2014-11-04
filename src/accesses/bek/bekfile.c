@@ -91,6 +91,7 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	if(!get_bek_dataset(fd_bek, (void**)&bek_dataset))
 	{
 		xprintf(L_ERROR, "Unable to retrieve the dataset. Abort.\n");
+		xclose(fd_bek);
 		return FALSE;
 	}
 	

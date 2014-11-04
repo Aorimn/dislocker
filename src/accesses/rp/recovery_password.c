@@ -24,6 +24,7 @@
 
 #include "recovery_password.h"
 #include "metadata/vmk.h"
+#include "xstd/xsys_select.h"
 
 
 
@@ -367,7 +368,8 @@ int prompt_rp(uint8_t** rp)
 	fflush(NULL);
 
 	FD_ZERO(&rfds);
-	FD_SET((unsigned) in, &rfds);
+	/** @see xstd/xsys_select.h for an explanation of this macro */
+	DIS_FD_SET(in, &rfds);
 
 	while(1)
 	{

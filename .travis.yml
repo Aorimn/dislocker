@@ -10,6 +10,7 @@ os:
 
 before_install:
     - cd src
+    - brew update
 
 install:
     - make travis-install

@@ -164,7 +164,7 @@ travis-install:
 		sudo make install;                                    \
 	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
 		brew update;                                          \
-		brew install dislocker.rb;                            \
+		brew install dislocker.rb --verbose;                  \
 	fi
 
 travis-test:

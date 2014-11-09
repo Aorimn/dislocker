@@ -160,12 +160,13 @@ travis-install:
 	if [ "$$TRAVIS_OS_NAME" = "linux" ]; then                     \
 		sudo apt-get update -qq;                              \
 		sudo apt-get install -qq libfuse-dev libpolarssl-dev; \
-		make CC=$$CC;                                         \
-		sudo make install;                                    \
 	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
 		brew update;                                          \
-		brew install dislocker.rb --verbose;                  \
+		brew install polarssl;                                \
+		brew install osxfuse;                                 \
 	fi
+	make CC=$$CC
+	sudo make install
 
 travis-test:
 	@echo "Testing dislocker..."

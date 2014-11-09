@@ -174,6 +174,8 @@ travis-test:
 		echo "Testing $${prog}..."; \
 		$${prog} -h;                \
 	done
+	@echo "Looking for dislocker's manual..."
+	man -w dislocker
 
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)

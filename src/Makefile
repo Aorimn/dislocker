@@ -19,7 +19,7 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BI
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 INC		=	-I. -I/usr/local/include
-LIB		=	-l$(PROGNAME) -lpthread -lpolarssl -L.
+LIB		=	-l$(PROGNAME) -lpthread -lpolarssl -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
@@ -66,10 +66,6 @@ ifneq ($(OS), Darwin)
 WFLAGS		+=	-Wconversion
 # FIXME wtf with ld on OSX?
 LHARDEN		+=	-Wl,-z,relro -Wl,-z,now
-endif
-
-ifeq ($(OS), FreeBSD)
-LIB		+=	-L/usr/local/lib
 endif
 
 ifeq ($(CC), clang)

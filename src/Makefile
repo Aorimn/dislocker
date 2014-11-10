@@ -1,6 +1,7 @@
 PROGNAME	=	dislocker
 AUTHOR		=	\"Romain Coltel\"
-VERSION		=	0.3.1
+VERSION_MAJOR	=	0
+VERSION		=	$(VERSION_MAJOR).3.1
 ARCH		=	$(shell uname -m)
 OS		=	$(shell uname -s)
 DATE		=	$(shell date +%Y-%m-%d)
@@ -25,7 +26,9 @@ LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	$(LIB) $(LHARDEN)
-LIBNAME		=	lib$(PROGNAME).so
+LIBNAME		:=	lib$(PROGNAME).so.$(VERSION)
+SONAME		:=	lib$(PROGNAME).so.$(VERSION_MAJOR)
+SHARED_FLAGS	:=	-shared -Wl,-soname,$(SONAME)
 
 BIN		=	$(PROGNAME)
 SUFFIXES	=	fuse file metadata bek
@@ -89,7 +92,7 @@ export
 all : $(BIN)
 
 libs: $(OBJECTS)
-	$(CC) -shared $(CFLAGS) -o $(LIBNAME) $(OBJECTS)
+	$(CC) $(SHARED_FLAGS) $(CFLAGS) -o $(LIBNAME) $(OBJECTS)
 
 # Default rules for final binaries
 $(BIN) : libs $(SUFFIXES)

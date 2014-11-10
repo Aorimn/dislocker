@@ -20,12 +20,12 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BI
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 INC		=	-I. -I/usr/local/include
-LIB		=	-l$(PROGNAME) -lpthread -lpolarssl -L. -L/usr/local/lib
+LIB		=	-lpthread -lpolarssl -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-override LDFLAGS +=	$(LIB) $(LHARDEN)
+override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN)
 LIBNAME		:=	lib$(PROGNAME).so.$(VERSION)
 SONAME		:=	lib$(PROGNAME).so.$(VERSION_MAJOR)
 SHARED_FLAGS	:=	-shared -Wl,-soname,$(SONAME)
@@ -92,7 +92,7 @@ export
 all : $(BIN)
 
 libs: $(OBJECTS)
-	$(CC) $(SHARED_FLAGS) $(CFLAGS) -o $(LIBNAME) $(OBJECTS)
+	$(CC) $(SHARED_FLAGS) $(CFLAGS) -o $(LIBNAME) $(OBJECTS) $(LIB)
 
 # Default rules for final binaries
 $(BIN) : libs $(SUFFIXES)

@@ -9,7 +9,7 @@ REQUIREMENTS
 `------------
 
 You need:
- - Headers for FUSE, if you want to use FUSE;
+ - Headers for FUSE;
  - Headers for PolarSSL;
  - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
@@ -21,7 +21,7 @@ For OSX: Follow the instructions in the next section.
 
 Of course, you also need a compiler like gcc or clang, and make.
 
-Note that the code expects FUSE 2.6, when using the decryption with FUSE.
+Note that the code expects FUSE 2.6.
 
 
 
@@ -34,7 +34,7 @@ own section below, beware to follow yours:
 . If you are on MacOSX, just install Homebrew (http://brew.sh/) and run the
 following command:
 $ brew install dislocker.rb
-This will install dislocker in FUSE mode.
+This will install dislocker.
 
 . If you're on FreeBSD, run the following commands for installing the required
 libraries:
@@ -44,20 +44,18 @@ $ pkg install fusefs-libs
 Then follow the instructions below (next point):
 
 . If you aren't on MacOSX...
-As you may know, the driver can be used in two ways: using FUSE or not. By
-default, typing `make` will generate a FUSE capable binary. However, running
-`make file` won't include FUSE capabilities. In this latter mode, dislocker
-will decrypt your BitLocker volume into a file, so make sure you have enough
-space left on your partition. The file will be a NTFS partition then.
-Thus, make your choice of the use you'll have.
+If you already have installed the dependencies (see REQUIREMENTS section above),
+you just have to type `make' to generate the library and binaries, then
+`make install' as super-user to install these library and binaries on the
+filesystem.
 
-Type: `make` or `make file` according to your needs, then `sudo make install`
-(or just the last one if you're lazy, but I don't recommend that). Note that the
-`-Werror' flag on the `WFLAGS' line in the Makefile may break the compilation,
-so you can remove it, but it is at your own risks.
+Note that the `-Werror' flag on the `WFLAGS' line in the Makefile may break the
+compilation, so you can remove it, but it is at your own risks.
 
 The binary will be installed into `/usr/bin/' by default, edit the INSTALL_PATH
 variable (into the Makefile) to change that before the `make install` command.
+Same thing goes for the library except the variable name in the Makefile is
+LIBRARY_PATH, which is `/usr/lib/' by default (or `/usr/lib64/' if it exists).
 
 Once installed, see dislocker(1) for details on how to use it.
 
@@ -67,7 +65,7 @@ UNINSTALLING
 `------------
 
 I'm sure you don't want to do that. But if you're really forced by someone, just
-type `make uninstall`.
+type `make uninstall` as super-user.
 
 
 
@@ -78,6 +76,10 @@ Globally, this was successfuly tested on Linux x86/x86_64, MacOSX and FreeBSD.
 It won't work on Windows and may not work on other BSDs.
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
+
+For users of a gcc version < 4.3, you'll need to tweak the Makefile a little by
+removing `-Werror' from the WFLAGS variable.
+
 
 Whether it works or not, feel free to send comments and feedbacks to
 <dislocker __AT__ hsc __DOT__ fr>.
@@ -90,7 +92,16 @@ the people who give feedbacks.
 NOTE
 `----
 
-Two more binaries are build when compiling dislocker:
-- One for disecting a .bek file and printing information about it;
-- The other one for printing information about a BitLocker-encrypted volume.
+Four binaries are built when compiling dislocker as described in the INSTALLING
+section:
+- One for disecting a .bek file and printing information about it
+  dislocker-bek
+- Another one for printing information about a BitLocker-encrypted volume
+  dislocker-metadata
+- A third one for decrypting a BitLocker encrypted partition into a flat file
+formatted as an NTFS partition you can mount
+  dislocker-file
+- A last one, which is the one you're using when calling `dislocker',
+dynamically decrypts a BitLocker encrypted partition using FUSE
+  dislocker-fuse
 

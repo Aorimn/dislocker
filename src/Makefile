@@ -26,9 +26,10 @@ LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN)
-LIBNAME		:=	lib$(PROGNAME).so.$(VERSION)
-SONAME		:=	lib$(PROGNAME).so.$(VERSION_MAJOR)
-SHARED_FLAGS	:=	-shared -Wl,-soname,$(SONAME)
+LINKERNAME	:=	lib$(PROGNAME).so
+SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
+LIBNAME		:=	$(LINKERNAME).$(VERSION)
+SHARED_FLAGS	=	-shared -Wl,-soname,$(SONAME)
 
 BIN		=	$(PROGNAME)
 SUFFIXES	=	fuse file metadata bek
@@ -55,6 +56,11 @@ DESTDIR		=	/usr
 
 BINARIES_PATH	=	$(DESTDIR)/bin/
 LIBRARY_PATH	=	$(DESTDIR)/lib/
+# Change library path for OS which have a lib64/ directory as ld's looking into
+# it while loading the library
+ifneq ("$(wildcard $(DESTDIR)/lib64/)", "")
+LIBRARY_PATH	=	$(DESTDIR)/lib64/
+endif
 
 MAN_NUMBER	=	1
 MAN_PATH	=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
@@ -93,6 +99,9 @@ all : $(BIN)
 
 libs: $(OBJECTS)
 	$(CC) $(SHARED_FLAGS) $(CFLAGS) -o $(LIBNAME) $(OBJECTS) $(LIB)
+	rm -f $(SONAME) $(LINKERNAME)
+	ln -s $(LIBNAME) $(SONAME)
+	ln -s $(SONAME) $(LINKERNAME)
 
 # Default rules for final binaries
 $(BIN) : libs $(SUFFIXES)
@@ -130,6 +139,8 @@ install: all
 	install -pm755 $(BINS) $(BINARIES_PATH)
 	ln -s $(BIN)-fuse $(BINARIES_PATH)$(BIN)
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
+	ln -s $(LIBRARY_PATH)$(LIBNAME) $(LIBRARY_PATH)$(SONAME)
+	ln -s $(LIBRARY_PATH)$(SONAME) $(LIBRARY_PATH)$(LINKERNAME)
 	if [ "$(OS)" = "Darwin" ]; then                                       \
 		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
 	else                                                                  \
@@ -146,6 +157,8 @@ uninstall: clean
 	for prog in $(BINS); do \
 		if [ -f $(BINARIES_PATH)$${prog} ]; then rm $(BINARIES_PATH)$${prog}; fi \
 	done
+	if [ -f $(LIBRARY_PATH)$(LINKERNAME) ]; then       rm $(LIBRARY_PATH)$(LINKERNAME); fi
+	if [ -f $(LIBRARY_PATH)$(SONAME) ]; then           rm $(LIBRARY_PATH)$(SONAME); fi
 	if [ -f $(LIBRARY_PATH)$(LIBNAME) ]; then          rm $(LIBRARY_PATH)$(LIBNAME); fi
 	if [ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ]; then rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz; fi
 	@echo "==========================================================="
@@ -153,7 +166,7 @@ uninstall: clean
 
 
 clean:
-	rm -rf -- $(OBJECTS) *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME)
+	rm -rf -- $(OBJECTS) *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME) $(SONAME) $(LINKERNAME)
 
 travis-install:
 	if [ "$$TRAVIS_OS_NAME" = "linux" ]; then                     \

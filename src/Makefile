@@ -90,47 +90,47 @@ endif
 
 export
 
-.PHONY : all libs $(BIN) $(SUFFIXES) install uninstall clean travis-install valgrind snapshot release
+.PHONY : all $(BIN) install uninstall clean travis-install travis-test valgrind snapshot release
 
 .c.o :
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 all : $(BIN)
 
-libs: $(OBJECTS)
+$(LIBNAME): $(OBJECTS)
 	$(CC) $(SHARED_FLAGS) $(CFLAGS) -o $(LIBNAME) $(OBJECTS) $(LIB)
 	rm -f $(SONAME) $(LINKERNAME)
 	ln -s $(LIBNAME) $(SONAME)
 	ln -s $(SONAME) $(LINKERNAME)
 
 # Default rules for final binaries
-$(BIN) : libs $(SUFFIXES)
+$(BIN): $(LIBNAME) $(BINS)
 
 
 # Build the binary for the file output
-file: libs $(BIN)-file.o
+$(BIN)-file: $(LIBNAME) $(BIN)-file.o
 	$(CC) $(CFLAGS) -o $(BIN)-file $(BIN)-file.o $(LDFLAGS)
 
 # Build the binary for the fuse output
-fuse: CFLAGS  += -DFUSE_USE_VERSION=26
+$(BIN)-fuse: CFLAGS  += -DFUSE_USE_VERSION=26
 
 # Don't link with the same library on MacOSX
 ifeq ($(OS), Darwin)
-fuse: LDFLAGS += -losxfuse_i64
+$(BIN)-fuse: LDFLAGS += -losxfuse_i64
 else
-fuse: LDFLAGS += -lfuse
+$(BIN)-fuse: LDFLAGS += -lfuse
 endif # Darwin
 
-fuse: libs $(BIN)-fuse.o
+$(BIN)-fuse: $(LIBNAME) $(BIN)-fuse.o
 	$(CC) $(CFLAGS) -o $(BIN)-fuse $(BIN)-fuse.o $(LDFLAGS)
 
 
 # Build the binary for getting metadata only
-metadata: libs $(BIN)-metadata.o
+$(BIN)-metadata: $(LIBNAME) $(BIN)-metadata.o
 	$(CC) $(CFLAGS) -o $(BIN)-metadata $(BIN)-metadata.o $(LDFLAGS)
 
 # Build the binary for getting bek information only
-bek: libs $(BIN)-bek.o
+$(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 	$(CC) $(CFLAGS) -o $(BIN)-bek $(BIN)-bek.o $(LDFLAGS)
 
 

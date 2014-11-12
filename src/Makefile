@@ -62,24 +62,36 @@ ifneq ("$(wildcard $(DESTDIR)/lib64/)", "")
 LIBRARY_PATH	=	$(DESTDIR)/lib64/
 endif
 
-MAN_NUMBER	=	1
-MAN_PATH	=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
-MAN_ROOT	=	../man/
+MAN_NUMBER	:=	1
+MAN_PATH	:=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
+MAN_ROOT	:=	../man/
+MAN_PAGE	:=	$(BIN)_man
 
 
 
 
-# For MacOSX users
+# For MacOSX users, some parameters change
 ifneq ($(OS), Darwin)
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
-# FIXME wtf with ld on OSX?
-LHARDEN		+=	-Wl,-z,relro -Wl,-z,now
+else
+# Change the man page for some examples aren't the same
+MAN_PAGE	:=	$(BIN)_osx_man
+
+# Don't use `-read_only_relocs' here as it seems to only work for 32 bits
+# binaries
+LHARDEN		+=	-Wl,-bind_at_load
 endif
 
 ifeq ($(CC), clang)
 WFLAGS		+=	 -Qunused-arguments
 endif
+
+# These flags seem to be GNU ld specifics, cf above for OSX flags
+ifeq ("$(shell ld --version | grep -o GNU | head -n 1)", "GNU")
+LHARDEN		+=	-Wl,-z,now -Wl,-z,relro
+endif
+
 
 ifdef DEBUG
 DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
@@ -141,11 +153,7 @@ install: all
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
 	ln -s $(LIBRARY_PATH)$(LIBNAME) $(LIBRARY_PATH)$(SONAME)
 	ln -s $(LIBRARY_PATH)$(SONAME) $(LIBRARY_PATH)$(LINKERNAME)
-	if [ "$(OS)" = "Darwin" ]; then                                       \
-		cp $(MAN_ROOT)$(BIN)_osx_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER); \
-	else                                                                  \
-		cp $(MAN_ROOT)$(BIN)_man $(MAN_ROOT)$(BIN).$(MAN_NUMBER);     \
-	fi
+	cp $(MAN_ROOT)$(MAN_PAGE) $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
 	@echo "==========================================================="

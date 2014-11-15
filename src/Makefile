@@ -17,6 +17,8 @@ MAKE		=	make
 endif
 
 
+# Note that some variables here are changed below depending on the environment
+# this file is run
 CC		=	cc
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
@@ -28,7 +30,6 @@ LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN)
-# See below for the following 4 changed variables on OSX
 LINKERNAME	:=	lib$(PROGNAME).so
 SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		:=	$(LINKERNAME).$(VERSION)
@@ -85,7 +86,7 @@ MAN_PAGE	:=	$(BIN)_osx_man
 LHARDEN		+=	-Wl,-bind_at_load
 # Change every flag for generating dynamic shared object under OSX
 LINKERNAME	=	lib$(PROGNAME).dylib
-SONAME		=	__unused.canberemoved
+SONAME		=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		=	lib$(PROGNAME).$(VERSION_MAJOR).dylib
 SHARED_FLAGS	=	-dynamiclib -current_version $(VERSION_MAJOR).$(VERSION_MINOR) -compatibility_version $(VERSION_MAJOR).$(VERSION_MINOR)
 endif

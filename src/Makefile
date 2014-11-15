@@ -97,7 +97,7 @@ endif
 
 
 # These flags seem to be GNU ld specifics, cf above for OSX flags
-ifeq ("$(shell ld --version | grep -o GNU | head -n 1)", "GNU")
+ifeq ("$(shell ld --version 2>/dev/null | grep -o GNU | head -n 1)", "GNU")
 LHARDEN		+=	-Wl,-z,now -Wl,-z,relro
 endif
 
@@ -194,8 +194,8 @@ travis-install:
 		brew install polarssl;                                \
 		brew install osxfuse;                                 \
 	fi
-	make CC=$$CC
-	sudo make install
+	make CC=$(CC)
+	sudo make CC=$(CC) install
 
 travis-test:
 	@echo "Testing dislocker..."

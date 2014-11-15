@@ -1,7 +1,9 @@
 PROGNAME	=	dislocker
 AUTHOR		=	\"Romain Coltel\"
 VERSION_MAJOR	=	0
-VERSION		=	$(VERSION_MAJOR).3.1
+VERSION_MINOR	=	3
+VERSION_RELEASE	=	1
+VERSION		=	$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 ARCH		=	$(shell uname -m)
 OS		=	$(shell uname -s)
 DATE		=	$(shell date +%Y-%m-%d)
@@ -26,6 +28,7 @@ LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN)
+# See below for the following 4 changed variables on OSX
 LINKERNAME	:=	lib$(PROGNAME).so
 SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		:=	$(LINKERNAME).$(VERSION)
@@ -77,15 +80,21 @@ WFLAGS		+=	-Wconversion
 else
 # Change the man page for some examples aren't the same
 MAN_PAGE	:=	$(BIN)_osx_man
-
 # Don't use `-read_only_relocs' here as it seems to only work for 32 bits
 # binaries
 LHARDEN		+=	-Wl,-bind_at_load
+# Change every flag for generating dynamic shared object under OSX
+LINKERNAME	=	lib$(PROGNAME).dylib
+SONAME		=	__unused.canberemoved
+LIBNAME		=	lib$(PROGNAME).$(VERSION_MAJOR).dylib
+SHARED_FLAGS	=	-dynamiclib -current_version $(VERSION_MAJOR).$(VERSION_MINOR) -compatibility_version $(VERSION_MAJOR).$(VERSION_MINOR)
 endif
+
 
 ifeq ($(CC), clang)
 WFLAGS		+=	 -Qunused-arguments
 endif
+
 
 # These flags seem to be GNU ld specifics, cf above for OSX flags
 ifeq ("$(shell ld --version | grep -o GNU | head -n 1)", "GNU")

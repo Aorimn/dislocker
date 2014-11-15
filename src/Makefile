@@ -79,6 +79,8 @@ ifneq ($(OS), Darwin)
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
 else
+# Force clang on OSX
+override CC	=	clang
 # Change the man page for some examples aren't the same
 MAN_PAGE	:=	$(BIN)_osx_man
 # Don't use `-read_only_relocs' here as it seems to only work for 32 bits

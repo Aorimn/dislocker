@@ -12,7 +12,7 @@ before_install:
     - cd src
 
 install:
-    - make travis-install
+    - make CC=$CC travis-install
 
 script:
     - make travis-test

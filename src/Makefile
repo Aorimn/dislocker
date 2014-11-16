@@ -39,6 +39,7 @@ BIN		=	$(PROGNAME)
 SUFFIXES	=	fuse file metadata bek
 BINS		=	$(foreach suf, $(SUFFIXES), $(BIN)-$(suf))
 BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
+DEFAULT_PROG	=	$(word 1, $(BINS))
 
 SOURCES		=	dislocker.c common.c config.c sectors.c \
 			xstd/xstdio.c xstd/xstdlib.c \
@@ -161,7 +162,7 @@ $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 
 install: all
 	install -pm755 $(BINS) $(BINARIES_PATH)
-	ln -s $(BIN)-fuse $(BINARIES_PATH)$(BIN)
+	ln -s $(DEFAULT_PROG) $(BINARIES_PATH)$(BIN)
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
 	ln -s $(LIBRARY_PATH)$(LIBNAME) $(LIBRARY_PATH)$(SONAME)
 	ln -s $(LIBRARY_PATH)$(SONAME) $(LIBRARY_PATH)$(LINKERNAME)

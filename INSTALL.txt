@@ -38,9 +38,7 @@ This will install dislocker.
 
 . If you're on FreeBSD, run the following commands for installing the required
 libraries:
-$ pkg install polarssl
-$ pkg install gmake
-$ pkg install fusefs-libs
+$ pkg install polarssl gmake fusefs-libs
 Then follow the instructions below (next point):
 
 . If you aren't on MacOSX...

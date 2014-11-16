@@ -6,15 +6,15 @@ require "formula"
 
 class Dislocker < Formula
   homepage "https://github.com/Aorimn/dislocker"
-  url "https://github.com/Aorimn/dislocker/archive/master.zip"
-  sha1 "f366f788d5a79c975e553f496ffd4eadc8427b2a"
-  version "0.3.1"
+  url "https://github.com/Aorimn/dislocker/archive/v0.4.tar.gz"
+  sha1 "d05858bd9d5d5fc0f21fef3ed6fa32bea13be762"
+  version "0.4.0"
 
   depends_on "polarssl"
   depends_on "osxfuse"
 
   def install
-    system "make -C src fuse"
-    system "make -C src install INSTALL_PATH=#{prefix}/ MAN_PATH=#{prefix}/"
+    system "make -C src"
+    system "make -C src install DESTDIR=#{prefix}/"
   end
 end

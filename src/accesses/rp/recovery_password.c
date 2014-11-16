@@ -348,11 +348,17 @@ int prompt_rp(uint8_t** rp)
 		return FALSE;
 	}
 	
-	if(in >= FD_SETSIZE)
+	if(FD_SETSIZE < 0)
+	{
+		fprintf(stderr, "Cannot add fd in the set.\n");
+		return FALSE;
+	}
+	
+	if((unsigned) in >= (unsigned) FD_SETSIZE)
 	{
 		fprintf(stderr,
-		        "Terminal file descriptor (%d) is equal to or larger than "
-		        "FD_SETSIZE (%d).\n", in, FD_SETSIZE);
+		        "Terminal file descriptor (%u) is equal to or larger than "
+		        "FD_SETSIZE (%u).\n", (unsigned) in, (unsigned) FD_SETSIZE);
 		close_input_fd();
 		return FALSE;
 	}

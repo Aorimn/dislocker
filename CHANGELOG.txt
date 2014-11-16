@@ -1,3 +1,29 @@
+v0.4 -- Bugfixes:
+ - Installation process is now ok;
+ - Various crashes have been fixed;
+ - Some minor display errors have been fixed.
+
+     -- Features improvement:
+ - Adding of the write capability on some Windows 8 encrypted volumes;
+ - Stealth password and recovery key in `ps' output;
+ - Adding `--stateok' argument to tell dislocker not to check for the BitLocker
+   volume state - as in 'partially decrypted', 'partially encrypted', and so on:
+   `- One can read partially encrypted volumes now!
+
+     -- Notable changes:
+ - A brew file is now available for OSX users;
+ - The embedded PolarSSL library has been removed, due to licensing problems
+   when packaging, so users need to install PolarSSL on their own now - see
+   INSTALL.txt for hints on how to do it;
+ - The core part is now a library - dynamic shared object or dynamic library,
+   depending on the OS - and four binaries are now using this library.
+   `- The library is not yet for use by other developers, its interface is not
+      well enough defined yet.
+   `- The NOTE part of the README.txt/INSTALL.txt files lists these binaries.
+
+     -- Portability:
+ - Support added for FreeBSD.
+
 
 v0.3 -- Bugfixes:
  - One can now read from a device from /dev;
@@ -7,7 +33,7 @@ v0.3 -- Bugfixes:
  - Code cleaned and reorganised (yes, it's a bugfix);
  - Better BitLocker's files handling. This is not optimal yet, as it should
    involve the NTFS layer, which is currently completely dislocker-independant.
-  
+
      -- Features improvement:
  - One can write on a BitLocker encrypted volume;
  - Adding `--readonly' argument to deny writes on the BitLocker volume;

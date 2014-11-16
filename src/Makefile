@@ -1,8 +1,8 @@
 PROGNAME	=	dislocker
 AUTHOR		=	\"Romain Coltel\"
 VERSION_MAJOR	=	0
-VERSION_MINOR	=	3
-VERSION_RELEASE	=	1
+VERSION_MINOR	=	4
+VERSION_RELEASE	=	0
 VERSION		=	$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
 ARCH		=	$(shell uname -m)
 OS		=	$(shell uname -s)

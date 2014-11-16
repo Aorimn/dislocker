@@ -100,6 +100,9 @@ typedef struct _data {
 	/* Contexts used to encrypt or decrypt */
 	contexts_t*         enc_ctx;
 	
+	/* Volume's state is kept here */
+	int                 volume_state;
+	
 	/* Function to decrypt a region of the volume */
 	int(*decrypt_region)(
 		struct _data* io_data,

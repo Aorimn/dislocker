@@ -338,6 +338,15 @@ int dis_initialize(dis_context_t* dis_ctx)
 	// TODO add the BEFORE_DECRYPTION_CHECKING event here, so add the check here too
 	
 	
+	/* Don't do the check for each and every enc/decryption operation */
+	dis_ctx->io_data.volume_state = TRUE;
+	
+	if(dis_ctx->cfg.dont_check_state == FALSE &&
+		!check_state(dis_ctx->io_data.metadata))
+	{
+		dis_ctx->io_data.volume_state = FALSE;
+	}
+	
 	/* Clean everything before returning if there's an error */
 	if(ret == EXIT_FAILURE)
 		dis_destroy(dis_ctx);
@@ -361,10 +370,9 @@ int dislock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	
 	
 	/* Check the state the BitLocker volume is in */
-	if(dis_ctx->cfg.dont_check_state == FALSE &&
-		!check_state(dis_ctx->io_data.metadata))
+	if(dis_ctx->io_data.volume_state == FALSE)
 	{
-		xprintf(L_ERROR, "Invalid state, can't run safely. Abort.\n");
+		xprintf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
 		return -EFAULT;
 	}
 	
@@ -495,6 +503,13 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	off_t  sector_start;
 	size_t sector_to_add = 0;
 	
+	
+	/* Check the state the BitLocker volume is in */
+	if(dis_ctx->io_data.volume_state == FALSE)
+	{
+		xprintf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
+		return -EFAULT;
+	}
 	
 	/* Perform basic checks */
 	if(dis_ctx->cfg.is_ro & READ_ONLY)

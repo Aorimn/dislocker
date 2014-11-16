@@ -10,15 +10,9 @@ DATE		=	$(shell date +%Y-%m-%d)
 
 # DEBUG		=	1
 
-ifeq ($(OS), FreeBSD)
-MAKE		=	gmake
-else
-MAKE		=	make
-endif
-
 
 # Note that some variables here are changed below depending on the environment
-# this file is run
+# this file is run in
 CC		=	cc
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
@@ -62,7 +56,7 @@ DESTDIR		=	/usr
 BINARIES_PATH	=	$(DESTDIR)/bin/
 LIBRARY_PATH	=	$(DESTDIR)/lib/
 # Change library path for OS which have a lib64/ directory as ld's looking into
-# it while loading the library
+# it while loading the library instead of lib/
 ifneq ("$(wildcard $(DESTDIR)/lib64/)", "")
 LIBRARY_PATH	=	$(DESTDIR)/lib64/
 endif
@@ -76,10 +70,7 @@ MAN_PAGE	:=	$(BIN)_man
 
 
 # For MacOSX users, some parameters change
-ifneq ($(OS), Darwin)
-# Useless warnings when used within Darwin
-WFLAGS		+=	-Wconversion
-else
+ifeq ($(OS), Darwin)
 # Force clang on OSX
 override CC	=	clang
 # Change the man page for some examples aren't the same
@@ -92,6 +83,9 @@ LINKERNAME	=	lib$(PROGNAME).dylib
 SONAME		=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		=	lib$(PROGNAME).$(VERSION_MAJOR).dylib
 SHARED_FLAGS	=	-dynamiclib -current_version $(VERSION_MAJOR).$(VERSION_MINOR) -compatibility_version $(VERSION_MAJOR).$(VERSION_MINOR)
+else
+# Useless warnings when used within Darwin
+WFLAGS		+=	-Wconversion
 endif
 
 

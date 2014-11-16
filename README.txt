@@ -29,6 +29,10 @@ Nethertheless, once the partition is decrypted, you can mount your file as any
 NTFS partition.
 
 
+Thanks goes to Rogier Wolff for testing, hugsy for all the OSX support and
+patches, Will Dyson for the patches, and all the people who give feedbacks.
+
+
 
 INSTALLATION AND REQUIREMENTS
 `-----------------------------
@@ -62,4 +66,10 @@ formatted as an NTFS partition you can mount
 - A last one, which is the one you're using when calling `dislocker',
 dynamically decrypts a BitLocker encrypted partition using FUSE
   dislocker-fuse
+
+You can build each one independently providing it as the makefile target. For
+instance, if you want to compile dislocker-fuse only, you'd simply run:
+  make dislocker-fuse
+To install this binary only, you would then run the following command:
+  make install BINS=dislocker-fuse
 

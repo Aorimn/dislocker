@@ -109,7 +109,7 @@ endif
 
 export
 
-.PHONY : all $(BIN) install uninstall clean travis-install travis-test valgrind snapshot release
+.PHONY : all $(BIN) install-bins install-lib install-man install uninstall-bins uninstall-lib uninstall-man uninstall clean travis-install travis-test valgrind snapshot release
 
 .c.o :
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -153,29 +153,35 @@ $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 	$(CC) $(CFLAGS) -o $(BIN)-bek $(BIN)-bek.o $(LDFLAGS)
 
 
-
-install: all
+install-bins:
 	install -pm755 $(BINS) $(BINARIES_PATH)
 	ln -s $(DEFAULT_PROG) $(BINARIES_PATH)$(BIN)
+install-lib:
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
 	ln -s $(LIBRARY_PATH)$(LIBNAME) $(LIBRARY_PATH)$(SONAME)
 	ln -s $(LIBRARY_PATH)$(SONAME) $(LIBRARY_PATH)$(LINKERNAME)
+install-man:
 	cp $(MAN_ROOT)$(MAN_PAGE) $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
+install: all install-bins install-lib install-man
 	@echo "==========================================================="
 	@echo "'$(BIN)' installed into" $(BINARIES_PATH)
+	@echo "'$(SONAME)' installed into" $(LIBRARY_PATH)
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
-uninstall: clean
+uninstall-bins:
 	if [ -f $(BINARIES_PATH)$(BIN) ]; then rm $(BINARIES_PATH)$(BIN); fi
 	for prog in $(BINS); do \
 		if [ -f $(BINARIES_PATH)$${prog} ]; then rm $(BINARIES_PATH)$${prog}; fi \
 	done
+uninstall-lib:
 	if [ -f $(LIBRARY_PATH)$(LINKERNAME) ]; then       rm $(LIBRARY_PATH)$(LINKERNAME); fi
 	if [ -f $(LIBRARY_PATH)$(SONAME) ]; then           rm $(LIBRARY_PATH)$(SONAME); fi
 	if [ -f $(LIBRARY_PATH)$(LIBNAME) ]; then          rm $(LIBRARY_PATH)$(LIBNAME); fi
+uninstall-man:
 	if [ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ]; then rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz; fi
+uninstall: clean uninstall-bins uninstall-lib uninstall-man
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 

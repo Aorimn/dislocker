@@ -23,7 +23,7 @@ BitLocker partition. Therefore, if you write to this file, the BitLocker volume
 won't change, only the NTFS file will. Note that this may take a long time to
 create that file, depending on the size of the encrypted partition. But
 afterward, once the partition is decrypted, the access to the NTFS partition
-will be faster. Another thing to think about os the size on your disk this
+will be faster. Another thing to think about is the size on your disk this
 binary needs: the same size as the volume you're trying to decrypt.
 Nethertheless, once the partition is decrypted, you can mount your file as any
 NTFS partition.

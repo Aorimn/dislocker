@@ -116,6 +116,7 @@ export
 
 all : $(BIN)
 
+lib: $(LIBNAME)
 $(LIBNAME): $(OBJECTS)
 	$(CC) $(SHARED_FLAGS) $(CFLAGS) -o $(LIBNAME) $(OBJECTS) $(LIB)
 	rm -f $(SONAME) $(LINKERNAME)

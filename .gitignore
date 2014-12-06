@@ -8,6 +8,8 @@ dislocker-file
 dislocker-fuse
 dislocker-metadata
 libdislocker.so
+libdislocker.so.0
+libdislocker.so.0.4.1
 
 # Unit test files
 *.gcno

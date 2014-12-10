@@ -129,7 +129,7 @@ $(BIN): $(LIBNAME) $(BINS)
 
 # Build the binary for the file output
 $(BIN)-file: $(LIBNAME) $(BIN)-file.o
-	$(CC) $(CFLAGS) -o $(BIN)-file $(BIN)-file.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
 # Build the binary for the fuse output
 $(BIN)-fuse: CFLAGS  += -DFUSE_USE_VERSION=26
@@ -142,16 +142,16 @@ $(BIN)-fuse: LDFLAGS += -lfuse
 endif # Darwin
 
 $(BIN)-fuse: $(LIBNAME) $(BIN)-fuse.o
-	$(CC) $(CFLAGS) -o $(BIN)-fuse $(BIN)-fuse.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
 
 # Build the binary for getting metadata only
 $(BIN)-metadata: $(LIBNAME) $(BIN)-metadata.o
-	$(CC) $(CFLAGS) -o $(BIN)-metadata $(BIN)-metadata.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
 # Build the binary for getting bek information only
 $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
-	$(CC) $(CFLAGS) -o $(BIN)-bek $(BIN)-bek.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
 
 install-bins:

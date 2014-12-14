@@ -143,9 +143,11 @@ int main(int argc, char** argv)
 	/*
 	 * Create a NTFS file which could be mounted using `mount -o loop...`
 	 */
-	
+	// TODO check that this file doesn't exist yet, we don't want to overwrite it
 	char* ntfs_file = argv[param_idx];
 	xprintf(L_INFO, "Putting NTFS data into '%s'...\n", ntfs_file);
+	
+	// TODO before running the encryption, check if the NTFS file will fit into the free space
 	
 	/* Run the decryption */
 	ret = file_main(ntfs_file, &dis_ctx);

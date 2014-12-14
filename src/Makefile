@@ -14,6 +14,8 @@ DATE		=	$(shell date +%Y-%m-%d)
 # Note that some variables here are changed below depending on the environment
 # this file is run in
 CC		=	cc
+INSTALL		=	install
+
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
@@ -50,22 +52,29 @@ SOURCES		=	dislocker.c common.c config.c sectors.c \
 OBJECTS		=	$(SOURCES:.c=.o)
 
 
+DESTDIR		=
+prefix		=	/usr
 
-DESTDIR		=	/usr
-
-BINARIES_PATH	=	$(DESTDIR)/bin/
-LIBRARY_PATH	=	$(DESTDIR)/lib/
+bindir		=	$(DESTDIR)$(prefix)/bin/
+libdir		=	$(DESTDIR)$(prefix)/lib/
 # Change library path for OS which have a lib64/ directory as ld's looking into
 # it while loading the library instead of lib/
-ifneq ("$(wildcard $(DESTDIR)/lib64/)", "")
-LIBRARY_PATH	=	$(DESTDIR)/lib64/
+ifneq ("$(wildcard $(DESTDIR)$(prefix)/lib64/)", "")
+libdir	=	$(DESTDIR)$(prefix)/lib64/
 endif
 
-MAN_NUMBER	:=	1
-MAN_PATH	:=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
-MAN_ROOT	:=	../man/
-MAN_PAGE	:=	$(BIN)_man
-
+mandir		:=	$(DESTDIR)$(prefix)/share/man/
+man1dir		:=	$(mandir)/man1/
+man3dir		:=	$(mandir)/man3/
+man1ext		:=	.1
+man3ext		:=	.3
+mansrcdir	:=	../man/$(shell echo $(OS) | tr A-Z a-z)/
+man1pages	:=	$(wildcard $(mansrcdir)*$(man1ext))
+# man3pages	:=	$(wildcard $(mansrcdir)*$(man3ext))
+man1pagesgz	:=	$(patsubst %$(man1ext), %$(man1ext).gz, $(man1pages))
+man3pagesgz	:=	$(patsubst %$(man3ext), %$(man3ext).gz, $(man3pages))
+manpages	:=	$(man1pages) $(man3pages)
+manpagesgz	:=	$(man1pagesgz) $(man3pagesgz)
 
 
 
@@ -73,8 +82,6 @@ MAN_PAGE	:=	$(BIN)_man
 ifeq ($(OS), Darwin)
 # Force clang on OSX
 override CC	=	clang
-# Change the man page for some examples aren't the same
-MAN_PAGE	:=	$(BIN)_osx_man
 # Don't use `-read_only_relocs' here as it seems to only work for 32 bits
 # binaries
 LHARDEN		+=	-Wl,-bind_at_load
@@ -86,7 +93,7 @@ SHARED_FLAGS	=	-dynamiclib -current_version $(VERSION_MAJOR).$(VERSION_MINOR) -c
 else
 # Useless warnings when used within Darwin
 WFLAGS		+=	-Wconversion
-endif
+endif # Darwin
 
 
 ifeq ($(CC), clang)
@@ -110,11 +117,15 @@ endif
 export
 
 .PHONY : all $(BIN) install-bins install-lib install-man install uninstall-bins uninstall-lib uninstall-man uninstall clean travis-install travis-test valgrind snapshot release
+.SUFFIXES :
+.SUFFIXES : .c .o .gz
 
-.c.o :
+%.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+%.gz : %
+	gzip -k $<
 
-all : $(BIN)
+all : $(BIN) $(manpagesgz)
 
 lib: $(LIBNAME)
 $(LIBNAME): $(OBJECTS)
@@ -155,40 +166,44 @@ $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 
 
 install-bins:
-	install -pm755 $(BINS) $(BINARIES_PATH)
-	ln -s $(DEFAULT_PROG) $(BINARIES_PATH)$(BIN)
+	$(INSTALL) -p -m 755 $(BINS) $(bindir)
+	ln -s $(DEFAULT_PROG) $(bindir)$(BIN)
 install-lib:
-	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
-	ln -s $(LIBRARY_PATH)$(LIBNAME) $(LIBRARY_PATH)$(SONAME)
-	ln -s $(LIBRARY_PATH)$(SONAME) $(LIBRARY_PATH)$(LINKERNAME)
+	$(INSTALL) -p -m 755 $(LIBNAME) $(libdir)
+	ln -s $(libdir)$(LIBNAME) $(libdir)$(SONAME)
+	ln -s $(libdir)$(SONAME) $(libdir)$(LINKERNAME)
 install-man:
-	cp $(MAN_ROOT)$(MAN_PAGE) $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
-	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
-	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
+	$(INSTALL) -p -m 644 $(man1pagesgz) $(man1dir)
+# 	$(INSTALL) -p -m 644 $(man3pagesgz) $(man3dir)
 install: all install-bins install-lib install-man
 	@echo "==========================================================="
-	@echo "'$(BIN)' installed into" $(BINARIES_PATH)
-	@echo "'$(SONAME)' installed into" $(LIBRARY_PATH)
+	@echo "'$(BIN)' installed into" $(bindir)
+	@echo "'$(SONAME)' installed into" $(libdir)
 	@echo "See 'man 1 $(BIN)' for details on how to use it"
 
 uninstall-bins:
-	if [ -f $(BINARIES_PATH)$(BIN) ]; then rm $(BINARIES_PATH)$(BIN); fi
+	if [ -f $(bindir)$(BIN) ]; then rm $(bindir)$(BIN); fi
 	for prog in $(BINS); do \
-		if [ -f $(BINARIES_PATH)$${prog} ]; then rm $(BINARIES_PATH)$${prog}; fi \
+		if [ -f $(bindir)$${prog} ]; then rm $(bindir)$${prog}; fi \
 	done
 uninstall-lib:
-	if [ -f $(LIBRARY_PATH)$(LINKERNAME) ]; then       rm $(LIBRARY_PATH)$(LINKERNAME); fi
-	if [ -f $(LIBRARY_PATH)$(SONAME) ]; then           rm $(LIBRARY_PATH)$(SONAME); fi
-	if [ -f $(LIBRARY_PATH)$(LIBNAME) ]; then          rm $(LIBRARY_PATH)$(LIBNAME); fi
+	if [ -f $(libdir)$(LINKERNAME) ]; then rm $(libdir)$(LINKERNAME); fi
+	if [ -f $(libdir)$(SONAME) ]; then     rm $(libdir)$(SONAME); fi
+	if [ -f $(libdir)$(LIBNAME) ]; then    rm $(libdir)$(LIBNAME); fi
 uninstall-man:
-	if [ -f $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz ]; then rm $(MAN_PATH)$(BIN).$(MAN_NUMBER).gz; fi
+	for manpagegz in $(man1pagesgz); do \
+		if [ -f $(man1dir)$$manpagegz ]; then rm $(man1dir)$$manpagegz; fi; \
+	done
+	for manpagegz in $(man3pagesgz); do \
+		if [ -f $(man3dir)$$manpagegz ]; then rm $(man3dir)$$manpagegz; fi; \
+	done
 uninstall: clean uninstall-bins uninstall-lib uninstall-man
 	@echo "==========================================================="
 	@echo "$(BIN) uninstalled"
 
 
 clean:
-	rm -rf -- $(OBJECTS) *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME) $(SONAME) $(LINKERNAME)
+	rm -rf -- $(OBJECTS) *~ *.swp $(BINS) $(BINS_OBJECTS) $(LIBNAME) $(SONAME) $(LINKERNAME) $(manpagesgz)
 
 travis-install:
 	if [ "$$TRAVIS_OS_NAME" = "linux" ]; then                     \

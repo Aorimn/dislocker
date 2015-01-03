@@ -64,8 +64,8 @@ libdir	=	$(DESTDIR)$(prefix)/lib64/
 endif
 
 mandir		:=	$(DESTDIR)$(prefix)/share/man/
-man1dir		:=	$(mandir)/man1/
-man3dir		:=	$(mandir)/man3/
+man1dir		:=	$(mandir)man1/
+man3dir		:=	$(mandir)man3/
 man1ext		:=	.1
 man3ext		:=	.3
 mansrcdir	:=	../man/$(shell echo $(OS) | tr A-Z a-z)/

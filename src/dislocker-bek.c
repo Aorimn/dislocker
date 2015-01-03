@@ -31,10 +31,13 @@
 #include "metadata/metadata.h"
 #include "accesses/bek/bekfile.h"
 
+#define USAGE "Usage: %1$s [-h] [-f file.bek]\n" \
+              "  Reads .BEK files and prints information about them\n"
+
 
 void usage(char* prog)
 {
-	fprintf(stderr, "usage: %s [-h] [-f file.bek]\n", prog);
+	fprintf(stderr, USAGE, prog);
 }
 
 
@@ -49,6 +52,7 @@ int main (int argc, char **argv)
 	opterr = 0;
 	
 	while((c = getopt (argc, argv, "hf:")) != -1)
+	{
 		switch(c)
 		{
 			case 'h':
@@ -67,6 +71,7 @@ int main (int argc, char **argv)
 				usage(argv[0]);
 				return EXIT_FAILURE;
 		}
+	}
 	
 	xstdio_init(L_INFO, NULL);
 	

@@ -125,7 +125,7 @@ export
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 %.gz : %
-	gzip -k $<
+	gzip -c $< > $@
 
 all : $(BIN) $(manpagesgz)
 

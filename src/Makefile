@@ -76,6 +76,7 @@ man1pagesgz	:=	$(patsubst %$(man1ext), %$(man1ext).gz, $(man1pages))
 man3pagesgz	:=	$(patsubst %$(man3ext), %$(man3ext).gz, $(man3pages))
 manpages	:=	$(man1pages) $(man3pages)
 manpagesgz	:=	$(man1pagesgz) $(man3pagesgz)
+DEFAULT_MAN	:=	$(word 1, $(BINS))$(man1ext)
 
 
 
@@ -175,6 +176,7 @@ install-lib:
 	ln -s $(libdir)$(SONAME) $(libdir)$(LINKERNAME)
 install-man:
 	$(INSTALL) -p -m 644 $(man1pagesgz) $(man1dir)
+	ln -s $(DEFAULT_MAN).gz $(man1dir)$(BIN)$(man1ext).gz
 # 	$(INSTALL) -p -m 644 $(man3pagesgz) $(man3dir)
 install: all install-bins install-lib install-man
 	@echo "==========================================================="
@@ -192,6 +194,7 @@ uninstall-lib:
 	if [ -f $(libdir)$(SONAME) ]; then     rm $(libdir)$(SONAME); fi
 	if [ -f $(libdir)$(LIBNAME) ]; then    rm $(libdir)$(LIBNAME); fi
 uninstall-man:
+	if [ -f $(man1dir)$(BIN)$(man1ext).gz ]; then rm $(man1dir)$(BIN)$(man1ext).gz; fi
 	for manpagegz in $(notdir $(man1pagesgz)); do \
 		if [ -f $(man1dir)$$manpagegz ]; then rm $(man1dir)$$manpagegz; fi; \
 	done

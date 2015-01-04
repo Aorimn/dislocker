@@ -60,7 +60,7 @@ libdir		=	$(DESTDIR)$(prefix)/lib/
 # Change library path for OS which have a lib64/ directory as ld's looking into
 # it while loading the library instead of lib/
 ifneq ("$(wildcard $(DESTDIR)$(prefix)/lib64/)", "")
-libdir	=	$(DESTDIR)$(prefix)/lib64/
+libdir		=	$(DESTDIR)$(prefix)/lib64/
 endif
 
 mandir		:=	$(DESTDIR)$(prefix)/share/man/

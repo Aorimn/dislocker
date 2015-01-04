@@ -9,17 +9,19 @@ REQUIREMENTS
 `------------
 
 You need:
+ - Compiler, gcc or clang;
+ - make (or gmake, for FreeBSD)
  - Headers for FUSE;
  - Headers for PolarSSL;
  - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
 For Debian-like:
-  aptitude install libfuse-dev libpolarssl-dev
+  aptitude install gcc make libfuse-dev libpolarssl-dev
 For Fedora-like:
-  yum install fuse-devel polarssl-devel
+  yum install gcc make fuse-devel polarssl-devel
+For FreeBSD:
+  pkg install gmake fusefs-libs polarssl
 For OSX: Follow the instructions in the next section.
-
-Of course, you also need a compiler like gcc or clang, and make.
 
 Note that the code expects FUSE 2.6.
 
@@ -36,11 +38,8 @@ following command:
 $ brew install dislocker.rb
 This will install dislocker.
 
-. If you're on FreeBSD, run the following commands for installing the required
-libraries:
-$ pkg install polarssl gmake fusefs-libs
-Then follow the instructions below (next point) by replacing `make' with
-`gmake':
+. If you're on FreeBSD, follow the instructions below (next point) by replacing
+`make' with `gmake':
 
 . If you aren't on MacOSX...
 If you already have installed the dependencies (see REQUIREMENTS section above),
@@ -49,12 +48,16 @@ you just have to type `make' to generate the library and binaries, then
 filesystem.
 
 Note that the `-Werror' flag on the `WFLAGS' line in the Makefile may break the
-compilation, so you can remove it, but it is at your own risks.
+compilation for useless warnings, so you can remove it, but it is at your own
+risks.
 
-The binary will be installed into `/usr/bin/' by default, edit the INSTALL_PATH
-variable (into the Makefile) to change that before the `make install` command.
-Same thing goes for the library except the variable name in the Makefile is
-LIBRARY_PATH, which is `/usr/lib/' by default (or `/usr/lib64/' if it exists).
+The binary will be installed into `/usr/bin/' by default, pass the bindir
+variable to make to change that in the `make install` command. This would do
+something like `make install bindir=/home/blah/compile/bin/`
+Same thing goes for the library except the variable name is libdir, which is
+`/usr/lib/' by default (or `/usr/lib64/' if it exists).
+Note that you can also pass DESTDIR or prefix in order to change the default
+installation directories at once.
 
 Once installed, see dislocker(1) for details on how to use it.
 

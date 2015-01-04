@@ -191,10 +191,10 @@ uninstall-lib:
 	if [ -f $(libdir)$(SONAME) ]; then     rm $(libdir)$(SONAME); fi
 	if [ -f $(libdir)$(LIBNAME) ]; then    rm $(libdir)$(LIBNAME); fi
 uninstall-man:
-	for manpagegz in $(man1pagesgz); do \
+	for manpagegz in $(notdir $(man1pagesgz)); do \
 		if [ -f $(man1dir)$$manpagegz ]; then rm $(man1dir)$$manpagegz; fi; \
 	done
-	for manpagegz in $(man3pagesgz); do \
+	for manpagegz in $(notdir $(man3pagesgz)); do \
 		if [ -f $(man3dir)$$manpagegz ]; then rm $(man3dir)$$manpagegz; fi; \
 	done
 uninstall: clean uninstall-bins uninstall-lib uninstall-man

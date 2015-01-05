@@ -58,9 +58,6 @@
 #define NTFS_SIGNATURE_SIZE      strlen(NTFS_SIGNATURE)
 
 
-/* To get rid of warnings from static variables in .h files */
-#define UNUSED __attribute__ ((unused))
-
 
 
 #ifdef __ARCH_X86_64

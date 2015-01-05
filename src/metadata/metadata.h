@@ -47,6 +47,7 @@ typedef struct _volume_header
 	uint8_t  jump[3];             //                                                -- offset 0
 	uint8_t  signature[8];        // = "-FVE-FS-" (without 0 at the string's end)   -- offset 3
 	                              // = "NTFS    " (idem) for NTFS volumes (ORLY?)
+	                              // = "MSWIN4.1" for BitLocker-To-Go encrypted volumes
 	
 	uint16_t sector_size;         // = 0x0200 = 512 bytes                           -- offset 0xb
 	uint8_t  sectors_per_cluster; //                                                -- offset 0xd
@@ -60,20 +61,38 @@ typedef struct _volume_header
 	uint16_t nb_of_heads;         //                                                -- offset 0x1a
 	uint32_t hidden_sectors;      //                                                -- offset 0x1c
 	uint32_t nb_sectors_32b;      //                                                -- offset 0x20
-	uint8_t  unknown2[4];         // For NTFS, always 0x00800080 (little endian)    -- offset 0x24
-	uint64_t nb_sectors_64b;      //                                                -- offset 0x28
-	uint64_t mft_start_cluster;   //                                                -- offset 0x30
-	union {                       // Metadata LCN or MFT Mirror                     -- offset 0x38
-		uint64_t metadata_lcn;    //  depending on whether we're talking about a Vista volume
-		uint64_t mft_mirror;      //  or an NTFS one
+	
+	union {                       //                                                -- offset 0x24
+		struct {
+			uint8_t  unknown2[4];         // NTFS = 0x00800080 (little endian)
+			uint64_t nb_sectors_64b;      //                                        -- offset 0x28
+			uint64_t mft_start_cluster;   //                                        -- offset 0x30
+			union {                       // Metadata LCN or MFT Mirror             -- offset 0x38
+				uint64_t metadata_lcn;    //  depending on whether we're talking about a Vista volume
+				uint64_t mft_mirror;      //  or an NTFS one
+			};
+			uint8_t  unknown3[96];        //                                        -- offset 0x40
+			
+			guid_t   guid;                //                                        -- offset 0xa0
+			uint64_t offset_bl_header[3]; // NOT for Vista                          -- offset 0xb0
+			uint64_t offset_eow_information[2]; // NOT for Vista nor 7              -- offset 0xc8
+			
+			uint8_t  unknown4[294];       //                                        -- offset 0xd8
+		};
+		struct {
+			uint8_t  unknown5[35];
+			
+			uint8_t  fs_name[11];         //                                        -- offset 0x47
+			uint8_t  fs_signature[8];     //                                        -- offset 0x52
+			
+			uint8_t  unknown6[334];       //                                        -- offset 0x5a
+			
+			guid_t   bltg_guid;           //                                        -- offset 0x1a8
+			uint64_t bltg_header[3];      //                                        -- offset 0x1b8
+			
+			uint8_t  Unknown7[46];        //                                        -- offset 0x1d0
+		};
 	};
-	uint8_t  unknown3[96];        // FIXME                                          -- offset 0x40
-	
-	guid_t   guid;                //                                                -- offset 0xa0
-	uint64_t offset_bl_header[3]; // NOT for Vista                                  -- offset 0xb0
-	uint64_t offset_eow_information[2]; // NOT for Vista nor 7                      -- offset 0xc8
-	
-	uint8_t  unknown4[294];       // FIXME                                          -- offset 0xd8
 	
 	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
 } volume_header_t; // Size = 512

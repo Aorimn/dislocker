@@ -213,6 +213,8 @@ typedef struct _bitlocker_eow_infos
  */
 int get_volume_header(volume_header_t *volume_header, int fd, off_t partition_offset);
 
+int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_config_t *cfg);
+
 int get_metadata(off_t source, void **metadata, int fd);
 
 int get_dataset(void* metadata, bitlocker_dataset_t** dataset);

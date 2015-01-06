@@ -58,6 +58,102 @@ int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
 
 
 /**
+ * Check the volume header
+ */
+int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_config_t *cfg)
+{
+	guid_t volume_guid;
+	
+	/* Checking sector size */
+	if(volume_header->sector_size == 0)
+	{
+		xprintf(L_ERROR, "The sector size found is null.\n");
+		return FALSE;
+	}
+	
+	/* Check the signature */
+	if(memcmp(BITLOCKER_SIGNATURE, volume_header->signature,
+	          BITLOCKER_SIGNATURE_SIZE) == 0)
+	{
+		memcpy(volume_guid, volume_header->guid, sizeof(guid_t));
+	}
+	else if(memcmp(BITLOCKER_TO_GO_SIGNATURE, volume_header->signature,
+	               BITLOCKER_TO_GO_SIGNATURE_SIZE) == 0)
+	{
+		memcpy(volume_guid, volume_header->bltg_guid, sizeof(guid_t));
+	}
+	else
+	{
+		xprintf(
+		        L_ERROR,
+		        "The signature of the volume (%.8s) doesn't match the "
+		        "BitLocker's ones (" BITLOCKER_SIGNATURE " or "
+		        BITLOCKER_TO_GO_SIGNATURE "). Abort.\n",
+		        volume_header->signature
+		);
+		return FALSE;
+	}
+
+	
+	
+	/* Check if we're running under EOW mode */
+	extern guid_t INFORMATION_OFFSET_GUID, EOW_INFORMATION_OFFSET_GUID;
+	
+	if(check_match_guid(volume_guid, INFORMATION_OFFSET_GUID))
+	{
+		xprintf(L_INFO, "Volume GUID (INFORMATION OFFSET) supported\n");
+	}
+	else if(check_match_guid(volume_guid, EOW_INFORMATION_OFFSET_GUID))
+	{
+		xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
+		
+		// First: get the EOW informations no matter what
+		off_t source = (off_t) volume_header->offset_eow_information[0];
+		void* eow_infos = NULL;
+		
+		if(get_eow_information(source, &eow_infos, volume_fd))
+		{
+			// Second: print them
+			print_eow_infos(L_DEBUG, (bitlocker_eow_infos_t*)eow_infos);
+			
+			xfree(eow_infos);
+			
+			// Third: check if this struct passes checks
+			if(get_eow_check_valid(volume_header, volume_fd, &eow_infos, cfg))
+			{
+				xprintf(L_INFO,
+				        "EOW information at offset % " F_OFF_T
+				        " passed the tests\n", source);
+				xfree(eow_infos);
+			}
+			else
+			{
+				xprintf(L_ERROR,
+				        "EOW information at offset % " F_OFF_T
+				        " failed to pass the tests\n", source);
+			}
+		}
+		else
+		{
+			xprintf(L_ERROR,
+			        "Getting EOW information at offset % " F_OFF_T
+			        " failed\n", source);
+		}
+		
+		xprintf(L_ERROR, "EOW volume GUID not supported.\n");
+		return FALSE;
+	}
+	else
+	{
+		xprintf(L_ERROR, "Unknown volume GUID not supported.\n");
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
+
+/**
  * Read one of BitLocker metadata and put data in a bitlocker_header_t structure
  * This also take the dataset header as it's in the bitlocker_header_t
  * Then read all metadata, including datums

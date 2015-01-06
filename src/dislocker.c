@@ -157,79 +157,10 @@ int dis_initialize(dis_context_t* dis_ctx)
 	checkupdate_dis_state(dis_ctx, AFTER_VOLUME_HEADER);
 	
 	
-	/* Checking the signature */
-	if(memcmp(BITLOCKER_SIGNATURE, dis_ctx->io_data.volume_header->signature,
-	          BITLOCKER_SIGNATURE_SIZE) != 0)
+	/* Checking the volume header */
+	if(!check_volume_header(dis_ctx->io_data.volume_header, dis_ctx->io_data.volume_fd, &dis_ctx->cfg))
 	{
-		xprintf(
-			L_CRITICAL,
-			"The signature of the volume (%.8s) doesn't match the "
-			"BitLocker's one (-FVE-FS-). Abort.\n",
-			dis_ctx->io_data.volume_header->signature
-		);
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
-	
-	/* Checking sector size */
-	if(dis_ctx->io_data.volume_header->sector_size == 0)
-	{
-		xprintf(L_CRITICAL, "The sector size found is null. Abort.\n");
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
-	
-	/* Check if we're running under EOW mode */
-	extern guid_t INFORMATION_OFFSET_GUID, EOW_INFORMATION_OFFSET_GUID;
-	
-	if(check_match_guid(dis_ctx->io_data.volume_header->guid, EOW_INFORMATION_OFFSET_GUID))
-	{
-		xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
-		
-		// First: get the EOW informations no matter what
-		off_t source = (off_t)dis_ctx->io_data.volume_header->offset_eow_information[0];
-		void* eow_infos = NULL;
-		
-		if(get_eow_information(source, &eow_infos, dis_ctx->io_data.volume_fd))
-		{
-			// Second: print them
-			print_eow_infos(L_DEBUG, (bitlocker_eow_infos_t*)eow_infos);
-			
-			xfree(eow_infos);
-			
-			// Third: check if this struct passes checks
-			if(get_eow_check_valid(dis_ctx->io_data.volume_header, dis_ctx->io_data.volume_fd, &eow_infos, &dis_ctx->cfg))
-			{
-				xprintf(L_INFO,
-				        "EOW information at offset % " F_OFF_T
-				        " passed the tests\n", source);
-				xfree(eow_infos);
-			}
-			else
-			{
-				xprintf(L_ERROR,
-				        "EOW information at offset % " F_OFF_T
-				        " failed to pass the tests\n", source);
-			}
-		}
-		else
-		{
-			xprintf(L_ERROR,
-			        "Getting EOW information at offset % " F_OFF_T
-			        " failed\n", source);
-		}
-		
-		xprintf(L_CRITICAL, "EOW volume GUID not supported.\n");
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
-	else if(check_match_guid(dis_ctx->io_data.volume_header->guid, INFORMATION_OFFSET_GUID))
-	{
-		xprintf(L_INFO, "Volume GUID supported\n");
-	}
-	else
-	{
-		xprintf(L_CRITICAL, "Unknown volume GUID not supported.\n");
+		xprintf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
 		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}

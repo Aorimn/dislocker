@@ -203,6 +203,18 @@ typedef struct _bitlocker_eow_infos
 } bitlocker_eow_infos_t; // Size = 0x38
 
 
+
+/**
+ * A region is used to describe BitLocker metadata
+ */
+typedef struct _regions
+{
+	/* Metadata offset */
+	uint64_t addr;
+	/* Metadata size on disk */
+	uint64_t size;
+} dis_regions_t;
+
 #pragma pack ()
 
 
@@ -211,9 +223,24 @@ typedef struct _bitlocker_eow_infos
 /*
  * Prototypes
  */
-int get_volume_header(volume_header_t *volume_header, int fd, off_t partition_offset);
+int get_volume_header(
+	volume_header_t *volume_header,
+	int fd,
+	off_t partition_offset
+);
 
-int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_config_t *cfg);
+int check_volume_header(
+	volume_header_t *volume_header,
+	int volume_fd,
+	dis_config_t *cfg
+);
+
+int begin_compute_regions(
+	volume_header_t* vh,
+	int fd,
+	off_t disk_offset,
+	dis_regions_t* regions
+);
 
 int get_metadata(off_t source, void **metadata, int fd);
 
@@ -221,9 +248,20 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
 
 int get_eow_information(off_t source, void** eow_infos, int fd);
 
-int get_metadata_check_validations(volume_header_t* volume_header, int fd, void** metadata, dis_config_t* cfg);
+int get_metadata_check_validations(
+	volume_header_t* volume_header,
+	int fd,
+	void** metadata,
+	dis_config_t *cfg,
+	dis_regions_t *regions
+);
 
-int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos, dis_config_t* cfg);
+int get_eow_check_valid(
+	volume_header_t *volume_header,
+	int fd,
+	void **eow_infos,
+	dis_config_t* cfg
+);
 
 int check_state(bitlocker_header_t* metadata);
 

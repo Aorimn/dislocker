@@ -77,10 +77,7 @@ typedef struct _data {
 	 * This last area is used only when BitLocker's state is 2.
 	 */
 	size_t nb_virt_region;
-	struct {
-		uint64_t addr;
-		uint64_t size;
-	} virt_region[5];
+	dis_regions_t virt_region[5];
 	
 	/* Size (in bytes) of the NTFS backed-up sectors */
 	off_t               virtualized_size;

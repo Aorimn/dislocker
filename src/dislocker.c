@@ -168,13 +168,29 @@ int dis_initialize(dis_context_t* dis_ctx)
 	checkupdate_dis_state(dis_ctx, AFTER_VOLUME_CHECK);
 	
 	
+	/* Fill the regions the metadata occupy on disk */
+	if(!begin_compute_regions(
+		dis_ctx->io_data.volume_header,
+		dis_ctx->io_data.volume_fd,
+		dis_ctx->cfg.offset,
+		dis_ctx->io_data.virt_region))
+	{
+		xprintf(
+			L_CRITICAL,
+			"Can't compute regions from volume header. Abort.\n"
+		);
+		dis_destroy(dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
+	
 	/* Getting BitLocker metadata and validate them */
-	// TODO give the whole dis_ctx here for stopping at first INFORMATION (for stop_at)
 	if(!get_metadata_check_validations(
 		dis_ctx->io_data.volume_header,
 		dis_ctx->io_data.volume_fd,
 		&bl_metadata,
-		&dis_ctx->cfg))
+		&dis_ctx->cfg,
+		dis_ctx->io_data.virt_region))
 	{
 		xprintf(
 			L_CRITICAL,

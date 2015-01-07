@@ -186,7 +186,13 @@ int prepare_crypt(dis_context_t* dis_ctx)
 	io_data->nb_virt_region = 3;
 	for(loop = 0; loop < io_data->nb_virt_region; loop++)
 	{
-		io_data->virt_region[loop].addr = metadata->offset_bl_header[loop];
+		/*
+		 * io_data->virt_region[loop].addr is already done while retrieving
+		 * real offsets (begin_compute_regions@metadata.c).
+		 * This basically is metadata->offset_bl_header[loop] here, but that
+		 * wouldn't be the case for Vista & BitLocker-to-go encrypted volumes,
+		 * so we computed it before.
+		 */
 		io_data->virt_region[loop].size = metafiles_size;
 	}
 	

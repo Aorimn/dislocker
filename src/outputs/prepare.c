@@ -125,16 +125,11 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
  */
 int prepare_crypt(dis_context_t* dis_ctx)
 {
-	size_t loop = 0;
-	dis_iodata_t* io_data        = &dis_ctx->io_data;
-	bitlocker_header_t* metadata = io_data->metadata;
-	uint16_t sector_size         = io_data->volume_header->sector_size;
-	uint8_t  sectors_per_cluster = io_data->volume_header->sectors_per_cluster;
-	uint32_t cluster_size        = 0;
-	uint64_t metafiles_size      = 0;
+	dis_iodata_t* io_data   = &dis_ctx->io_data;
 	
+	int nb_virt_region      = 0;
 	io_data->xinfo          = NULL;
-	io_data->sector_size    = sector_size;
+	io_data->sector_size    = io_data->volume_header->sector_size;
 	io_data->part_off       = dis_ctx->cfg.offset;
 	io_data->decrypt_region = read_decrypt_sectors;
 	io_data->encrypt_region = encrypt_write_sectors;
@@ -162,54 +157,32 @@ int prepare_crypt(dis_context_t* dis_ctx)
 		io_data->volume_size
 	);
 	
-	/*
-	 * Alignment isn't the same for W$ Vista (size-of-a-cluster aligned on
-	 * 0x4000) and 7&8 (size-of-a-sector aligned on 0x10000).
-	 * This gives the metadata files' sizes in the NTFS layer.
-	 */
-	if(metadata->version == V_VISTA)
-	{
-		cluster_size   = (uint32_t)sector_size * sectors_per_cluster;
-		metafiles_size = (uint64_t)(cluster_size+0x3fff) & ~(cluster_size-1);
-	}
-	else if(metadata->version == V_SEVEN)
-	{
-		metafiles_size = (uint64_t)(~(sector_size-1) & (sector_size+0xffff));
-	}
-	
-	xprintf(L_DEBUG, "Metadata files size: %#" F_U64_T "\n", metafiles_size);
 	
 	/*
 	 * Initialize region to report as filled with zeroes, if asked from the NTFS
 	 * layer. This is to mimic BitLocker's behaviour.
 	 */
-	io_data->nb_virt_region = 3;
-	for(loop = 0; loop < io_data->nb_virt_region; loop++)
+	nb_virt_region = end_compute_regions(
+		io_data->virt_region,
+		io_data->volume_header,
+		io_data->metadata
+	);
+	
+	if(nb_virt_region < 0)
 	{
-		/*
-		 * io_data->virt_region[loop].addr is already done while retrieving
-		 * real offsets (begin_compute_regions@metadata.c).
-		 * This basically is metadata->offset_bl_header[loop] here, but that
-		 * wouldn't be the case for Vista & BitLocker-to-go encrypted volumes,
-		 * so we computed it before.
-		 */
-		io_data->virt_region[loop].size = metafiles_size;
+		xprintf(
+			L_ERROR,
+			"Can't compute regions.\n"
+		);
+		return FALSE;
 	}
 	
-	if(metadata->version == V_VISTA)
+	io_data->nb_virt_region = (size_t) nb_virt_region;
+	
+	if(io_data->metadata->version == V_SEVEN)
 	{
-		// Nothing special to do
-	}
-	else if(metadata->version == V_SEVEN)
-	{
-		/*
-		 * On BitLocker 7's volumes, there's a virtualized space used to store
-		 * firsts NTFS sectors. BitLocker creates a NTFS file to not write on
-		 * the area and displays a zeroes-filled file.
-		 * A second part, new from Windows 8, follows...
-		 */
 		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(&metadata->dataset, -1,
+		if(!get_next_datum(&io_data->metadata->dataset, -1,
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
 			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
@@ -224,11 +197,7 @@ int prepare_crypt(dis_context_t* dis_ctx)
 			datum = NULL;
 			return FALSE;
 		}
-		
-		io_data->nb_virt_region++;
-		io_data->virt_region[3].addr = metadata->boot_sectors_backup;
-		io_data->virt_region[3].size = datum->nb_bytes;
-		io_data->virtualized_size    = (off_t)datum->nb_bytes;
+		io_data->virtualized_size = (off_t)datum->nb_bytes;
 		
 		xprintf(
 			L_DEBUG,
@@ -246,21 +215,8 @@ int prepare_crypt(dis_context_t* dis_ctx)
 			io_data->xinfo = &datum->xinfo;
 			xprintf(L_DEBUG, "Got extended info\n");
 		}
-		
-		/* Another area to report as filled with zeroes, new to W8 as well */
-		if(metadata->curr_state == SWITCHING_ENCRYPTION)
-		{
-			io_data->nb_virt_region++;
-			io_data->virt_region[4].addr = metadata->encrypted_volume_size;
-			io_data->virt_region[4].size = metadata->unknown_size;
-		}
 	}
-	else
-	{
-		/* Explicitly mark a BitLocker version as unsupported */
-		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", metadata->version);
-		return FALSE;
-	}
+	
 	
 	return TRUE;
 }

@@ -156,6 +156,8 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
 /**
  * This function compute the real offsets when the metadata_lcn doesn't equal 0
  * This is because of Vista which compute offsets differently than Seven
+ * This also takes into account BitLocker-to-go's volume header structure
+ * difference in the offsets
  * 
  * @param vh The volume header structure already taken
  * @param fd The opened file descriptor of the volume
@@ -221,6 +223,112 @@ int begin_compute_regions(volume_header_t* vh,
 	}
 	
 	return TRUE;
+}
+
+
+/**
+ * This finalizes the initialization of the regions informations, putting the
+ * metadata file sizes in the right place.
+ * 
+ * @param regions Where to put regions' sizes
+ * @param volume_header The volume header structure
+ * @param metadata One of the BitLocker metadata
+ * @return -1 on failure, the number of virtualized regions
+ */
+int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
+                        bitlocker_header_t* metadata)
+{
+	if(!regions || !volume_header || !metadata)
+		return -1;
+	
+	uint16_t sector_size         = volume_header->sector_size;
+	uint8_t  sectors_per_cluster = volume_header->sectors_per_cluster;
+	uint32_t cluster_size        = 0;
+	uint64_t metafiles_size      = 0;
+	
+	int nb_virt_region = 0;
+	
+	/*
+	 * Alignment isn't the same for W$ Vista (size-of-a-cluster aligned on
+	 * 0x4000) and 7&8 (size-of-a-sector aligned on 0x10000).
+	 * This gives the metadata files' sizes in the NTFS layer.
+	 */
+	if(metadata->version == V_VISTA)
+	{
+		cluster_size   = (uint32_t)sector_size * sectors_per_cluster;
+		metafiles_size = (uint64_t)(cluster_size+0x3fff) & ~(cluster_size-1);
+	}
+	else if(metadata->version == V_SEVEN)
+	{
+		metafiles_size = (uint64_t)(~(sector_size-1) & (sector_size+0xffff));
+	}
+	
+	
+	xprintf(
+		L_DEBUG,
+		"Metadata files size: %#" F_U64_T "\n",
+		metafiles_size
+	);
+	
+	/*
+	 * The first 3 regions are for INFORMATION metadata, they have the same size
+	 */
+	regions[0].size = metafiles_size;
+	regions[1].size = metafiles_size;
+	regions[2].size = metafiles_size;
+	nb_virt_region = 3;
+	
+	
+	if(metadata->version == V_VISTA)
+	{
+		// Nothing special to do
+	}
+	else if(metadata->version == V_SEVEN)
+	{
+		/*
+		 * On BitLocker 7's volumes, there's a virtualized space used to store
+		 * firsts NTFS sectors. BitLocker creates a NTFS file to not write on
+		 * the area and displays a zeroes-filled file.
+		 * A second part, new from Windows 8, follows...
+		 */
+		datum_virtualization_t* datum = NULL;
+		if(!get_next_datum(&metadata->dataset, -1,
+		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
+		{
+			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
+			xprintf(
+				L_ERROR,
+				"Error looking for the VIRTUALIZATION datum type"
+				" %hd (%s). Internal failure, abort.\n",
+				DATUM_VIRTUALIZATION_INFO,
+				type_str
+			);
+			xfree(type_str);
+			datum = NULL;
+			return FALSE;
+		}
+		
+		nb_virt_region++;
+		regions[3].addr = metadata->boot_sectors_backup;
+		regions[3].size = datum->nb_bytes;
+		
+		/* Another area to report as filled with zeroes, new to W8 as well */
+		if(metadata->curr_state == SWITCHING_ENCRYPTION)
+		{
+			nb_virt_region++;
+			regions[4].addr = metadata->encrypted_volume_size;
+			regions[4].size = metadata->unknown_size;
+		}
+	}
+	else
+	{
+		/* Explicitly mark a BitLocker version as unsupported */
+		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", metadata->version);
+		return -1;
+	}
+	
+	
+	return nb_virt_region;
 }
 
 

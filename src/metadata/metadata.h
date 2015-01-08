@@ -242,6 +242,12 @@ int begin_compute_regions(
 	dis_regions_t* regions
 );
 
+int end_compute_regions(
+	dis_regions_t* regions,
+	volume_header_t* volume_header,
+	bitlocker_header_t* metadata
+);
+
 int get_metadata(off_t source, void **metadata, int fd);
 
 int get_dataset(void* metadata, bitlocker_dataset_t** dataset);

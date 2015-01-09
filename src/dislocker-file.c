@@ -143,8 +143,16 @@ int main(int argc, char** argv)
 	/*
 	 * Create a NTFS file which could be mounted using `mount -o loop...`
 	 */
-	// TODO check that this file doesn't exist yet, we don't want to overwrite it
 	char* ntfs_file = argv[param_idx];
+	
+	// Check if the file exists, we don't want to overwrite it
+	if(access(ntfs_file, F_OK) == 0)
+	{
+		xprintf(L_CRITICAL, "'%s' already exists, can't override. Abort.\n", ntfs_file);
+		dis_destroy(&dis_ctx);
+		return EXIT_FAILURE;
+	}
+	
 	xprintf(L_INFO, "Putting NTFS data into '%s'...\n", ntfs_file);
 	
 	// TODO before running the encryption, check if the NTFS file will fit into the free space

@@ -3,7 +3,10 @@ INTRODUCTION AND EXPLANATIONS
 
 This software has been designed to read BitLocker encrypted partitions under a
 Linux system. The driver used to only read volumes encrypted under a Windows 7
-system but is now Windows Vista and 8 capable and has the write functionality.
+system but see now its capabilities extended to:
+ - Windows Vista, 7 and 8 encrypted partitions;
+ - BitLocker-To-Go encrypted partitions - that's USB/FAT32 partitions;
+ - be able to write on the above partitions.
 
 The core driver is composed of a library, with multiple binaries (see the NOTES
 section below) using this library. Two binaries are of interest when wanting to
@@ -48,6 +51,27 @@ BUGS
 There may be bugs, and I'll be happy to hear about it!
 
 Feel free to send comments and feedbacks to <dislocker __AT__ hsc __DOT__ fr>.
+
+
+
+A NOTE ON BITLOCKER-TO-GO
+`-------------------------
+
+Microsofts idea behind BitLocker-To-Go is that computers running Microsoft
+operating systems will be able to mount encrypted removable media without too
+much trouble.
+
+To achieve this, the data on the media has a dual format. First it is
+a valid FAT32 filesystem. In that filesystem they store executables and
+datafiles that allow access to the encrypted volume. Besides that you
+will see big "encrypted" files that hold the actual encrypted volume.
+
+On the other side, it is a bitlocker volume. Just with some unused space, from
+the bitlocker point-of-view. That's where the FAT32 stuff lives.
+
+So, to access a  BitLocker-To-Go encrypted media, the whole partition is the
+volume that dislocker works with. The use of dislocker is therefore the same
+whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 
 
 

@@ -238,36 +238,35 @@ int dis_initialize(dis_context_t* dis_ctx)
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
 	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
-		return EXIT_SUCCESS;
-	
-	
-	/* Now that we have the metadata, get the dataset within it */
-	if(get_dataset(bl_metadata, &dataset) != TRUE)
 	{
-		xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
-	
-	/*
-	 * Get the keys -- VMK & FVEK -- for dec/encryption operations
-	 */
-	if(dis_get_access(dis_ctx, dataset) == EXIT_FAILURE)
-	{
-		xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
-	
-	
-	/*
-	 * Init the decrypt keys' contexts
-	 */
-	if(!init_keys(dataset, dis_ctx->io_data.fvek, dis_ctx->io_data.enc_ctx))
-	{
-		xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		/* Now that we have the metadata, get the dataset within it */
+		if(get_dataset(bl_metadata, &dataset) != TRUE)
+		{
+			xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
+			dis_destroy(dis_ctx);
+			return EXIT_FAILURE;
+		}
+		
+		/*
+		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
+		 */
+		if(dis_get_access(dis_ctx, dataset) == EXIT_FAILURE)
+		{
+			xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+			dis_destroy(dis_ctx);
+			return EXIT_FAILURE;
+		}
+		
+		
+		/*
+		 * Init the decrypt keys' contexts
+		 */
+		if(!init_keys(dataset, dis_ctx->io_data.fvek, dis_ctx->io_data.enc_ctx))
+		{
+			xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
+			dis_destroy(dis_ctx);
+			return EXIT_FAILURE;
+		}
 	}
 	
 	

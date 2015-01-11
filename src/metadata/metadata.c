@@ -58,10 +58,40 @@ int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
 
 
 /**
+ * Get BitLocker's version from the volume header
+ * 
+ * @param volume_header A volume header structure to check
+ * @return V_VISTA or V_SEVEN according to the version found, or -1 if not
+ * recognized
+ */
+static inline int get_version_from_volume_header(volume_header_t *volume_header)
+{
+	if(memcmp(BITLOCKER_SIGNATURE, volume_header->signature,
+	          BITLOCKER_SIGNATURE_SIZE) == 0)
+	{
+		if(volume_header->metadata_lcn == 0)
+			return V_SEVEN;
+		
+		return V_VISTA;
+	}
+	
+	return -1;
+}
+
+
+/**
  * Check the volume header
+ * 
+ * @param volume_header A volume header structure to check
+ * @param volume_fd The opened file descriptor of the BitLocker volume
+ * @param cfg Config asked by the user and used
+ * @return TRUE if result can be trusted, FALSE otherwise
  */
 int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_config_t *cfg)
 {
+	if(!volume_header || volume_fd < 0 || !cfg)
+		return FALSE;
+	
 	guid_t volume_guid;
 	
 	/* Checking sector size */
@@ -93,7 +123,14 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
 		);
 		return FALSE;
 	}
-
+	
+	
+	/*
+	 * There's no BitLocker GUID in the volume header for volumes encrypted by
+	 * Vista
+	 */
+	if(get_version_from_volume_header(volume_header) == V_VISTA)
+		return TRUE;
 	
 	
 	/* Check if we're running under EOW mode */
@@ -160,7 +197,7 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
  * difference in the offsets
  * 
  * @param vh The volume header structure already taken
- * @param fd The opened file descriptor of the volume
+ * @param fd The opened file descriptor of the BitLocker volume
  * @param disk_offset Initial partition offset
  * @param regions The 3 offsets of the BitLocker INFORMATION structure (which
  * corresponds to our bitlocker_header_t structure) will be put in the 3 first
@@ -181,7 +218,7 @@ int begin_compute_regions(volume_header_t* vh,
 	          BITLOCKER_SIGNATURE_SIZE) == 0)
 	{
 		/* This is when the volume has been encrypted with W$ 7 or 8 */
-		if(vh->metadata_lcn == 0)
+		if(get_version_from_volume_header(vh) == V_SEVEN)
 		{
 			regions[0].addr = vh->offset_bl_header[0];
 			regions[1].addr = vh->offset_bl_header[1];

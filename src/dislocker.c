@@ -237,7 +237,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	/*
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
-	if(((bitlocker_header_t*)bl_metadata)->curr_state == DECRYPTED)
+	if(((bitlocker_header_t*)bl_metadata)->curr_state != DECRYPTED)
 	{
 		/* Now that we have the metadata, get the dataset within it */
 		if(get_dataset(bl_metadata, &dataset) != TRUE)

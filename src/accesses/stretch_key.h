@@ -36,19 +36,6 @@
 #include "ssl_bindings.h"
 
 
-#define SHA256_DIGEST_LENGTH 32
-#define SALT_LENGTH          16
-
-
-// Needed structure
-typedef struct {
-	uint8_t updated_hash[SHA256_DIGEST_LENGTH];
-	uint8_t password_hash[SHA256_DIGEST_LENGTH];
-	uint8_t salt[SALT_LENGTH];
-	uint64_t hash_count;
-} bitlocker_chain_hash_t;
-
-
 
 /*
  * Prototypes

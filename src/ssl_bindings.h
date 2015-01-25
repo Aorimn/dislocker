@@ -31,15 +31,21 @@
 
 // Function's name changed
 #if defined(POLARSSL_SHA256_C)
+
+#include "polarssl/sha256.h"
 #define SHA256(input, len, output)       sha256(input, len, output, 0)
-#else
+
+#else /* defined(POLARSSL_SHA256_C) */
+
+#include "polarssl/sha2.h"
 // 0x00630500 = version 0.99.5, argument's type changed in this release
-# if POLARSSL_VERSION_NUMBER >= 0x00630500
+#if POLARSSL_VERSION_NUMBER >= 0x00630500
 #define SHA256(input, len, output)       sha2(input, len, output, 0)
-# else
+#else
 #define SHA256(input, len, output)       sha2(input, (int)len, output, 0)
-# endif
-#endif
+#endif /* POLARSSL_VERSION_NUMBER >= 0x00630500 */
+
+#endif /* defined(POLARSSL_SHA256_C) */
 
 /* Here stand the bindings for AES functions and contexts */
 #define AES_CONTEXT                      aes_context

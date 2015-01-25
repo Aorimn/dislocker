@@ -27,10 +27,18 @@
  * Here stand the bindings for polarssl SHA256/SHA2/SHA-2 function for dislocker
  */
 #include "polarssl/config.h"
+#include "polarssl/version.h"
+
+// Function's name changed
 #if defined(POLARSSL_SHA256_C)
 #define SHA256(input, len, output)       sha256(input, len, output, 0)
 #else
+// 0x00630500 = version 0.99.5, argument's type changed in this release
+# if POLARSSL_VERSION_NUMBER >= 0x00630500
 #define SHA256(input, len, output)       sha2(input, len, output, 0)
+# else
+#define SHA256(input, len, output)       sha2(input, (int)len, output, 0)
+# endif
 #endif
 
 /* Here stand the bindings for AES functions and contexts */

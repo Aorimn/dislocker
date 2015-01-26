@@ -75,7 +75,9 @@ PORTABILITY
 `-----------
 
 Globally, this was successfuly tested on Linux x86/x86_64, MacOSX and FreeBSD.
-It won't work on Windows and may not work on other BSDs.
+It won't work on Windows and may not work on other BSDs. For Ubuntu 10.04,
+you'll need to remove the `-Werror' flag from the WFLAGS variable in the
+Makefile.
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
 

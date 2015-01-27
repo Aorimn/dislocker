@@ -24,7 +24,7 @@ LIB		=	-lpthread -lpolarssl -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
+CFLAGS		+=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
 override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN)
 LINKERNAME	:=	lib$(PROGNAME).so
 SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
@@ -172,8 +172,8 @@ install-bins:
 	ln -s $(DEFAULT_PROG) $(bindir)$(BIN)
 install-lib:
 	$(INSTALL) -p -m 755 $(LIBNAME) $(libdir)
-	ln -s $(libdir)$(LIBNAME) $(libdir)$(SONAME)
-	ln -s $(libdir)$(SONAME) $(libdir)$(LINKERNAME)
+	cd $(libdir) && ln -s $(LIBNAME) $(SONAME)
+	cd $(libdir) && ln -s $(SONAME) $(LINKERNAME)
 install-man:
 	$(INSTALL) -p -m 644 $(man1pagesgz) $(man1dir)
 	ln -s $(DEFAULT_MAN).gz $(man1dir)$(BIN)$(man1ext).gz

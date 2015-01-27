@@ -103,7 +103,7 @@ Then dislock it:
 .IP
 -- In `file' mode:
 .IP
-.B % dislocker -V encrypted.bitlocker -p563200-557084-108284-218900-019151-415437-694144-239976 -- decrypted.ntfs
+.B % dislocker-file -V encrypted.bitlocker -p563200-557084-108284-218900-019151-415437-694144-239976 -- decrypted.ntfs
 .IP
 This will decrypt \fBencrypted.bitlocker\fR into \fBdecrypted.ntfs\fR using the recovery password method.
 .IP

@@ -116,7 +116,12 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	int   file_fd = -1;
 	datum_key_t* datum_key = NULL;
 	
-	char enc_method[2]  = {0,};
+	union {
+		cipher_t single;
+		char multi[2];
+	} enc_method;
+	
+	memset(enc_method.multi, 0, 2);
 	char fvek_keys[64] = {0,};
 	
 	off_t expected_size = sizeof(enc_method) + sizeof(fvek_keys);
@@ -130,13 +135,13 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	if(actual_size != expected_size)
 	{
 		xprintf(L_ERROR, "Wrong FVEK file size, expected %d but has %d\n",
-		        expected_size, actual_size);
+				expected_size, actual_size);
 		return FALSE;
 	}
 	
 	/* Read everything */
 	xlseek(file_fd, 0, SEEK_SET);
-	xread(file_fd, enc_method, sizeof(enc_method));
+	xread(file_fd, enc_method.multi, sizeof(enc_method));
 	xread(file_fd, fvek_keys,  sizeof(fvek_keys));
 	
 	
@@ -150,7 +155,7 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	datum_key->header.datum_type = DATUM_KEY;
 	datum_key->header.error_status = 1;
 	
-	datum_key->algo = *(cipher_t*)enc_method;
+	datum_key->algo = enc_method.single;
 	datum_key->padd = 0;
 	
 	/* ... copy the keys */

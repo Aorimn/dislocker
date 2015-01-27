@@ -27,11 +27,6 @@
 #include <stdint.h>
 
 
-#define ROTATE_LEFT(a,n)  (((a) << (n)) | ((a) >> ((sizeof(a) * 8)-(n))))
-#define ROTATE_RIGHT(a,n) (((a) >> (n)) | ((a) << ((sizeof(a) * 8)-(n))))
-
-
-
 /*
  * Prototypes
  */

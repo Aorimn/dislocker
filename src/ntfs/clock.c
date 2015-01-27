@@ -23,6 +23,9 @@
 #include "clock.h"
 
 
+// Constant used to convert NTFS timestamp into a UTC one
+#define NTFS_TIME_OFFSET  ((ntfs_time_t)(369 * 365 + 89) *24 * 3600 * 10000000)
+
 /**
  * Convert a ntfs timestamp into a utc one
  * 

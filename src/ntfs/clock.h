@@ -29,7 +29,6 @@
 
 /* Deal with ntfs timestamps */
 typedef uint64_t ntfs_time_t;
-#define NTFS_TIME_OFFSET  ((ntfs_time_t)(369 * 365 + 89) *24 * 3600 * 10000000)
 
 
 /*

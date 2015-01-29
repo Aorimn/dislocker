@@ -24,8 +24,9 @@ LIB		=	-lpthread -lpolarssl -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		+=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-LDFLAGS 	+=	-l$(PROGNAME) $(LIB) $(LHARDEN)
+# Remember to use the override keyword for CFLAGS and LDFLAGS.
+override CFLAGS	+=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
+override LDFLAGS	+=	-l$(PROGNAME) $(LIB) $(LHARDEN)
 LINKERNAME	:=	lib$(PROGNAME).so
 SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		:=	$(LINKERNAME).$(VERSION)
@@ -111,7 +112,7 @@ endif
 
 ifdef DEBUG
 DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
-CFLAGS		+=	$(DBGFLAGS)
+override CFLAGS	+=	$(DBGFLAGS)
 endif
 
 
@@ -145,13 +146,13 @@ $(BIN)-file: $(LIBNAME) $(BIN)-file.o
 	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
 # Build the binary for the fuse output
-$(BIN)-fuse: CFLAGS  += -DFUSE_USE_VERSION=26
+$(BIN)-fuse: override CFLAGS  += -DFUSE_USE_VERSION=26
 
 # Don't link with the same library on MacOSX
 ifeq ($(OS), Darwin)
-$(BIN)-fuse: LDFLAGS += -losxfuse_i64
+$(BIN)-fuse: override LDFLAGS += -losxfuse_i64
 else
-$(BIN)-fuse: LDFLAGS += -lfuse
+$(BIN)-fuse: override LDFLAGS += -lfuse
 endif # Darwin
 
 $(BIN)-fuse: $(LIBNAME) $(BIN)-fuse.o

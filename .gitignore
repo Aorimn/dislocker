@@ -2,6 +2,7 @@
 *.kate-swp
 *~
 *.swp
+*.gz
 dislocker
 dislocker-bek
 dislocker-file

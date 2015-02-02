@@ -82,14 +82,18 @@ void encrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* se
 {
 	/* Parameters are assumed to be correctly checked already */
 	
-	unsigned char iv[16] = {0,};
+	union {
+		unsigned char multi[16];
+		off_t single;
+	} iv;
+	memset(iv.multi, 0, 16);
 	
 	/* Create the iv */
-	*(off_t*)iv = sector_address;
-	AES_ECB_ENC(&ctx->FVEK_E_ctx, AES_ENCRYPT, iv, iv);
+	iv.single = sector_address;
+	AES_ECB_ENC(&ctx->FVEK_E_ctx, AES_ENCRYPT, iv.multi, iv.multi);
 	
 	/* Actually encrypt data */
-	AES_CBC(&ctx->FVEK_E_ctx, AES_ENCRYPT, sector_size, iv, sector, buffer);
+	AES_CBC(&ctx->FVEK_E_ctx, AES_ENCRYPT, sector_size, iv.multi, sector, buffer);
 }
 
 
@@ -106,19 +110,23 @@ void encrypt_with_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* secto
 {
 	/* Parameters are assumed to be correctly checked already */
 	
-	uint8_t iv[16] = {0,};
+	union {
+		uint8_t multi[16];
+		off_t single;
+	} iv;
+	memset(iv.multi, 0, 16);
 	uint8_t sector_key[32] = {0,};
 	
 	int loop = 0;
 	
 	
 	/* First, create the sector key */
-	*(off_t*)iv = sector_address;
+	iv.single = sector_address;
 	
-	AES_ECB_ENC(&ctx->TWEAK_E_ctx, AES_ENCRYPT, iv, sector_key);
+	AES_ECB_ENC(&ctx->TWEAK_E_ctx, AES_ENCRYPT, iv.multi, sector_key);
 	/* For iv unicity reason... */
-	iv[15] = 0x80;
-	AES_ECB_ENC(&ctx->TWEAK_E_ctx, AES_ENCRYPT, iv, &sector_key[16]);
+	iv.multi[15] = 0x80;
+	AES_ECB_ENC(&ctx->TWEAK_E_ctx, AES_ENCRYPT, iv.multi, &sector_key[16]);
 	
 	memcpy(buffer, sector, sector_size);
 	

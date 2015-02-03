@@ -25,6 +25,8 @@
 
 #define _GNU_SOURCE
 
+#include <pthread.h>
+
 #include "accesses/accesses.h"
 
 

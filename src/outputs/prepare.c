@@ -21,6 +21,7 @@
  * USA.
  */
 
+#include <pthread.h>
 
 #include "prepare.h"
 #include "sectors.h"

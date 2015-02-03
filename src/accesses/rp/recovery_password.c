@@ -28,6 +28,13 @@
 
 
 
+// Specifications of the recovery password
+#define NB_RP_BLOCS   8
+#define NB_DIGIT_BLOC 6
+
+#define INTERMEDIATE_KEY_LENGTH 32
+
+
 /**
  * Get the VMK datum using a recovery password
  * 

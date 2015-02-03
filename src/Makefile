@@ -171,13 +171,16 @@ $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 
 
 install-bins:
+	$(INSTALL) -d $(bindir)
 	$(INSTALL) -p -m 755 $(BINS) $(bindir)
 	ln -s $(DEFAULT_PROG) $(bindir)$(BIN)
 install-lib:
+	$(INSTALL) -d $(libdir)
 	$(INSTALL) -p -m 755 $(LIBNAME) $(libdir)
 	cd $(libdir) && ln -s $(LIBNAME) $(SONAME)
 	cd $(libdir) && ln -s $(SONAME) $(LINKERNAME)
 install-man:
+	$(INSTALL) -d $(man1dir)
 	$(INSTALL) -p -m 644 $(man1pagesgz) $(man1dir)
 	ln -s $(DEFAULT_MAN).gz $(man1dir)$(BIN)$(man1ext).gz
 # 	$(INSTALL) -p -m 644 $(man3pagesgz) $(man3dir)

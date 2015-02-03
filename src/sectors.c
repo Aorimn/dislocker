@@ -23,12 +23,41 @@
 
 #define _GNU_SOURCE
 
+#include <pthread.h>
 
 #include "common.h"
 #include "encryption/decrypt.h"
 #include "encryption/encrypt.h"
 #include "metadata/metadata.h"
 #include "sectors.h"
+
+
+/*
+ * Number of thread you want to run for enc/decryption
+ * NOTE: FUSE uses its own threads so the FUSE's functions can be called in
+ * parallel. Use the environment variable FUSE_THREAD_STACK to change the
+ * FUSE's threads number.
+ */
+#define NB_THREAD 2
+// Have a look at sysconf(_SC_NPROCESSORS_ONLN)
+
+
+/* Struct we pass to a thread for buffer enc/decryption */
+typedef struct _thread_arg
+{
+	size_t   nb_loop;
+	
+	uint16_t sector_size;
+	off_t    sector_start;
+	
+	uint8_t* input;
+	uint8_t* output;
+	
+	unsigned int modulo;
+	unsigned int modulo_result;
+	
+	dis_iodata_t* io_data;
+} thread_arg_t;
 
 
 

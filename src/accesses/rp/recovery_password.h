@@ -28,12 +28,6 @@
 #include "../stretch_key.h"
 #include "metadata/metadata.h"
 
-// Specifications of the recovery password
-#define NB_RP_BLOCS   8
-#define NB_DIGIT_BLOC 6
-
-#define INTERMEDIATE_KEY_LENGTH 32
-
 
 /*
  * Prototypes

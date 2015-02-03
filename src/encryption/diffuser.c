@@ -27,6 +27,9 @@
 #include "diffuser.h"
 
 
+#define ROTATE_LEFT(a,n)  (((a) << (n)) | ((a) >> ((sizeof(a) * 8)-(n))))
+#define ROTATE_RIGHT(a,n) (((a) >> (n)) | ((a) << ((sizeof(a) * 8)-(n))))
+
 
 /**
  * Implement diffuser A's decryption algorithm as explained by Niels Ferguson

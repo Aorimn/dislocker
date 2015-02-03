@@ -30,7 +30,8 @@ override LDFLAGS	+=	-l$(PROGNAME) $(LIB) $(LHARDEN)
 LINKERNAME	:=	lib$(PROGNAME).so
 SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		:=	$(LINKERNAME).$(VERSION)
-SHARED_FLAGS	=	-shared -Wl,-soname,$(SONAME)
+SHARED_HARDEN	=	-fPIC
+SHARED_FLAGS	=	-shared -Wl,-soname,$(SONAME) $(SHARED_HARDEN)
 
 BIN		=	$(PROGNAME)
 SUFFIXES	=	fuse file metadata bek
@@ -107,6 +108,7 @@ endif
 # These flags seem to be GNU ld specifics, cf above for OSX flags
 ifeq ("$(shell ld --version 2>/dev/null | grep -o GNU | head -n 1)", "GNU")
 LHARDEN		+=	-Wl,-z,now -Wl,-z,relro
+SHARED_HARDEN	+=	-Wl,-z,now -Wl,-z,relro
 endif
 
 

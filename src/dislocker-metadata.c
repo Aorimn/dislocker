@@ -30,22 +30,19 @@
 #include <locale.h>
 
 #include "dislocker.h"
-
-#include "common.h"
-#include "config.h"
 #include "metadata/print_metadata.h"
-#include "metadata/metadata.h"
 
 
 void usage()
 {
-	fprintf(stderr, "Usage: " PROGNAME " [-ho] [-V VOLUME]\n"
-					"\n"
-					"    -h         print this help and exit\n"
-					"    -o         partition offset\n"
-					"    -v         increase verbosity to debug level\n"
-					"    -V VOLUME  volume to get metadata from\n"
-		   );
+	fprintf(stderr,
+		"Usage: " PROGNAME " [-hov] [-V VOLUME]\n"
+		"\n"
+		"    -h         print this help and exit\n"
+		"    -o         partition offset\n"
+		"    -v         increase verbosity to debug level\n"
+		"    -V VOLUME  volume to get metadata from\n"
+	);
 }
 
 

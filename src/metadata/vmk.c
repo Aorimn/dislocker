@@ -52,6 +52,7 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
 	if(!has_clear_key(dataset, (datum_vmk_t**)vmk_datum))
 	{
 		xprintf(L_ERROR, "No clear key found. Use a different method.\n");
+		xfree(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
 	}

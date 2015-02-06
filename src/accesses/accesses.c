@@ -112,7 +112,6 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 		else
 		{
 			xprintf(L_CRITICAL, "Wtf!? Abort.\n");
-			dis_destroy(dis_ctx);
 			return EXIT_FAILURE;
 		}
 	}
@@ -124,7 +123,6 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 			"None of the provided decryption mean is "
 			"decrypting the keys. Abort.\n"
 		);
-		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
 	
@@ -148,10 +146,7 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 	if(dis_ctx->cfg.decryption_mean != USE_FVEKFILE)
 	{
 		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
-		{
-			dis_destroy(dis_ctx);
 			return EXIT_FAILURE;
-		}
 	}
 	
 	
@@ -167,7 +162,6 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 			"Can't recognize the encryption algorithm used: %#x. Abort\n",
 			fvek_typed_datum->algo
 		);
-		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
 	

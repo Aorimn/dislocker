@@ -78,13 +78,15 @@ whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 NOTE
 `----
 
-Four binaries are built when compiling dislocker as described in the INSTALL.txt
+Five binaries are built when compiling dislocker as described in the INSTALL.txt
 file:
 - One for disecting a .bek file and printing information about it
   dislocker-bek
 - Another one for printing information about a BitLocker-encrypted volume
   dislocker-metadata
-- A third one for decrypting a BitLocker encrypted partition into a flat file
+- A third one is not a binary but a Ruby script which try to find BitLocker
+  encrypted partition among the plugged-in disks
+- Another one for decrypting a BitLocker encrypted partition into a flat file
 formatted as an NTFS partition you can mount
   dislocker-file
 - A last one, which is the one you're using when calling `dislocker',

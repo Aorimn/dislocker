@@ -34,7 +34,7 @@ SHARED_HARDEN	=	-fPIC
 SHARED_FLAGS	=	-shared -Wl,-soname,$(SONAME) $(SHARED_HARDEN)
 
 BIN		=	$(PROGNAME)
-SUFFIXES	=	fuse file metadata bek
+SUFFIXES	=	fuse file metadata bek find
 BINS		=	$(foreach suf, $(SUFFIXES), $(BIN)-$(suf))
 BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
 DEFAULT_PROG	=	$(word 1, $(BINS))
@@ -125,10 +125,14 @@ export
 .SUFFIXES :
 .SUFFIXES : .c .o .gz
 
+# Implicit rules
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 %.gz : %
 	gzip -c $< > $@
+% : %.rb
+	cp $< $@
+
 
 all : $(BIN) $(manpagesgz)
 
@@ -169,6 +173,9 @@ $(BIN)-metadata: $(LIBNAME) $(BIN)-metadata.o
 $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
+# Nothing to do exactly for this is a script
+# See implicit rules above
+# $(BIN)-find:
 
 install-bins:
 	$(INSTALL) -d $(bindir)

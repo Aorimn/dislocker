@@ -23,7 +23,7 @@ For FreeBSD:
   pkg install gmake fusefs-libs polarssl
 For OSX: Follow the instructions in the next section.
 
-Note that the code expects FUSE 2.6.
+Note that the code expects at least FUSE 2.6.
 
 
 

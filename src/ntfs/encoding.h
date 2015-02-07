@@ -23,6 +23,7 @@
 #ifndef ENCODING_H
 #define ENCODING_H
 
+#include <wchar.h>
 
 #include "common.h"
 

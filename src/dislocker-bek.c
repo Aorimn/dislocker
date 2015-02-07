@@ -26,6 +26,10 @@
 
 #include <getopt.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "common.h"
 #include "metadata/print_metadata.h"
 #include "metadata/metadata.h"

@@ -21,6 +21,7 @@
  * USA.
  */
 
+#include <errno.h>
 #include <pthread.h>
 
 #include "prepare.h"

@@ -21,6 +21,8 @@
  * USA.
  */
 
+#include <time.h>
+
 #include "print_metadata.h"
 
 

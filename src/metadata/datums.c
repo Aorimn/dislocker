@@ -21,6 +21,9 @@
  * USA.
  */
 
+#include <time.h>
+#include <wchar.h>
+
 #include "datums.h"
 #include "vmk.h"
 

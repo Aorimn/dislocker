@@ -29,18 +29,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <unistd.h>
-#include <time.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <wchar.h>
-
-#include <errno.h>
-
-
 
 
 /* Convention */

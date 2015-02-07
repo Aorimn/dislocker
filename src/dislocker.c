@@ -25,6 +25,11 @@
 
 #define _GNU_SOURCE
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include <errno.h>
 #include <pthread.h>
 
 #include "accesses/accesses.h"

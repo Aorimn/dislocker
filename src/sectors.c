@@ -23,6 +23,7 @@
 
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <pthread.h>
 
 #include "common.h"

@@ -22,6 +22,8 @@
  */
 
 
+#include <errno.h>
+
 #include "recovery_password.h"
 #include "metadata/vmk.h"
 #include "xstd/xsys_select.h"

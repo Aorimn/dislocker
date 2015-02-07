@@ -24,6 +24,10 @@
 /* This define is for the O_LARGEFILE definition */
 #define _GNU_SOURCE
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "dislocker.h"
 
 #if defined(__DARWIN) || defined(__FREEBSD)

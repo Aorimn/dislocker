@@ -81,52 +81,6 @@ int xopen(const char* file, int flags)
 
 
 /**
- * open syscall wrapper (for the one with mode)
- * 
- * @param file The file (with its path) to open
- * @param flags The mode(s) along the opening (read/write/...)
- * @param mode The mode(s) a file will have if created
- * @return The file descriptor returned by the actual open
- */
-int xopen2(const char* file, int flags, mode_t mode)
-{
-	int fd = -1;
-	
-	xprintf(L_DEBUG, "Trying to open '%s'... ", file);
-	
-	if((fd = open(file, flags, mode)) < 0)
-	{
-		char* err_string = NULL;
-		size_t arbitrary_value = 42;
-		char* before = "Failed to open file";
-		char* after = xmalloc(arbitrary_value);
-		
-		snprintf(after, arbitrary_value, "%s", file);
-		
-		if(arbitrary_value < strlen(file))
-		{
-			after[arbitrary_value-4] = '.';
-			after[arbitrary_value-3] = '.';
-			after[arbitrary_value-2] = '.';
-		}
-		
-		size_t len = strlen(before);
-		
-		err_string = xmalloc(len + arbitrary_value + 4);
-		snprintf(err_string, len + arbitrary_value + 4, "%s '%s'", before, after);
-		
-		xfree(after);
-		
-		xperror(err_string);
-	}
-	
-	xprintf(L_DEBUG, "Opened (fd #%d).\n", fd);
-	
-	return fd;
-}
-
-
-/**
  * close syscall wrapper
  * 
  * @param fd The result of an xopen call

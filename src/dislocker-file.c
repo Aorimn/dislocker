@@ -40,7 +40,54 @@
 
 
 
-int file_main(char* ntfs_file, dis_context_t* dis_ctx)
+/**
+ * open(2) syscall wrapper (for the one with mode)
+ * 
+ * @param file The file (with its path) to open
+ * @param flags The mode(s) along the opening (read/write/...)
+ * @param mode The mode(s) a file will have if created
+ * @return The file descriptor returned by the actual open
+ */
+static int xopen_file(const char* file, int flags, mode_t mode)
+{
+	int fd = -1;
+	
+	xprintf(L_DEBUG, "Trying to open '%s'... ", file);
+	
+	if((fd = open(file, flags, mode)) < 0)
+	{
+		char* err_string = NULL;
+		size_t arbitrary_value = 42;
+		char* before = "Failed to open file";
+		char* after = xmalloc(arbitrary_value);
+		
+		snprintf(after, arbitrary_value, "%s", file);
+		
+		if(arbitrary_value < strlen(file))
+		{
+			after[arbitrary_value-4] = '.';
+			after[arbitrary_value-3] = '.';
+			after[arbitrary_value-2] = '.';
+		}
+		
+		size_t len = strlen(before);
+		
+		err_string = xmalloc(len + arbitrary_value + 4);
+		snprintf(err_string, len + arbitrary_value + 4, "%s '%s'", before, after);
+		
+		xfree(after);
+		
+		xperror(err_string);
+	}
+	
+	xprintf(L_DEBUG, "Opened (fd #%d).\n", fd);
+	
+	return fd;
+}
+
+
+
+static int file_main(char* ntfs_file, dis_context_t* dis_ctx)
 {
 	// Check parameter
 	if(!ntfs_file)
@@ -63,7 +110,7 @@ int file_main(char* ntfs_file, dis_context_t* dis_ctx)
 	if(dis_ctx->cfg.is_ro & READ_ONLY)
 		mode = S_IRUSR;
 	
-	int fd_ntfs = xopen2(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
+	int fd_ntfs = xopen_file(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
 	
 	
 	off_t offset          = 0;

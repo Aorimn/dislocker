@@ -23,6 +23,7 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
+#include <time.h>
 
 #include "common.h"
 

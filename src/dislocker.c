@@ -64,8 +64,9 @@
 
 int dis_initialize(dis_context_t* dis_ctx)
 {
-	void* bl_metadata = NULL;
+	void* metadata = NULL;
 	
+	bitlocker_information_t* information = NULL;
 	bitlocker_dataset_t* dataset = NULL;
 	
 	int ret = EXIT_SUCCESS;
@@ -192,10 +193,10 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	
 	/* Getting BitLocker metadata and validate them */
-	if(!get_metadata_check_validations(
+	if(!get_metadata_lazy_checked(
 		dis_ctx->io_data.volume_header,
 		dis_ctx->io_data.volume_fd,
-		&bl_metadata,
+		&metadata,
 		&dis_ctx->cfg,
 		dis_ctx->io_data.virt_region))
 	{
@@ -207,7 +208,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 		return EXIT_FAILURE;
 	}
 	
-	if(dis_ctx->cfg.force_block == 0 || !bl_metadata)
+	if(dis_ctx->cfg.force_block == 0 || !metadata)
 	{
 		xprintf(
 			L_CRITICAL,
@@ -217,14 +218,16 @@ int dis_initialize(dis_context_t* dis_ctx)
 		return EXIT_FAILURE;
 	}
 	
+	information = metadata;
+	
 	/* Checking BitLocker version */
-	if(((bitlocker_header_t*)bl_metadata)->version > V_SEVEN)
+	if(information->version > V_SEVEN)
 	{
 		xprintf(
 			L_CRITICAL,
 			"Program designed only for BitLocker version 2 and less, "
 			"the version here is %hd. Abort.\n",
-			((bitlocker_header_t*)bl_metadata)->version
+			information->version
 		);
 		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
@@ -233,10 +236,10 @@ int dis_initialize(dis_context_t* dis_ctx)
 	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
 	
 	/* For debug purpose, print the metadata */
-	print_bl_metadata(L_DEBUG, bl_metadata);
-	print_data(L_DEBUG, bl_metadata);
+	print_information(L_DEBUG, information);
+	print_data(L_DEBUG, metadata);
 	
-	dis_ctx->io_data.metadata = bl_metadata;
+	dis_ctx->io_data.information = information;
 	
 	checkupdate_dis_state(dis_ctx, AFTER_BITLOCKER_INFORMATION_CHECK);
 	
@@ -244,10 +247,10 @@ int dis_initialize(dis_context_t* dis_ctx)
 	/*
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
-	if(((bitlocker_header_t*)bl_metadata)->curr_state != DECRYPTED)
+	if(information->curr_state != DECRYPTED)
 	{
-		/* Now that we have the metadata, get the dataset within it */
-		if(get_dataset(bl_metadata, &dataset) != TRUE)
+		/* Now that we have the information, get the dataset within it */
+		if(get_dataset(metadata, &dataset) != TRUE)
 		{
 			xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
 			dis_destroy(dis_ctx);
@@ -295,7 +298,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	dis_ctx->io_data.volume_state = TRUE;
 	
 	if(dis_ctx->cfg.dont_check_state == FALSE &&
-		!check_state(dis_ctx->io_data.metadata))
+		!check_state(dis_ctx->io_data.information))
 	{
 		dis_ctx->io_data.volume_state = FALSE;
 	}
@@ -544,7 +547,7 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	 * For BitLocker 7's volume, redirect writes to firsts sectors to the backed
 	 * up ones
 	 */
-	if(dis_ctx->io_data.metadata->version == V_SEVEN &&
+	if(dis_ctx->io_data.information->version == V_SEVEN &&
 	   offset < dis_ctx->io_data.virtualized_size)
 	{
 		xprintf(L_DEBUG, "  Entering virtualized area\n");
@@ -554,7 +557,7 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 			 * If all the request is within the virtualized area, just change
 			 * the offset
 			 */
-			offset = offset + (off_t)dis_ctx->io_data.metadata->boot_sectors_backup;
+			offset = offset + (off_t)dis_ctx->io_data.information->boot_sectors_backup;
 			xprintf(L_DEBUG, "  `-> Just redirecting to %#"F_OFF_T"\n", offset);
 		}
 		else
@@ -697,8 +700,8 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 int dis_destroy(dis_context_t* dis_ctx)
 {
 	/* Finish cleaning things */
-	if(dis_ctx->io_data.metadata)
-		xfree(dis_ctx->io_data.metadata);
+	if(dis_ctx->io_data.information)
+		xfree(dis_ctx->io_data.information);
 	
 	if(dis_ctx->io_data.volume_header)
 		xfree(dis_ctx->io_data.volume_header);

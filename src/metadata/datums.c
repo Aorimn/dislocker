@@ -469,7 +469,7 @@ void print_datum_virtualization(LEVELS level, void* vdatum)
 	xprintf(level, "NTFS boot sectors address:  %#llx\n", datum->ntfs_boot_sectors);
 	xprintf(level, "Number of backuped bytes: %1$#llx (%1$llu)\n", datum->nb_bytes);
 	
-	/* For Windows 8 metadata */
+	/* For Windows 8 encrypted volumes */
 	size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
 	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
 	if(actual_size > win7_size)
@@ -519,7 +519,7 @@ void print_mac(LEVELS level, uint8_t* mac)
 /**
  * Get the next specified datum
  * 
- * @param dataset The metadata dataset
+ * @param dataset The metadata's dataset
  * @param type The second uint16_t of any datum header struct
  * @param datum_type The third uint16_t of any datum header struct
  * @param datum_begin The beginning of the search
@@ -684,7 +684,7 @@ int datum_type_must_be(void* datum, datum_t datum_type)
 /**
  * Check if a clear key is stored in data
  * 
- * @param metadata The metadata where to look
+ * @param dataset The metadata's dataset
  * @param vmk_datum The VMK datum of the clear key if found
  * @return TRUE if result can be trusted, FALSE otherwise
  */

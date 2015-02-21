@@ -350,7 +350,7 @@ static void* thread_decrypt(void* params)
 	
 	size_t   virt_loop       = 0;
 	off_t    metadata_offset = 0;
-	uint16_t version         = io_data->metadata->version;
+	uint16_t version         = io_data->information->version;
 	
 	off_t size               = 0;
 	
@@ -411,7 +411,7 @@ static void* thread_decrypt(void* params)
 		
 		/* Check for sectors fixing and non-encrypted sectors */
 		if(version == V_SEVEN &&
-		   (uint64_t)sector_offset < io_data->metadata->nb_backup_sectors)
+		   (uint64_t)sector_offset < io_data->information->nb_backup_sectors)
 		{
 			/*
 			 * The firsts sectors are encrypted in a different place on a
@@ -424,7 +424,7 @@ static void* thread_decrypt(void* params)
 			);
 		}
 		else if(version == V_SEVEN &&
-		       (uint64_t)offset >= io_data->metadata->encrypted_volume_size)
+		       (uint64_t)offset >= io_data->information->encrypted_volume_size)
 		{
 			/* Do not decrypt when there's nothing to */
 			xprintf(L_DEBUG,
@@ -492,7 +492,7 @@ static void* thread_encrypt(void* params)
 	uint8_t* loop_input  = args->input;
 	uint8_t* loop_output = args->output;
 	
-	uint16_t version     = io_data->metadata->version;
+	uint16_t version     = io_data->information->version;
 	
 	
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
@@ -532,7 +532,7 @@ static void* thread_encrypt(void* params)
 				memcpy(loop_output, loop_input, args->sector_size);
 		}
 		else if(version == V_SEVEN &&
-		       (uint64_t)offset >= io_data->metadata->encrypted_volume_size)
+		       (uint64_t)offset >= io_data->information->encrypted_volume_size)
 		{
 			memcpy(loop_output, loop_input, args->sector_size);
 		}
@@ -574,11 +574,11 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	
 	/* 
 	 * NTFS's boot sectors are saved into the field "boot_sectors_backup" into
-	 * metadata.
+	 * metadata's header: the information structure.
 	 * So we can use them here to give a good NTFS partition's beginning.
 	 */
 	off_t from = sector_address;
-	off_t to   = from + (off_t)io_data->metadata->boot_sectors_backup;
+	off_t to   = from + (off_t)io_data->information->boot_sectors_backup;
 	
 	xprintf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
 	                 "\n", from, to);
@@ -629,7 +629,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	to -= io_data->part_off;
 	
 	/* If the sector wasn't yet encrypted, don't decrypt it */
-	if((uint64_t)to >= io_data->metadata->encrypted_volume_size)
+	if((uint64_t)to >= io_data->information->encrypted_volume_size)
 	{
 		memcpy(output, input, io_data->sector_size);
 	}
@@ -664,7 +664,7 @@ static void fix_read_sector_vista(dis_iodata_t* io_data,
 	
 	xprintf(L_DEBUG, "  Fixing sector (Vista): replacing signature "
 	                 "and MFTMirror field by: %#llx\n",
-	                 io_data->metadata->mftmirror_backup);
+	                 io_data->information->mftmirror_backup);
 	
 	/* 
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
@@ -677,7 +677,7 @@ static void fix_read_sector_vista(dis_iodata_t* io_data,
 	memcpy(formatted_output->signature, NTFS_SIGNATURE, NTFS_SIGNATURE_SIZE);
 	
 	/* And this is for the MFT Mirror field */
-	formatted_output->mft_mirror = io_data->metadata->mftmirror_backup;
+	formatted_output->mft_mirror = io_data->information->mftmirror_backup;
 }
 
 
@@ -709,7 +709,7 @@ static void fix_write_sector_vista(dis_iodata_t* io_data,
 	
 	/* And this is for the metadata LCN */
 	formatted_output->metadata_lcn =
-		io_data->metadata->offset_bl_header[0] /
+		io_data->information->information_off[0] /
 		(uint64_t)(
 			formatted_output->sectors_per_cluster *
 			formatted_output->sector_size

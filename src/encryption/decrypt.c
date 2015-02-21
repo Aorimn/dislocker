@@ -386,27 +386,27 @@ void decrypt_with_diffuser   (contexts_t* ctx, uint16_t sector_size, uint8_t* se
 /**
  * Interface to decrypt a sector
  * 
- * @param global_data Data needed by FUSE and the decryption to deal with encrypted data
+ * @param io_data Data needed by FUSE and the decryption to deal with encrypted data
  * @param sector The sector to decrypt
  * @param buffer The place where we have to put decrypted data
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int decrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+int decrypt_sector(dis_iodata_t* io_data, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	// Check parameters
-	if(!global_data || !sector || !buffer)
+	if(!io_data || !sector || !buffer)
 		return FALSE;
 	
 	
-	switch(global_data->metadata->dataset.algorithm)
+	switch(io_data->information->dataset.algorithm)
 	{
 		case AES_128_DIFFUSER:
 		case AES_256_DIFFUSER:
-			decrypt_with_diffuser(global_data->enc_ctx, global_data->sector_size, sector, sector_address, buffer);
+			decrypt_with_diffuser(io_data->enc_ctx, io_data->sector_size, sector, sector_address, buffer);
 			break;
 		case AES_128_NO_DIFFUSER:
 		case AES_256_NO_DIFFUSER:
-			decrypt_without_diffuser(global_data->enc_ctx, global_data->sector_size, sector, sector_address, buffer);
+			decrypt_without_diffuser(io_data->enc_ctx, io_data->sector_size, sector, sector_address, buffer);
 			break;
 	}
 	

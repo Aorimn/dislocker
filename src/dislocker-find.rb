@@ -88,7 +88,7 @@ def is_bitlocker_encrypted?(device)
 	begin
 		volume_header = fd.read_nonblock(512)
 	rescue
-		# If we can't read 11 bytes, then it's not a BitLocker volume
+		# If we can't read 512 bytes, then it's not a BitLocker volume
 		return false
 	else
 		volume_signature = volume_header[3, 8]

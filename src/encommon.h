@@ -57,8 +57,8 @@ typedef struct _aes_contexts {
  * Structure used for operation on disk (encryption/decryption)
  */
 typedef struct _data {
-	/* Volume metadata */
-	bitlocker_header_t* metadata;
+	/* BitLocker-volume's metadata */
+	bitlocker_information_t* information;
 	
 	/* The volume header, 512 bytes */
 	volume_header_t* volume_header;
@@ -76,8 +76,8 @@ typedef struct _data {
 	 * an area I don't know about yet for W$ 8.
 	 * This last area is used only when BitLocker's state is 2.
 	 */
-	size_t nb_virt_region;
-	dis_regions_t virt_region[5];
+	size_t              nb_virt_region;
+	dis_regions_t       virt_region[5];
 	
 	/* Size (in bytes) of the NTFS backed-up sectors */
 	off_t               virtualized_size;

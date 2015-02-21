@@ -30,7 +30,7 @@
 
 void print_volume_header(LEVELS level, volume_header_t *volume_header);
 
-void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header);
+void print_information(LEVELS level, bitlocker_information_t *information);
 
 void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos);
 
@@ -38,7 +38,7 @@ void print_dataset(LEVELS level, bitlocker_dataset_t* dataset);
 
 void print_data(LEVELS level, void* metadata);
 
-const char* get_bl_state(state_t state);
+const char* get_state(state_t state);
 
 
 #endif // PRINT_METADATA_H

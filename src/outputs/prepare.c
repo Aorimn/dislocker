@@ -167,7 +167,7 @@ int prepare_crypt(dis_context_t* dis_ctx)
 	nb_virt_region = end_compute_regions(
 		io_data->virt_region,
 		io_data->volume_header,
-		io_data->metadata
+		io_data->information
 	);
 	
 	if(nb_virt_region < 0)
@@ -181,10 +181,10 @@ int prepare_crypt(dis_context_t* dis_ctx)
 	
 	io_data->nb_virt_region = (size_t) nb_virt_region;
 	
-	if(io_data->metadata->version == V_SEVEN)
+	if(io_data->information->version == V_SEVEN)
 	{
 		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(&io_data->metadata->dataset, -1,
+		if(!get_next_datum(&io_data->information->dataset, -1,
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
 			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
@@ -267,7 +267,7 @@ static uint64_t get_volume_size(dis_iodata_t* io_data)
 	
 	volume_size = get_volume_size_from_mbr(io_data->volume_header);
 	
-	if(!volume_size && io_data->metadata->version == V_SEVEN)
+	if(!volume_size && io_data->information->version == V_SEVEN)
 	{
 		/*
 		 * For version V_SEVEN, volumes can be partially encrypted.

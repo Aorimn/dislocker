@@ -119,16 +119,16 @@ int main(int argc, char **argv)
 	print_volume_header(L_INFO, dis_ctx.io_data.volume_header);
 	xprintf(L_INFO, "\n");
 	
-	// Printing BitLocker metadata
-	print_bl_metadata(L_INFO, dis_ctx.io_data.metadata);
+	// Printing BitLocker information metadata
+	print_information(L_INFO, dis_ctx.io_data.information);
 	xprintf(L_INFO, "\n");
 	
 	// Now we're looking at the data themselves
-	print_data(L_INFO, dis_ctx.io_data.metadata);
+	print_data(L_INFO, dis_ctx.io_data.information);
 	
 	
-	// Get the metadata's dataset
-	if(!get_dataset(dis_ctx.io_data.metadata, &dataset))
+	// Get the information's dataset
+	if(!get_dataset(dis_ctx.io_data.information, &dataset))
 	{
 		xprintf(L_CRITICAL, "Can't find a valid dataset. Abort.\n");
 		dis_destroy(&dis_ctx);

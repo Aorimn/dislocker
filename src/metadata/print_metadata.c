@@ -69,9 +69,9 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header)
 	
 	xprintf(level, "  Volume GUID: '%.37s'\n", rec_id);
 	
-	xprintf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->offset_bl_header[2]);
+	xprintf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[0]);
+	xprintf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->information_off[1]);
+	xprintf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[2]);
 	
 	xprintf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
 	xprintf(level, "========================================\n");
@@ -84,7 +84,7 @@ void print_volume_header(LEVELS level, volume_header_t *volume_header)
  * @param state The state to translate
  * @return The state as a constant string
  */
-const char* get_bl_state(state_t state)
+const char* get_state(state_t state)
 {
 	if(state >= sizeof(states_str) / sizeof(char*))
 		return states_str[sizeof(states_str) / sizeof(char*) - 1];
@@ -96,30 +96,30 @@ const char* get_bl_state(state_t state)
 /**
  * Print a BitLocker header structure into a human-readable format
  * 
- * @param bl_header The BitLocker header to print
+ * @param information The BitLocker header to print
  */
-void print_bl_metadata(LEVELS level, bitlocker_header_t *bl_header)
+void print_information(LEVELS level, bitlocker_information_t *information)
 {
-	int metadata_size = bl_header->version == V_SEVEN ? bl_header->size << 4 : bl_header->size;
+	int metadata_size = information->version == V_SEVEN ? information->size << 4 : information->size;
 	
-	xprintf(level, "=====================[ BitLocker metadata informations ]=====================\n");
-	xprintf(level, "  Signature: '%.8s'\n", bl_header->signature);
+	xprintf(level, "=====================[ BitLocker information structure ]=====================\n");
+	xprintf(level, "  Signature: '%.8s'\n", information->signature);
 	xprintf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", metadata_size);
-	xprintf(level, "  Version: %hu\n", bl_header->version);
-	xprintf(level, "  Current state: %s (%hu)\n", get_bl_state(bl_header->curr_state), bl_header->curr_state);
-	xprintf(level, "  Next state: %s (%hu)\n", get_bl_state(bl_header->next_state), bl_header->next_state);
-	xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", bl_header->encrypted_volume_size, bl_header->encrypted_volume_size / (1024*1024));
-	xprintf(level, "  Size of virtualized region: %1$#x (%1$u)\n", bl_header->unknown_size);
-	xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", bl_header->nb_backup_sectors);
-	xprintf(level, "  First metadata header offset:  %#" F_U64_T "\n", bl_header->offset_bl_header[0]);
-	xprintf(level, "  Second metadata header offset: %#" F_U64_T "\n", bl_header->offset_bl_header[1]);
-	xprintf(level, "  Third metadata header offset:  %#" F_U64_T "\n", bl_header->offset_bl_header[2]);
-	if(bl_header->version == V_SEVEN)
-		xprintf(level, "  Boot sectors backup address:   %#" F_U64_T "\n", bl_header->boot_sectors_backup);
+	xprintf(level, "  Version: %hu\n", information->version);
+	xprintf(level, "  Current state: %s (%hu)\n", get_state(information->curr_state), information->curr_state);
+	xprintf(level, "  Next state: %s (%hu)\n",    get_state(information->next_state), information->next_state);
+	xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
+	xprintf(level, "  Size of virtualized region: %1$#x (%1$u)\n", information->unknown_size);
+	xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);
+	xprintf(level, "  First metadata header offset:  %#" F_U64_T "\n", information->information_off[0]);
+	xprintf(level, "  Second metadata header offset: %#" F_U64_T "\n", information->information_off[1]);
+	xprintf(level, "  Third metadata header offset:  %#" F_U64_T "\n", information->information_off[2]);
+	if(information->version == V_SEVEN)
+		xprintf(level, "  Boot sectors backup address:   %#" F_U64_T "\n", information->boot_sectors_backup);
 	else
-		xprintf(level, "  NTFS MftMirror field:   %#" F_U64_T "\n", bl_header->mftmirror_backup);
+		xprintf(level, "  NTFS MftMirror field:   %#" F_U64_T "\n", information->mftmirror_backup);
 	
-	print_dataset(level, &bl_header->dataset);
+	print_dataset(level, &information->dataset);
 	xprintf(level, "=============================================================================\n");
 }
 
@@ -195,19 +195,15 @@ void print_data(LEVELS level, void* metadata)
 	if(!metadata)
 		return;
 	
-	bitlocker_dataset_t* dataset = metadata + 0x40;
+	bitlocker_dataset_t* dataset = NULL;
 	void* data = NULL;
 	void* end_dataset = 0;
 	int loop = 0;
 	
-	/* Check this dataset validity */
-	if(
-		dataset->copy_size < dataset->header_size
-		|| dataset->size   > dataset->copy_size
-		|| dataset->copy_size - dataset->header_size < 8
-	)
+	/* Get the dataset in the given metadata */
+	if(!get_dataset(metadata, &dataset))
 	{
-		xprintf(L_ERROR, "Error, no dataset found.\n");
+		xprintf(L_ERROR, "Error, no valid dataset found.\n");
 		return;
 	}
 	

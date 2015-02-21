@@ -145,7 +145,7 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
 		xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
 		
 		// First: get the EOW informations no matter what
-		off_t source = (off_t) volume_header->offset_eow_information[0];
+		off_t source = (off_t) volume_header->eow_information_off[0];
 		void* eow_infos = NULL;
 		
 		if(get_eow_information(source, &eow_infos, volume_fd))
@@ -200,8 +200,8 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
  * @param fd The opened file descriptor of the BitLocker volume
  * @param disk_offset Initial partition offset
  * @param regions The 3 offsets of the BitLocker INFORMATION structure (which
- * corresponds to our bitlocker_header_t structure) will be put in the 3 first
- * addr member of this array
+ * corresponds to our bitlocker_information_t structure) will be put in the 3
+ * first addr member of this array
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int begin_compute_regions(volume_header_t* vh,
@@ -220,9 +220,9 @@ int begin_compute_regions(volume_header_t* vh,
 		/* This is when the volume has been encrypted with W$ 7 or 8 */
 		if(get_version_from_volume_header(vh) == V_SEVEN)
 		{
-			regions[0].addr = vh->offset_bl_header[0];
-			regions[1].addr = vh->offset_bl_header[1];
-			regions[2].addr = vh->offset_bl_header[2];
+			regions[0].addr = vh->information_off[0];
+			regions[1].addr = vh->information_off[1];
+			regions[2].addr = vh->information_off[2];
 			return TRUE;
 		}
 		
@@ -233,18 +233,18 @@ int begin_compute_regions(volume_header_t* vh,
 		);
 		
 		uint64_t new_offset = vh->metadata_lcn * vh->sectors_per_cluster * vh->sector_size;
-		xprintf(L_INFO, "Changing first metadata offset from %#llx to %#llx\n", vh->offset_bl_header[0], new_offset);
+		xprintf(L_INFO, "Changing first metadata offset from %#llx to %#llx\n", vh->information_off[0], new_offset);
 		regions[0].addr = new_offset;
 		
 		/* Now that we have the first offset, go get the others */
-		bitlocker_header_t* metadata = NULL;
-		if(!get_metadata((off_t)new_offset + disk_offset, (void**)&metadata, fd))
+		bitlocker_information_t* information = NULL;
+		if(!get_metadata((off_t)new_offset + disk_offset, (void**)&information, fd))
 			return FALSE;
 		
-		regions[1].addr = metadata->offset_bl_header[1];
-		regions[2].addr = metadata->offset_bl_header[2];
+		regions[1].addr = information->information_off[1];
+		regions[2].addr = information->information_off[2];
 		
-		xfree(metadata);
+		xfree(information);
 	}
 	else if(memcmp(BITLOCKER_TO_GO_SIGNATURE, vh->signature,
 	               BITLOCKER_TO_GO_SIGNATURE_SIZE) == 0)
@@ -269,13 +269,13 @@ int begin_compute_regions(volume_header_t* vh,
  * 
  * @param regions Where to put regions' sizes
  * @param volume_header The volume header structure
- * @param metadata One of the BitLocker metadata
+ * @param information One of the BitLocker information structure
  * @return -1 on failure, the number of virtualized regions
  */
 int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
-                        bitlocker_header_t* metadata)
+                        bitlocker_information_t* information)
 {
-	if(!regions || !volume_header || !metadata)
+	if(!regions || !volume_header || !information)
 		return -1;
 	
 	uint16_t sector_size         = volume_header->sector_size;
@@ -290,12 +290,12 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 	 * 0x4000) and 7&8 (size-of-a-sector aligned on 0x10000).
 	 * This gives the metadata files' sizes in the NTFS layer.
 	 */
-	if(metadata->version == V_VISTA)
+	if(information->version == V_VISTA)
 	{
 		cluster_size   = (uint32_t)sector_size * sectors_per_cluster;
 		metafiles_size = (uint64_t)(cluster_size+0x3fff) & ~(cluster_size-1);
 	}
-	else if(metadata->version == V_SEVEN)
+	else if(information->version == V_SEVEN)
 	{
 		metafiles_size = (uint64_t)(~(sector_size-1) & (sector_size+0xffff));
 	}
@@ -316,11 +316,11 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 	nb_virt_region = 3;
 	
 	
-	if(metadata->version == V_VISTA)
+	if(information->version == V_VISTA)
 	{
 		// Nothing special to do
 	}
-	else if(metadata->version == V_SEVEN)
+	else if(information->version == V_SEVEN)
 	{
 		/*
 		 * On BitLocker 7's volumes, there's a virtualized space used to store
@@ -329,7 +329,7 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 		 * A second part, new from Windows 8, follows...
 		 */
 		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(&metadata->dataset, -1,
+		if(!get_next_datum(&information->dataset, -1,
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
 			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
@@ -346,21 +346,21 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 		}
 		
 		nb_virt_region++;
-		regions[3].addr = metadata->boot_sectors_backup;
+		regions[3].addr = information->boot_sectors_backup;
 		regions[3].size = datum->nb_bytes;
 		
 		/* Another area to report as filled with zeroes, new to W8 as well */
-		if(metadata->curr_state == SWITCHING_ENCRYPTION)
+		if(information->curr_state == SWITCHING_ENCRYPTION)
 		{
 			nb_virt_region++;
-			regions[4].addr = metadata->encrypted_volume_size;
-			regions[4].size = metadata->unknown_size;
+			regions[4].addr = information->encrypted_volume_size;
+			regions[4].size = information->unknown_size;
 		}
 	}
 	else
 	{
 		/* Explicitly mark a BitLocker version as unsupported */
-		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", metadata->version);
+		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", information->version);
 		return -1;
 	}
 	
@@ -370,9 +370,10 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 
 
 /**
- * Read one of BitLocker metadata and put data in a bitlocker_header_t structure
- * This also take the dataset header as it's in the bitlocker_header_t
- * Then read all metadata, including datums
+ * Read the beginning of one of the BitLocker metadata area and put data in a
+ * bitlocker_information_t structure.
+ * This also take the dataset header as it's in the bitlocker_information_t.
+ * Then includes datums in the read.
  * 
  * @param source The beginning address of the header
  * @param metadata One of the BitLocker metadata, beginning at source
@@ -389,19 +390,19 @@ int get_metadata(off_t source, void **metadata, int fd)
 	
 	xprintf(L_INFO, "Reading bitlocker header at %#" F_OFF_T "...\n", source);
 	
-	bitlocker_header_t bl_header;
+	bitlocker_information_t information;
 	
 	/*
-	 * Read and place data into the bitlocker_header_t structure,
-	 * this is the metadata header
+	 * Read and place data into the bitlocker_information_t structure,
+	 * this is the metadata's header
 	 */
-	ssize_t nb_read = xread(fd, &bl_header, sizeof(bitlocker_header_t));
+	ssize_t nb_read = xread(fd, &information, sizeof(bitlocker_information_t));
 	
 	// Check if we read all we wanted
-	if(nb_read != sizeof(bitlocker_header_t))
+	if(nb_read != sizeof(bitlocker_information_t))
 	{
 		xprintf(L_ERROR, "get_metadata::Error, not all bytes read: %d, %d"
-				" expected (1).\n", nb_read, sizeof(bitlocker_header_t));
+				" expected (1).\n", nb_read, sizeof(bitlocker_information_t));
 		return FALSE;
 	}
 	
@@ -409,28 +410,28 @@ int get_metadata(off_t source, void **metadata, int fd)
 	 * Now that we now the size of the metadata, allocate a buffer and read data
 	 * to complete it
 	 */
-	size_t size = (size_t)(bl_header.version == V_SEVEN ?
-	                                      bl_header.size << 4 : bl_header.size);
+	size_t size = (size_t)(information.version == V_SEVEN ?
+	                                  information.size << 4 : information.size);
 	
 	
-	if(size <= sizeof(bitlocker_header_t))
+	if(size <= sizeof(bitlocker_information_t))
 	{
 		xprintf(L_ERROR, "get_metadata::Error, metadata size is lesser than the"
 				" size of the metadata header\n");
 		return FALSE;
 	}
 	
-	size_t rest_size = size - sizeof(bitlocker_header_t);
+	size_t rest_size = size - sizeof(bitlocker_information_t);
 	
 	*metadata = xmalloc(size);
 	
 	// Copy the header at the begining of the metadata
-	memcpy(*metadata, &bl_header, sizeof(bitlocker_header_t));
+	memcpy(*metadata, &information, sizeof(bitlocker_information_t));
 	
 	xprintf(L_INFO, "Reading data...\n");
 	
 	// Read the rest, the real data
-	nb_read = xread(fd, *metadata + sizeof(bitlocker_header_t), rest_size);
+	nb_read = xread(fd, *metadata + sizeof(bitlocker_information_t), rest_size);
 	
 	// Check if we read all we wanted
 	if((size_t) nb_read != rest_size)
@@ -460,7 +461,8 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 	if(!metadata)
 		return FALSE;
 	
-	*dataset = metadata + 0x40;
+	bitlocker_information_t* information = metadata;
+	*dataset = &information->dataset;
 	
 	/* Check this dataset validity */
 	if(
@@ -468,7 +470,10 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 		|| (*dataset)->size   > (*dataset)->copy_size
 		|| (*dataset)->copy_size - (*dataset)->header_size < 8
 	)
+	{
+		xprintf(L_DEBUG, "size=%#x, copy_size=%#x, header_size=%#x\n");
 		return FALSE;
+	}
 	
 	return TRUE;
 }
@@ -519,7 +524,7 @@ int get_eow_information(off_t source, void** eow_infos, int fd)
 		return FALSE;
 	}
 	
-	size_t rest_size = size - sizeof(bitlocker_header_t);
+	size_t rest_size = size - sizeof(bitlocker_information_t);
 	
 	*eow_infos = xmalloc(size);
 	
@@ -558,7 +563,7 @@ int get_eow_information(off_t source, void** eow_infos, int fd)
  * use in this function
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_metadata_check_validations(volume_header_t *volume_header,
+int get_metadata_lazy_checked(volume_header_t *volume_header,
                                    int fd, void **metadata, dis_config_t *cfg,
                                    dis_regions_t *regions)
 {
@@ -566,14 +571,14 @@ int get_metadata_check_validations(volume_header_t *volume_header,
 	if(!volume_header || fd < 0 || !metadata || !cfg)
 		return FALSE;
 	
-	xprintf(L_DEBUG, "Entering get_metadata_check_validations\n");
+	xprintf(L_DEBUG, "Entering get_metadata_lazy_checked\n");
 	
-	bitlocker_header_t* metadata_header = NULL;
+	bitlocker_information_t* information = NULL;
 	unsigned int  metadata_size = 0;
 	unsigned char current = 0;
 	unsigned int  metadata_crc32 = 0;
 	off_t         validations_offset = 0;
-	bitlocker_validations_infos_t validations;
+	bitlocker_validations_t validations;
 	
 	/* If the user wants a specific metadata block */
 	if(cfg->force_block != 0)
@@ -606,8 +611,9 @@ int get_metadata_check_validations(volume_header_t *volume_header,
 		
 		/* Calculate validations offset */
 		validations_offset = 0;
-		metadata_header = (bitlocker_header_t*) *metadata;
-		metadata_size = (unsigned int)(metadata_header->version == V_SEVEN ? ((unsigned int)metadata_header->size) << 4 : metadata_header->size);
+		information = *metadata;
+		metadata_size = (unsigned int)(information->version == V_SEVEN ?
+		            ((unsigned int)information->size) << 4 : information->size);
 		
 		validations_offset = (off_t)regions[current].addr + metadata_size;
 		
@@ -618,10 +624,10 @@ int get_metadata_check_validations(volume_header_t *volume_header,
 		xlseek(fd, validations_offset + cfg->offset, SEEK_SET);
 		
 		/* Get the validations metadata */
-		memset(&validations, 0, sizeof(bitlocker_validations_infos_t));
+		memset(&validations, 0, sizeof(bitlocker_validations_t));
 		
-		ssize_t nb_read = xread(fd, &validations, sizeof(bitlocker_validations_infos_t));
-		if(nb_read != sizeof(bitlocker_validations_infos_t))
+		ssize_t nb_read = xread(fd, &validations, sizeof(bitlocker_validations_t));
+		if(nb_read != sizeof(bitlocker_validations_t))
 		{
 			xprintf(L_ERROR, "Error, can't read all validations data.\n");
 			return FALSE;
@@ -680,7 +686,7 @@ int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos
 	while(current < 2)
 	{
 		/* Compute the on-disk offset */
-		curr_offset = (off_t)volume_header->offset_eow_information[current]
+		curr_offset = (off_t)volume_header->eow_information_off[current]
 		            + cfg->offset;
 		++current;
 		
@@ -737,13 +743,13 @@ int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos
 /**
  * Check for dangerous state the BitLocker volume can be in.
  * 
- * @param metadata The BitLocker metadata header
+ * @param information The BitLocker metadata header
  * @return TRUE if it's safe to use the volume, FALSE otherwise
  */
-int check_state(bitlocker_header_t* metadata)
+int check_state(bitlocker_information_t* information)
 {
 	// Check parameter
-	if(!metadata)
+	if(!information)
 		return FALSE;
 	
 	char* enc = "enc";
@@ -751,9 +757,9 @@ int check_state(bitlocker_header_t* metadata)
 	char* unknown = "unknown-";
 	char* next_state = NULL;
 	
-	if(metadata->next_state == DECRYPTED)
+	if(information->next_state == DECRYPTED)
 		next_state = dec;
-	else if(metadata->next_state == ENCRYPTED)
+	else if(information->next_state == ENCRYPTED)
 		next_state = enc;
 	else
 	{
@@ -763,11 +769,11 @@ int check_state(bitlocker_header_t* metadata)
 			", but it would be awesome if you could spare some time to report "
 			"this state (%d) to the author and how did you do to have this. "
 			"Many thanks.\n",
-			metadata->next_state
+			information->next_state
 		);
 	}
 	
-	switch(metadata->curr_state)
+	switch(information->curr_state)
 	{
 		case SWITCHING_ENCRYPTION:
 			xprintf(L_ERROR,

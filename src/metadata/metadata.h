@@ -63,7 +63,7 @@ typedef struct _volume_header
 	uint32_t nb_sectors_32b;      //                                                -- offset 0x20
 	
 	union {                       //                                                -- offset 0x24
-		struct {
+		struct { // Classic BitLocker
 			uint8_t  unknown2[4];         // NTFS = 0x00800080 (little endian)
 			uint64_t nb_sectors_64b;      //                                        -- offset 0x28
 			uint64_t mft_start_cluster;   //                                        -- offset 0x30
@@ -74,12 +74,12 @@ typedef struct _volume_header
 			uint8_t  unknown3[96];        //                                        -- offset 0x40
 			
 			guid_t   guid;                //                                        -- offset 0xa0
-			uint64_t offset_bl_header[3]; // NOT for Vista                          -- offset 0xb0
-			uint64_t offset_eow_information[2]; // NOT for Vista nor 7              -- offset 0xc8
+			uint64_t information_off[3];  // NOT for Vista                          -- offset 0xb0
+			uint64_t eow_information_off[2]; // NOT for Vista NOR 7                 -- offset 0xc8
 			
 			uint8_t  unknown4[294];       //                                        -- offset 0xd8
 		};
-		struct {
+		struct { // BitLocker-To-Go
 			uint8_t  unknown5[35];
 			
 			uint8_t  fs_name[11];         //                                        -- offset 0x47
@@ -128,11 +128,11 @@ typedef uint16_t state_t;
 
 
 /**
- * Header of a BitLocker metadata structure
+ * Header of a BitLocker metadata structure, named information
  * 
  * Datums (protectors) with keys in them follow this header
  */
-typedef struct _bitlocker_header
+typedef struct _bitlocker_information
 {
 	uint8_t signature[8]; // = "-FVE-FS-"                                                   -- offset 0
 	uint16_t size;        // Total size (has to be multiplied by 16 when the version is 2)  -- offset 8
@@ -151,7 +151,7 @@ typedef struct _bitlocker_header
 	uint32_t unknown_size;  //                                                              -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
 	
-	uint64_t offset_bl_header[3]; //                                                        -- offset 0x20
+	uint64_t information_off[3];  //                                                        -- offset 0x20
 	
 	union {
 		uint64_t boot_sectors_backup; // Address where the boot sectors have been backed up -- offset 0x38
@@ -159,7 +159,7 @@ typedef struct _bitlocker_header
 	};
 	
 	struct _bitlocker_dataset dataset; // See above                                         -- offset 0x40
-} bitlocker_header_t; // Size = 0x40 + 0x30
+} bitlocker_information_t; // Size = 0x40 + 0x30
 
 
 
@@ -168,16 +168,16 @@ typedef struct _bitlocker_header
  * (DATUM_KEY). When there's a DATUM_AES_CCM, this is actually the DATUM_KEY
  * encrypted using the VMK.
  * The key contained in the DATUM_KEY structure is the SHA-256 sum of the entire
- * BitLocker's metadata fields (bitlocker_header_t + every datum).
+ * BitLocker's metadata fields (bitlocker_information_t + every datum).
  * 
  * Therefore, the size field contains 8 plus the size of the datum.
  */
-typedef struct _bitlocker_validations_infos
+typedef struct _bitlocker_validations
 {
 	uint16_t  size;
 	version_t version;
 	uint32_t  crc32;
-} bitlocker_validations_infos_t; // Size = 8
+} bitlocker_validations_t; // Size = 8
 
 
 
@@ -205,7 +205,7 @@ typedef struct _bitlocker_eow_infos
 
 
 /**
- * A region is used to describe BitLocker metadata
+ * A region is used to describe BitLocker metadata on disk
  */
 typedef struct _regions
 {
@@ -216,7 +216,6 @@ typedef struct _regions
 } dis_regions_t;
 
 #pragma pack ()
-
 
 
 
@@ -245,7 +244,7 @@ int begin_compute_regions(
 int end_compute_regions(
 	dis_regions_t* regions,
 	volume_header_t* volume_header,
-	bitlocker_header_t* metadata
+	bitlocker_information_t* information
 );
 
 int get_metadata(off_t source, void **metadata, int fd);
@@ -254,7 +253,7 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
 
 int get_eow_information(off_t source, void** eow_infos, int fd);
 
-int get_metadata_check_validations(
+int get_metadata_lazy_checked(
 	volume_header_t* volume_header,
 	int fd,
 	void** metadata,
@@ -269,7 +268,7 @@ int get_eow_check_valid(
 	dis_config_t* cfg
 );
 
-int check_state(bitlocker_header_t* metadata);
+int check_state(bitlocker_information_t* information);
 
 
 #endif // METADATA_H

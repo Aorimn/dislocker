@@ -1,22 +1,13 @@
 #!/usr/bin/env ruby
 
+require 'libdislocker'
 
 $signatures = {
 	bitlocker:       '-FVE-FS-',
 	bitlocker_to_go: 'MSWIN4.1'
 }
 
-$guids = {
-	INFORMATION_OFFSET: [
-		0x3b, 0xd6, 0x67, 0x49, 0x29, 0x2e, 0xd8, 0x4a,
-		0x83, 0x99, 0xf6, 0xa3, 0x39, 0xe3, 0xd0, 0x01
-	].pack('c16'),
-	EOW_INFORMATION_OFFSET: [
-		0x3b, 0x4d, 0xa8, 0x92, 0x80, 0xdd, 0x0e, 0x4d,
-		0x9e, 0x4e, 0xb1, 0xe3, 0x28, 0x4e, 0xae, 0xd8
-	].pack('c16')
-}
-
+$guids = Dislocker::Metadata::GUID::INFORMATION_OFFSETS
 
 def get_partitions
 	uname = nil
@@ -72,7 +63,6 @@ def get_darwin_partitions
 	return Dir['/dev/disk*']
 end
 
-
 # Check if a device is BitLocker-encrypted
 def is_bitlocker_encrypted?(device)
 	begin
@@ -98,7 +88,7 @@ def is_bitlocker_encrypted?(device)
 	$signatures.each do |sig_name, sig|
 		# First check is the volume's signature
 		if sig == volume_signature
-			$guids.each do |guid_name, guid|
+			$guids.each do |guid|
 				# Second one is the volume's GUID
 				return true if volume_header[guid]
 			end
@@ -110,7 +100,9 @@ end
 
 
 
+#
 # Begin here
+#
 if ARGV.empty?
 	devices = get_partitions
 elsif ARGV[0] =~ /^--help|-h$/

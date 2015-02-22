@@ -96,17 +96,19 @@ NOTE
 Five binaries are built when compiling dislocker as described in the INSTALL.txt
 file:
 - One for disecting a .bek file and printing information about it
-  dislocker-bek
+  > dislocker-bek
 - Another one for printing information about a BitLocker-encrypted volume
-  dislocker-metadata
+  > dislocker-metadata
 - A third one is not a binary but a Ruby script which try to find BitLocker
-  encrypted partition among the plugged-in disks
+  encrypted partition among the plugged-in disks (only work if the library is
+  compiled with the ruby bindings)
+  > dislocker-find
 - Another one for decrypting a BitLocker encrypted partition into a flat file
 formatted as an NTFS partition you can mount
-  dislocker-file
+  > dislocker-file
 - A last one, which is the one you're using when calling `dislocker',
 dynamically decrypts a BitLocker encrypted partition using FUSE
-  dislocker-fuse
+  > dislocker-fuse
 
 
 You can build each one independently providing it as the makefile target. For

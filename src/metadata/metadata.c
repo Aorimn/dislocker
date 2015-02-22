@@ -1261,3 +1261,11 @@ uint32_t dis_metadata_backup_sectors_count(dis_metadata_t dis_meta)
 	return dis_meta->information->nb_backup_sectors;
 }
 
+#ifdef _HAVE_RUBY
+void Init_metadata(VALUE rb_mDislocker)
+{
+	VALUE rb_mDislockerMetadata = rb_define_module_under(rb_mDislocker, "Metadata");
+	
+	Init_guid(rb_mDislockerMetadata);
+}
+#endif

@@ -38,6 +38,11 @@ void format_guid(uint8_t *raw_guid, char* formated_guid);
 
 int check_match_guid(guid_t guid_1, guid_t guid_2);
 
+#ifdef _HAVE_RUBY
+#include <ruby.h>
+
+void Init_guid(VALUE rb_mDislockerMetadata);
+#endif
 
 
 #endif // GUID_H

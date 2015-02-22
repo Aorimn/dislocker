@@ -110,4 +110,27 @@ int check_match_guid(guid_t guid_1, guid_t guid_2)
 }
 
 
+#ifdef _HAVE_RUBY
+static VALUE rb_format_guid(VALUE self, VALUE rb_vGuid)
+{
+	(void) self;
+	char* guid = StringValuePtr(rb_vGuid);
+	char formated_guid[37];
+	
+	format_guid((uint8_t*) guid, formated_guid);
+	return rb_str_new(formated_guid, 37);
+}
 
+void Init_guid(VALUE rb_mDislockerMetadata)
+{
+	VALUE rb_mDisMetadataGuid = rb_define_module_under(rb_mDislockerMetadata, "GUID");
+	VALUE offset_guids = rb_ary_new3(
+		2,
+		rb_str_new((const char*)INFORMATION_OFFSET_GUID, 16),
+		rb_str_new((const char*)EOW_INFORMATION_OFFSET_GUID, 16)
+	);
+	
+	rb_define_const(rb_mDisMetadataGuid, "INFORMATION_OFFSETS", offset_guids);
+	rb_define_singleton_method(rb_mDisMetadataGuid, "pretty", rb_format_guid, 1);
+}
+#endif

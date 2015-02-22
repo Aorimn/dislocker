@@ -274,5 +274,10 @@ struct _dis_metadata {
 	dis_context_t    dis_ctx;
 };
 
+#ifdef _HAVE_RUBY
+#include <ruby.h>
+
+void Init_metadata(VALUE rb_mDislocker);
+#endif
 
 #endif /* DIS_METADATA_PRIV_H */

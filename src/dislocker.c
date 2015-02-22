@@ -661,3 +661,62 @@ int dis_destroy(dis_context_t dis_ctx)
 	
 	return EXIT_SUCCESS;
 }
+
+
+
+
+/**
+ * This part below is for Ruby bindings
+ */
+#ifdef _HAVE_RUBY
+#include <ruby.h>
+
+static VALUE rb_init_dislocker(VALUE self, VALUE rb_vdis_ctx)
+{
+	rb_iv_set(self, "@context", rb_vdis_ctx);
+	
+	// TODO dis_initialize(dis_context_t* dis_ctx);
+	
+	return Qtrue;
+}
+
+static VALUE rb_dislock(VALUE self, VALUE rb_vbuffer, VALUE rb_voffset, VALUE rb_vsize)
+{
+	// TODO
+	(void) self;
+	(void) rb_vbuffer;
+	(void) rb_voffset;
+	(void) rb_vsize;
+	return Qtrue;
+}
+
+static VALUE rb_enlock(VALUE self, VALUE rb_vbuffer, VALUE rb_voffset, VALUE rb_vsize)
+{
+	// TODO
+	(void) self;
+	(void) rb_vbuffer;
+	(void) rb_voffset;
+	(void) rb_vsize;
+	return Qtrue;
+}
+
+static VALUE rb_destroy_dislocker(VALUE self)
+{
+	// TODO
+	(void) self;
+	return Qtrue;
+}
+
+
+void Init_libdislocker()
+{
+	VALUE rb_mDislocker = rb_define_module("Dislocker");
+	Init_metadata(rb_mDislocker);
+	
+	rb_define_method(rb_mDislocker, "initialize", rb_init_dislocker, 1);
+	rb_define_method(rb_mDislocker, "dislock", rb_dislock, 3);
+	rb_define_method(rb_mDislocker, "enlock", rb_enlock, 3);
+	rb_define_method(rb_mDislocker, "destroy", rb_destroy_dislocker, 0);
+}
+
+#endif

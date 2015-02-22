@@ -35,7 +35,9 @@ SHARED_HARDEN	=	-fPIC
 SHARED_FLAGS	=	-shared -Wl,-soname,$(SONAME) $(SHARED_HARDEN)
 
 BIN		=	$(PROGNAME)
-SUFFIXES	=	fuse file metadata bek find
+SUFFIXES	=	fuse file metadata bek
+# Note: the 'find' suffix is added (cf below) only if the library is compiled
+# with ruby bindings
 BINS		=	$(foreach suf, $(SUFFIXES), $(BIN)-$(suf))
 BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
 DEFAULT_PROG	=	$(word 1, $(BINS))
@@ -111,6 +113,15 @@ ifeq ("$(shell ld --version 2>/dev/null | grep -o GNU | head -n 1)", "GNU")
 LHARDEN		+=	-Wl,-z,now -Wl,-z,relro
 SHARED_HARDEN	+=	-Wl,-z,now -Wl,-z,relro
 override LDFLAGS	+=	-Wl,-rpath=$(libdir)
+endif
+
+
+BINDINGS	=	ruby
+ifeq ($(strip $(shell pkg-config --cflags --libs $(BINDINGS) >/dev/null 2>&1 && echo ok)), ok)
+SUFFIXES	+=	find
+DEFINES		+=	-D_HAVE_$(shell echo $(BINDINGS) | tr a-z A-Z)
+LIB		+=	$(shell pkg-config --libs $(BINDINGS))
+INC		+=	$(shell pkg-config --cflags $(BINDINGS))
 endif
 
 

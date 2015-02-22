@@ -6,6 +6,7 @@
 dislocker
 dislocker-bek
 dislocker-file
+dislocker-find
 dislocker-fuse
 dislocker-metadata
 libdislocker.so

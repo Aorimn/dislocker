@@ -24,7 +24,7 @@
  * Get and display BitLocker's metadata
  */
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 
 #include <getopt.h>
 #include <locale.h>

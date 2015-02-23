@@ -22,7 +22,7 @@
  */
 
 /* This define is for the O_LARGEFILE definition */
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 
 #include <string.h>
 #include <unistd.h>

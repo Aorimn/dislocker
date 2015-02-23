@@ -120,7 +120,7 @@ endif
 BINDING		:=	ruby
 ifeq ($(strip $(shell pkg-config $(BINDING) >/dev/null 2>&1 && echo ok)), ok)
 SUFFIXES	+=	find
-DEFINES		+=	-D_HAVE_$(shell echo $(BINDING) | tr a-z A-Z)
+DEFINES		+=	-D_HAVE_RUBY=$(shell pkg-config --modversion $(BINDING))
 LIB		+=	$(shell pkg-config --libs $(BINDING))
 INC		+=	$(shell pkg-config --cflags $(BINDING))
 else
@@ -128,7 +128,7 @@ else
 BINDING		:=	ruby-1.9
 ifeq ($(strip $(shell pkg-config $(BINDING) >/dev/null 2>&1 && echo ok)), ok)
 SUFFIXES	+=	find
-DEFINES		+=	-D_HAVE_$(shell echo $(BINDING) | tr a-z A-Z)
+DEFINES		+=	-D_HAVE_RUBY=1.9
 LIB		+=	$(shell pkg-config --libs $(BINDING))
 INC		+=	$(shell pkg-config --cflags $(BINDING))
 endif

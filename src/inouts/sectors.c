@@ -21,7 +21,7 @@
  * USA.
  */
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 
 #include <unistd.h>
 #include <errno.h>

@@ -23,7 +23,7 @@
 
 
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -717,7 +717,6 @@ void Init_libdislocker()
 	rb_define_method(rb_mDislocker, "dislock", rb_dislock, 3);
 	rb_define_method(rb_mDislocker, "enlock", rb_enlock, 3);
 	rb_define_method(rb_mDislocker, "destroy", rb_destroy_dislocker, 0);
-	
 	
 	VALUE rb_mDisSignatures = rb_define_module_under(rb_mDislocker, "Signatures");
 	VALUE signatures = rb_ary_new3(

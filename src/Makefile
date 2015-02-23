@@ -116,24 +116,19 @@ override LDFLAGS	+=	-Wl,-rpath=$(libdir)
 endif
 
 
-# FIXME Now if you know how to fix this mess, I'm fully open
-BINDING		:=	ruby
-ifeq ($(strip $(shell pkg-config $(BINDING) >/dev/null 2>&1 && echo ok)), ok)
-SUFFIXES	+=	find
-DEFINES		+=	-D_HAVE_RUBY=$(shell pkg-config --modversion $(BINDING))
-LIB		+=	$(shell pkg-config --libs $(BINDING))
-INC		+=	$(shell pkg-config --cflags $(BINDING))
-else
+# Look for a Ruby version for library's bindings
+BINDINGS	:=	ruby ruby-2.0 ruby-1.9
+get_version	=	$(shell pkg-config --modversion $(1)|cut -d. -f1,2)
+check_if_exists	=	$(if $(strip $(shell pkg-config $(1) >/dev/null 2>&1 && echo ok)), $(1))
 
-BINDING		:=	ruby-1.9
-ifeq ($(strip $(shell pkg-config $(BINDING) >/dev/null 2>&1 && echo ok)), ok)
-SUFFIXES	+=	find
-DEFINES		+=	-D_HAVE_RUBY=1.9
-LIB		+=	$(shell pkg-config --libs $(BINDING))
-INC		+=	$(shell pkg-config --cflags $(BINDING))
-endif
+OK_BINDINGS	:=	$(foreach binding,$(BINDINGS),$(call check_if_exists,$(binding)))
+OK_BINDING	:=	$(if $(OK_BINDINGS),$(word 1,$(OK_BINDINGS)))
+RUBY_VERSION	:=	$(if $(OK_BINDING),$(call get_version,$(OK_BINDING)))
 
-endif
+SUFFIXES	+=	$(if $(RUBY_VERSION),find)
+DEFINES		+=	$(if $(RUBY_VERSION),-D_HAVE_RUBY=$(RUBY_VERSION))
+LIB		+=	$(if $(OK_BINDING),$(shell pkg-config --libs $(OK_BINDING)))
+INC		+=	$(if $(OK_BINDING),$(shell pkg-config --cflags $(OK_BINDING)))
 
 
 ifdef DEBUG

@@ -717,6 +717,15 @@ void Init_libdislocker()
 	rb_define_method(rb_mDislocker, "dislock", rb_dislock, 3);
 	rb_define_method(rb_mDislocker, "enlock", rb_enlock, 3);
 	rb_define_method(rb_mDislocker, "destroy", rb_destroy_dislocker, 0);
+	
+	
+	VALUE rb_mDisSignatures = rb_define_module_under(rb_mDislocker, "Signatures");
+	VALUE signatures = rb_ary_new3(
+		2,
+		rb_str_new(BITLOCKER_SIGNATURE, BITLOCKER_SIGNATURE_SIZE),
+		rb_str_new(BITLOCKER_TO_GO_SIGNATURE, BITLOCKER_TO_GO_SIGNATURE_SIZE)
+	);
+	rb_define_const(rb_mDisSignatures, "BitLocker", signatures);
 }
 
 #endif

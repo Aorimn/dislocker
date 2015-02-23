@@ -15,10 +15,13 @@ You need:
  - Headers for PolarSSL;
  - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
+If you have Ruby headers, the library will compile with some ruby bindings and
+another program will be available.
+
 For Debian-like:
-  aptitude install gcc make libfuse-dev libpolarssl-dev
+  aptitude install gcc make libfuse-dev libpolarssl-dev ruby-dev
 For Fedora-like:
-  yum install gcc make fuse-devel polarssl-devel
+  yum install gcc make fuse-devel polarssl-devel ruby-devel
 For FreeBSD:
   pkg install gmake fusefs-libs polarssl
 For OSX: Follow the instructions in the next section.
@@ -75,14 +78,13 @@ PORTABILITY
 `-----------
 
 Globally, this was successfuly tested on Linux x86/x86_64, MacOSX and FreeBSD.
-It won't work on Windows and may not work on other BSDs. For Ubuntu 10.04,
-you'll need to remove the `-Werror' flag from the WFLAGS variable in the
-Makefile.
+It won't work on Windows and may not work on other BSDs (not tested).
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
 
-For users of a gcc version < 4.3, you'll need to tweak the Makefile a little by
-removing `-Werror' from the WFLAGS variable.
+Cases where you need to remove the `-Werror' from the WFLAGS variable:
+ - You're on Ubuntu 10.04;
+ - You're using GCC with a version older than 4.3.
 
 
 Whether it works or not, feel free to send comments and feedbacks to
@@ -93,8 +95,7 @@ Whether it works or not, feel free to send comments and feedbacks to
 NOTE
 `----
 
-Five binaries are built when compiling dislocker as described in the INSTALL.txt
-file:
+Five binaries are built when compiling dislocker as described above:
 - One for disecting a .bek file and printing information about it
   > dislocker-bek
 - Another one for printing information about a BitLocker-encrypted volume

@@ -2,12 +2,8 @@
 
 require 'libdislocker'
 
-$signatures = {
-	bitlocker:       '-FVE-FS-',
-	bitlocker_to_go: 'MSWIN4.1'
-}
-
-$guids = Dislocker::Metadata::GUID::INFORMATION_OFFSETS
+$signatures = Dislocker::Signatures::BitLocker
+$guids      = Dislocker::Metadata::GUID::INFORMATION_OFFSETS
 
 def get_partitions
 	uname = nil
@@ -85,7 +81,7 @@ def is_bitlocker_encrypted?(device)
 	end
 	fd.close
 	
-	$signatures.each do |sig_name, sig|
+	$signatures.each do |sig|
 		# First check is the volume's signature
 		if sig == volume_signature
 			$guids.each do |guid|

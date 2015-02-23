@@ -116,12 +116,23 @@ override LDFLAGS	+=	-Wl,-rpath=$(libdir)
 endif
 
 
-BINDINGS	=	ruby
-ifeq ($(strip $(shell pkg-config --cflags --libs $(BINDINGS) >/dev/null 2>&1 && echo ok)), ok)
+# FIXME Now if you know how to fix this mess, I'm fully open
+BINDING		:=	ruby
+ifeq ($(strip $(shell pkg-config $(BINDING) >/dev/null 2>&1 && echo ok)), ok)
 SUFFIXES	+=	find
-DEFINES		+=	-D_HAVE_$(shell echo $(BINDINGS) | tr a-z A-Z)
-LIB		+=	$(shell pkg-config --libs $(BINDINGS))
-INC		+=	$(shell pkg-config --cflags $(BINDINGS))
+DEFINES		+=	-D_HAVE_$(shell echo $(BINDING) | tr a-z A-Z)
+LIB		+=	$(shell pkg-config --libs $(BINDING))
+INC		+=	$(shell pkg-config --cflags $(BINDING))
+else
+
+BINDING		:=	ruby-1.9
+ifeq ($(strip $(shell pkg-config $(BINDING) >/dev/null 2>&1 && echo ok)), ok)
+SUFFIXES	+=	find
+DEFINES		+=	-D_HAVE_$(shell echo $(BINDING) | tr a-z A-Z)
+LIB		+=	$(shell pkg-config --libs $(BINDING))
+INC		+=	$(shell pkg-config --cflags $(BINDING))
+endif
+
 endif
 
 

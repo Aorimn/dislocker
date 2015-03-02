@@ -63,7 +63,8 @@ typedef enum {
 typedef struct _dis_ctx {
 	/*
 	 * Dislocker's configuration.
-	 * Note that there's the dis_getopts() function to fill this structure.
+	 * Note that there's the dis_getopts() function to fill this structure from
+	 * command-line's arguments and the dis_setopt() function
 	 */
 	dis_config_t cfg;
 	

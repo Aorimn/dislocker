@@ -53,6 +53,22 @@ enum {
 };
 
 
+typedef enum {
+	DIS_OPT_VOLUME_PATH = 1,
+	DIS_OPT_CLEAR_KEY,
+	DIS_OPT_BEK_FILE_PATH,
+	DIS_OPT_RECOVERY_PASSWORD,
+	DIS_OPT_USER_PASSWORD,
+	DIS_OPT_FVEK_FILE_PATH,
+	DIS_OPT_VERBOSITY,
+	DIS_OPT_LOG_FILE_PATH,
+	DIS_OPT_FORCE_BLOCK,
+	DIS_OPT_VOLUME_OFFSET,
+	DIS_OPT_READ_ONLY,
+	DIS_OPT_DONT_CHECK_STATE
+} dis_opt_e;
+
+
 /**
  * Structure containing command line options
  */
@@ -104,6 +120,7 @@ typedef struct _dis_cfg {
  */
 void dis_usage();
 int  dis_getopts(dis_config_t* cfg, int argc, char** argv);
+int  dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value);
 void dis_free_args(dis_config_t* cfg);
 void dis_print_args(dis_config_t* cfg);
 

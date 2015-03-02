@@ -94,21 +94,20 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	dis_context_t dis_ctx;
-	memset(&dis_ctx, 0, sizeof(dis_context_t));
+	dis_context_t* dis_ctx = dis_new();
 	
 	/*
 	 * Initialize dislocker's configuration
 	 */
-	dis_ctx.cfg.volume_path = volume_path;
-	dis_ctx.cfg.verbosity = verbosity;
-	dis_ctx.cfg.offset = offset;
+	dis_setopt(&dis_ctx->cfg, DIS_OPT_VOLUME_PATH,   volume_path);
+	dis_setopt(&dis_ctx->cfg, DIS_OPT_VOLUME_OFFSET, &offset);
+	dis_setopt(&dis_ctx->cfg, DIS_OPT_VERBOSITY,     &verbosity);
 	
 	/* We don't want to give decryption mean, we only want the metadata */
-	dis_ctx.stop_at = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
+	dis_ctx->stop_at = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
 	
 	/* Initialize dislocker */
-	if(dis_initialize(&dis_ctx) == EXIT_FAILURE)
+	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
@@ -116,22 +115,22 @@ int main(int argc, char **argv)
 	
 	
 	// Printing volume header
-	print_volume_header(L_INFO, dis_ctx.io_data.volume_header);
+	print_volume_header(L_INFO, dis_ctx->io_data.volume_header);
 	xprintf(L_INFO, "\n");
 	
 	// Printing BitLocker information metadata
-	print_information(L_INFO, dis_ctx.io_data.information);
+	print_information(L_INFO, dis_ctx->io_data.information);
 	xprintf(L_INFO, "\n");
 	
 	// Now we're looking at the data themselves
-	print_data(L_INFO, dis_ctx.io_data.information);
+	print_data(L_INFO, dis_ctx->io_data.information);
 	
 	
 	// Get the information's dataset
-	if(!get_dataset(dis_ctx.io_data.information, &dataset))
+	if(!get_dataset(dis_ctx->io_data.information, &dataset))
 	{
 		xprintf(L_CRITICAL, "Can't find a valid dataset. Abort.\n");
-		dis_destroy(&dis_ctx);
+		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
 	
@@ -146,7 +145,7 @@ int main(int argc, char **argv)
 		xprintf(L_INFO, "No clear key found.\n");
 	
 	
-	dis_destroy(&dis_ctx);
+	dis_destroy(dis_ctx);
 	
 	return EXIT_SUCCESS;
 }

@@ -103,7 +103,7 @@ typedef struct _dis_cfg {
  * Function's prototypes
  */
 void dis_usage();
-int  dis_parse_args(dis_config_t* cfg, int argc, char** argv);
+int  dis_getopts(dis_config_t* cfg, int argc, char** argv);
 void dis_free_args(dis_config_t* cfg);
 void dis_print_args(dis_config_t* cfg);
 

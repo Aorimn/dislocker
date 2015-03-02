@@ -62,6 +62,14 @@
 
 
 
+dis_context_t* dis_new()
+{
+	dis_context_t* dis_ctx = xmalloc(sizeof(dis_context_t));
+	memset(dis_ctx, 0, sizeof(dis_context_t));
+	return dis_ctx;
+}
+
+
 int dis_initialize(dis_context_t* dis_ctx)
 {
 	void* metadata = NULL;
@@ -722,6 +730,8 @@ int dis_destroy(dis_context_t* dis_ctx)
 	xclose(dis_ctx->io_data.volume_fd);
 	
 	xstdio_end();
+	
+	xfree(dis_ctx);
 	
 	return EXIT_SUCCESS;
 }

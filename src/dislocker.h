@@ -63,7 +63,7 @@ typedef enum {
 typedef struct _dis_ctx {
 	/*
 	 * Dislocker's configuration.
-	 * Note that there's the dis_parse_args() function to fill this structure.
+	 * Note that there's the dis_getopts() function to fill this structure.
 	 */
 	dis_config_t cfg;
 	
@@ -84,20 +84,26 @@ typedef struct _dis_ctx {
 /**
  * Public prototypes
  */
+/**
+ * Allocate internal structure, named a context here. This structure is to be
+ * passed to this API's functions and records internal state.
+ */
+dis_context_t* dis_new();
 
 /**
  * Initialize dislocker. As stated above, the initialisation process may be
  * stopped at any major step in order to retrieve different information. Note
- * that you have to provide an already allocated dis_ctx with an already filled
- * dis_ctx->cfg with parameters for dislocker to initialize correctly.
+ * that you have to provide an already allocated dis_ctx (through the use of the
+ * dis_new() function).
  * This function malloc(3)s structures, see dis_destroy() below for free(3)ing
- * it.
+ * it. If you're weary of memory leaks, you'll make sure to call dis_destroy()
+ * to free the dis_new()-allocated context.
  * dislock() & enlock() function may not be called before executing this
- * function.
+ * function - or at least they won't work.
  * 
  * @param dis_ctx The dislocker context needed for all operations. As stated
- * above, this parameter has to be pre-allocated. Furthermore, the dis_ctx->cfg
- * structure has to be filled with parameters to properly initialize dislocker.
+ * above, this parameter has to be pre-allocated through the use of the
+ * dis_new() function.
  */
 int dis_initialize(dis_context_t* dis_ctx);
 

@@ -52,7 +52,7 @@
  * Data used globally for operation on disk (encryption/decryption) and in the
  * dislocker library.
  */
-dis_context_t dis_ctx;
+dis_context_t* dis_ctx;
 
 
 /**
@@ -73,10 +73,10 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 	}
 	else if(strcmp(path, NTFS_FILENAME) == 0)
 	{
-		mode_t m = (dis_ctx.cfg.is_ro & READ_ONLY) ? 0444 : 0666;
+		mode_t m = (dis_ctx->cfg.is_ro & READ_ONLY) ? 0444 : 0666;
 		stbuf->st_mode = S_IFREG | m;
 		stbuf->st_nlink = 1;
-		stbuf->st_size = (off_t)dis_ctx.io_data.volume_size;
+		stbuf->st_size = (off_t)dis_ctx->io_data.volume_size;
 	}
 	else
 		res = -ENOENT;
@@ -113,7 +113,7 @@ static int fs_open(const char *path, struct fuse_file_info *fi)
 		return -ENOENT;
 	
 	
-	if(dis_ctx.cfg.is_ro & READ_ONLY)
+	if(dis_ctx->cfg.is_ro & READ_ONLY)
 	{
 		if((fi->flags & 3) != O_RDONLY)
 			return -EACCES;
@@ -149,7 +149,7 @@ static int fs_read(
 		return -ENOENT;
 	}
 	
-	return dislock(&dis_ctx, (uint8_t*) buf, offset, size);
+	return dislock(dis_ctx, (uint8_t*) buf, offset, size);
 }
 
 static int fs_write(
@@ -170,7 +170,7 @@ static int fs_write(
 		return -ENOENT;
 	}
 	
-	return enlock(&dis_ctx, (uint8_t*) buf, offset, size);
+	return enlock(dis_ctx, (uint8_t*) buf, offset, size);
 }
 
 
@@ -200,11 +200,9 @@ int main(int argc, char** argv)
 	int ret       = EXIT_SUCCESS;
 	
 	
-	memset(&dis_ctx, 0, sizeof(dis_context_t));
-	
-	
 	/* Get command line options */
-	param_idx = dis_parse_args(&dis_ctx.cfg, argc, argv);
+	dis_ctx = dis_new();
+	param_idx = dis_getopts(&dis_ctx->cfg, argc, argv);
 	
 	/* Check we got enough arguments for at least one more, the mount point */
 	if(param_idx >= argc || param_idx <= 0)
@@ -215,7 +213,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Initialize dislocker */
-	if(dis_initialize(&dis_ctx) == EXIT_FAILURE)
+	if(dis_initialize(COMPLETE_EVERYTHING) == EXIT_FAILURE)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
@@ -262,7 +260,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Destroy dislocker structures */
-	dis_destroy(&dis_ctx);
+	dis_destroy(dis_ctx);
 	
 	return ret;
 }

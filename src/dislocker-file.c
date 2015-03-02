@@ -170,12 +170,11 @@ int main(int argc, char** argv)
 	int param_idx = 0;
 	int ret       = 0;
 	
-	dis_context_t dis_ctx;
-	memset(&dis_ctx, 0, sizeof(dis_context_t));
+	dis_context_t* dis_ctx = dis_new();
 	
 	
 	/* Get command line options */
-	param_idx = dis_parse_args(&dis_ctx.cfg, argc, argv);
+	param_idx = dis_getopts(&dis_ctx->cfg, argc, argv);
 	
 	/* Check that we have the file where to put NTFS data */
 	if(param_idx >= argc || param_idx <= 0)
@@ -185,7 +184,7 @@ int main(int argc, char** argv)
 	}
 	
 	/* Initialize dislocker */
-	if(dis_initialize(&dis_ctx) == EXIT_FAILURE)
+	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
@@ -200,7 +199,7 @@ int main(int argc, char** argv)
 	if(access(ntfs_file, F_OK) == 0)
 	{
 		xprintf(L_CRITICAL, "'%s' already exists, can't override. Abort.\n", ntfs_file);
-		dis_destroy(&dis_ctx);
+		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
 	
@@ -209,9 +208,9 @@ int main(int argc, char** argv)
 	// TODO before running the encryption, check if the NTFS file will fit into the free space
 	
 	/* Run the decryption */
-	ret = file_main(ntfs_file, &dis_ctx);
+	ret = file_main(ntfs_file, dis_ctx);
 	
-	dis_destroy(&dis_ctx);
+	dis_destroy(dis_ctx);
 	
 	return ret;
 }

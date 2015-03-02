@@ -92,7 +92,7 @@ static void hide_opt(char* opt)
  * @param argv Arguments given to the program
  * @return Return the number of arguments which are still waiting to be studied
  */
-int dis_parse_args(dis_config_t* cfg, int argc, char** argv)
+int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 {
 	/** See man getopt_long(3) */
 	extern int optind;

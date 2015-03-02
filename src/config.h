@@ -34,12 +34,12 @@
  * Different methods to decrypt the VMK
  */
 typedef enum {
-	USE_CLEAR_KEY         = (1 << 0),
-	USE_USER_PASSWORD     = (1 << 1),
-	USE_RECOVERY_PASSWORD = (1 << 2),
-	USE_BEKFILE           = (1 << 3),
-	USE_FVEKFILE          = (1 << 4)
-} DECRYPT_MEAN;
+	DIS_USE_CLEAR_KEY         = (1 << 0),
+	DIS_USE_USER_PASSWORD     = (1 << 1),
+	DIS_USE_RECOVERY_PASSWORD = (1 << 2),
+	DIS_USE_BEKFILE           = (1 << 3),
+	DIS_USE_FVEKFILE          = (1 << 4)
+} DIS_DECRYPT_MEAN;
 
 /* Don't use this as a decryption mean, but as the last one */
 #define LAST_MEAN (1 << 5)
@@ -61,7 +61,7 @@ typedef struct _dis_cfg {
 	char*         volume_path;
 	
 	/* Which method to use to decrypt */
-	DECRYPT_MEAN  decryption_mean;
+	DIS_DECRYPT_MEAN  decryption_mean;
 	/* Path to the .bek file in case of using the BEKFILE DECRYPT_MEAN */
 	char*         bek_file;
 	/*

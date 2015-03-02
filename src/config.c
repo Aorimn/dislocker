@@ -130,13 +130,13 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 		switch(optchar)
 		{
 			case 'c':
-				cfg->decryption_mean |= USE_CLEAR_KEY;
+				cfg->decryption_mean |= DIS_USE_CLEAR_KEY;
 				break;
 			case 'f':
 				if(cfg->bek_file != NULL)
 					free(cfg->bek_file);
 				cfg->bek_file = (char *) strdup(optarg);
-				cfg->decryption_mean |= USE_BEKFILE;
+				cfg->decryption_mean |= DIS_USE_BEKFILE;
 				break;
 			case 'F':
 				if(optarg)
@@ -153,7 +153,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 				if(cfg->fvek_file != NULL)
 					free(cfg->fvek_file);
 				cfg->fvek_file = (char *) strdup(optarg);
-				cfg->decryption_mean |= USE_FVEKFILE;
+				cfg->decryption_mean |= DIS_USE_FVEKFILE;
 				break;
 			case 'l':
 				if(cfg->log_file != NULL)
@@ -172,7 +172,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 					
 					hide_opt(optarg);
 				}
-				cfg->decryption_mean |= USE_RECOVERY_PASSWORD;
+				cfg->decryption_mean |= DIS_USE_RECOVERY_PASSWORD;
 				break;
 			case 'q':
 				cfg->verbosity = L_QUIET;
@@ -192,7 +192,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 					
 					hide_opt(optarg);
 				}
-				cfg->decryption_mean |= USE_USER_PASSWORD;
+				cfg->decryption_mean |= DIS_USE_USER_PASSWORD;
 				break;
 			case 'v':
 				if(cfg->verbosity != L_QUIET)
@@ -218,7 +218,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 	
 	/* Check decryption method */
 	if(!cfg->decryption_mean)
-		cfg->decryption_mean |= USE_CLEAR_KEY;
+		cfg->decryption_mean |= DIS_USE_CLEAR_KEY;
 	
 	/* Check if a block is forced */
 	if(cfg->force_block != 1 &&
@@ -274,21 +274,21 @@ void dis_print_args(dis_config_t* cfg)
 	{
 		switch(cfg->decryption_mean & mean)
 		{
-			case USE_CLEAR_KEY:
+			case DIS_USE_CLEAR_KEY:
 				xprintf(L_DEBUG,"   \tusing a clear key on the volume\n");
 				break;
-			case USE_USER_PASSWORD:
+			case DIS_USE_USER_PASSWORD:
 				xprintf(L_DEBUG,"   \tusing the user's password method\n");
 				xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->user_password);
 				break;
-			case USE_RECOVERY_PASSWORD:
+			case DIS_USE_RECOVERY_PASSWORD:
 				xprintf(L_DEBUG,"   \tusing the recovery password method\n");
 				xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
 				break;
-			case USE_BEKFILE:
+			case DIS_USE_BEKFILE:
 				xprintf(L_DEBUG,"   \tusing the bek file at '%s'\n", cfg->bek_file);
 				break;
-			case USE_FVEKFILE:
+			case DIS_USE_FVEKFILE:
 				xprintf(L_DEBUG,"   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
 				break;
 			default:

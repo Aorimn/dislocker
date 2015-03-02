@@ -135,7 +135,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->io_data.volume_fd);
 	
-	checkupdate_dis_state(dis_ctx, AFTER_OPEN_VOLUME);
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_OPEN_VOLUME);
 	
 	
 	/* To print UTF-32 strings */
@@ -170,7 +170,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	/* For debug purpose, print the volume header retrieved */
 	print_volume_header(L_DEBUG, dis_ctx->io_data.volume_header);
 	
-	checkupdate_dis_state(dis_ctx, AFTER_VOLUME_HEADER);
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_HEADER);
 	
 	
 	/* Checking the volume header */
@@ -181,7 +181,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 		return EXIT_FAILURE;
 	}
 	
-	checkupdate_dis_state(dis_ctx, AFTER_VOLUME_CHECK);
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_CHECK);
 	
 	
 	/* Fill the regions the metadata occupy on disk */
@@ -249,7 +249,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	
 	dis_ctx->io_data.information = information;
 	
-	checkupdate_dis_state(dis_ctx, AFTER_BITLOCKER_INFORMATION_CHECK);
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK);
 	
 	
 	/*
@@ -315,7 +315,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	if(ret == EXIT_FAILURE)
 		dis_destroy(dis_ctx);
 	else
-		dis_ctx->curr_state = COMPLETE_EVERYTHING;
+		dis_ctx->curr_state = DIS_STATE_COMPLETE_EVERYTHING;
 	
 	return ret;
 }

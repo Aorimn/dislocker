@@ -213,7 +213,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Initialize dislocker */
-	if(dis_initialize(COMPLETE_EVERYTHING) == EXIT_FAILURE)
+	if(dis_initialize(DIS_STATE_COMPLETE_EVERYTHING) == EXIT_FAILURE)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;

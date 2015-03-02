@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 	dis_ctx.cfg.offset = offset;
 	
 	/* We don't want to give decryption mean, we only want the metadata */
-	dis_ctx.stop_at = AFTER_BITLOCKER_INFORMATION_CHECK;
+	dis_ctx.stop_at = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
 	
 	/* Initialize dislocker */
 	if(dis_initialize(&dis_ctx) == EXIT_FAILURE)

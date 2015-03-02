@@ -44,68 +44,68 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 	 */
 	while(dis_ctx->cfg.decryption_mean)
 	{
-		if(dis_ctx->cfg.decryption_mean & USE_CLEAR_KEY)
+		if(dis_ctx->cfg.decryption_mean & DIS_USE_CLEAR_KEY)
 		{
 			if(!get_vmk_from_clearkey(dataset, &vmk_datum))
 			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_CLEAR_KEY;
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_CLEAR_KEY;
 			}
 			else
 			{
 				xprintf(L_INFO, "Used clear key decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_CLEAR_KEY;
+				dis_ctx->cfg.decryption_mean = DIS_USE_CLEAR_KEY;
 				break;
 			}
 		}
-		else if(dis_ctx->cfg.decryption_mean & USE_USER_PASSWORD)
+		else if(dis_ctx->cfg.decryption_mean & DIS_USE_USER_PASSWORD)
 		{
 			if(!get_vmk_from_user_pass(dataset, &dis_ctx->cfg, &vmk_datum))
 			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_USER_PASSWORD;
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_USER_PASSWORD;
 			}
 			else
 			{
 				xprintf(L_INFO, "Used user password decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_USER_PASSWORD;
+				dis_ctx->cfg.decryption_mean = DIS_USE_USER_PASSWORD;
 				break;
 			}
 		}
-		else if(dis_ctx->cfg.decryption_mean & USE_RECOVERY_PASSWORD)
+		else if(dis_ctx->cfg.decryption_mean & DIS_USE_RECOVERY_PASSWORD)
 		{
 			if(!get_vmk_from_rp(dataset, &dis_ctx->cfg, &vmk_datum))
 			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_RECOVERY_PASSWORD;
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_RECOVERY_PASSWORD;
 			}
 			else
 			{
 				xprintf(L_INFO, "Used recovery password decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_RECOVERY_PASSWORD;
+				dis_ctx->cfg.decryption_mean = DIS_USE_RECOVERY_PASSWORD;
 				break;
 			}
 		}
-		else if(dis_ctx->cfg.decryption_mean & USE_BEKFILE)
+		else if(dis_ctx->cfg.decryption_mean & DIS_USE_BEKFILE)
 		{
 			if(!get_vmk_from_bekfile(dataset, &dis_ctx->cfg, &vmk_datum))
 			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_BEKFILE;
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_BEKFILE;
 			}
 			else
 			{
 				xprintf(L_INFO, "Used bek file decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_BEKFILE;
+				dis_ctx->cfg.decryption_mean = DIS_USE_BEKFILE;
 				break;
 			}
 		}
-		else if(dis_ctx->cfg.decryption_mean & USE_FVEKFILE)
+		else if(dis_ctx->cfg.decryption_mean & DIS_USE_FVEKFILE)
 		{
 			if(!build_fvek_from_file(&dis_ctx->cfg, &fvek_datum))
 			{
-				dis_ctx->cfg.decryption_mean &= (unsigned) ~USE_FVEKFILE;
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_FVEKFILE;
 			}
 			else
 			{
 				xprintf(L_INFO, "Used FVEK file decryption method\n");
-				dis_ctx->cfg.decryption_mean = USE_FVEKFILE;
+				dis_ctx->cfg.decryption_mean = DIS_USE_FVEKFILE;
 				break;
 			}
 		}
@@ -128,7 +128,7 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 	
 	dis_ctx->io_data.vmk = vmk_datum;
 	
-	checkupdate_dis_state(dis_ctx, AFTER_VMK);
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VMK);
 	
 	
 	/*
@@ -144,7 +144,7 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 	/*
 	 * And then, use the VMK to decrypt the FVEK
 	 */
-	if(dis_ctx->cfg.decryption_mean != USE_FVEKFILE)
+	if(dis_ctx->cfg.decryption_mean != DIS_USE_FVEKFILE)
 	{
 		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
 			return EXIT_FAILURE;
@@ -168,7 +168,7 @@ int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset)
 	
 	dis_ctx->io_data.fvek = fvek_typed_datum;
 	
-	checkupdate_dis_state(dis_ctx, AFTER_FVEK);
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_FVEK);
 	
 	return EXIT_SUCCESS;
 }

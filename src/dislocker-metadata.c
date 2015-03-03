@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	dis_context_t* dis_ctx = dis_new();
+	dis_context_t dis_ctx = dis_new();
 	
 	/*
 	 * Initialize dislocker's configuration

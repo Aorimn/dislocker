@@ -32,7 +32,7 @@
 /**
  * Prototypes
  */
-int dis_get_access(dis_context_t* dis_ctx, bitlocker_dataset_t* dataset);
+int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset);
 
 
 #endif /* ACCESSES_H */

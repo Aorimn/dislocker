@@ -52,7 +52,7 @@
  * Data used globally for operation on disk (encryption/decryption) and in the
  * dislocker library.
  */
-dis_context_t* dis_ctx;
+dis_context_t dis_ctx;
 
 
 /**

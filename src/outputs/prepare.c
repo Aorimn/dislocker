@@ -125,7 +125,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
  * @param dis_ctx The dislocker context used everywhere.
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int prepare_crypt(dis_context_t* dis_ctx)
+int prepare_crypt(dis_context_t dis_ctx)
 {
 	dis_iodata_t* io_data   = &dis_ctx->io_data;
 	

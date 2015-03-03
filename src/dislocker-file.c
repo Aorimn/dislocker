@@ -87,7 +87,7 @@ static int xopen_file(const char* file, int flags, mode_t mode)
 
 
 
-static int file_main(char* ntfs_file, dis_context_t* dis_ctx)
+static int file_main(char* ntfs_file, dis_context_t dis_ctx)
 {
 	// Check parameter
 	if(!ntfs_file)
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
 	int param_idx = 0;
 	int ret       = 0;
 	
-	dis_context_t* dis_ctx = dis_new();
+	dis_context_t dis_ctx = dis_new();
 	
 	
 	/* Get command line options */

@@ -62,15 +62,15 @@
 
 
 
-dis_context_t* dis_new()
+dis_context_t dis_new()
 {
-	dis_context_t* dis_ctx = xmalloc(sizeof(dis_context_t));
-	memset(dis_ctx, 0, sizeof(dis_context_t));
+	dis_context_t dis_ctx = xmalloc(sizeof(struct _dis_ctx));
+	memset(dis_ctx, 0, sizeof(struct _dis_ctx));
 	return dis_ctx;
 }
 
 
-int dis_initialize(dis_context_t* dis_ctx)
+int dis_initialize(dis_context_t dis_ctx)
 {
 	void* metadata = NULL;
 	
@@ -324,7 +324,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 
 
 
-int dislock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
+int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 {
 	uint8_t* buf = NULL;
 	
@@ -458,7 +458,7 @@ int dislock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 
 
-int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
+int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 {
 	uint8_t* buf = NULL;
 	int      ret = 0;
@@ -706,7 +706,7 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 
 
-int dis_destroy(dis_context_t* dis_ctx)
+int dis_destroy(dis_context_t dis_ctx)
 {
 	/* Finish cleaning things */
 	if(dis_ctx->io_data.information)

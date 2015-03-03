@@ -43,7 +43,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, contexts_t* ctx);
  * Function used to prepare a structure which hold data used for
  * decryption/encryption
  */
-int prepare_crypt(dis_context_t* dis_ctx);
+int prepare_crypt(dis_context_t dis_ctx);
 
 
 #endif /* PREPARE_H */

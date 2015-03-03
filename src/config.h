@@ -49,7 +49,13 @@ typedef enum {
  * Just an enum not to have a random constant written everytime we use this
  */
 typedef enum {
-	DIS_FLAG_READ_ONLY = 1
+	/* Make the volume read-only, in order not to corrupt it */
+	DIS_FLAG_READ_ONLY = 1,
+	/*
+	 * By default, dislocker will check for unstable state that may corrupt data
+	 * if mounted using fuse
+	 */
+	DIS_FLAG_DONT_CHECK_VOLUME_STATE
 } dis_flags_e;
 
 
@@ -107,11 +113,6 @@ typedef struct _dis_cfg {
 	 * Various flags one can use. See dis_flags_e enum above for possible values
 	 */
 	dis_flags_e   flags;
-	/*
-	 * By default, dislocker will check for unstable state that may corrupt data
-	 * if mounted using fuse
-	 */
-	char          dont_check_volume_state;
 } dis_config_t;
 
 

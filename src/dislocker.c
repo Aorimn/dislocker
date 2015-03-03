@@ -305,7 +305,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 	/* Don't do the check for each and every enc/decryption operation */
 	dis_ctx->io_data.volume_state = TRUE;
 	
-	if(dis_ctx->cfg.dont_check_state == FALSE &&
+	if(dis_ctx->cfg.dont_check_volume_state == FALSE &&
 		!check_state(dis_ctx->io_data.information))
 	{
 		dis_ctx->io_data.volume_state = FALSE;

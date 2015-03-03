@@ -109,7 +109,7 @@ typedef struct _dis_cfg {
 	 * By default, dislocker will check for unstable state that may corrupt data
 	 * if mounted using fuse
 	 */
-	char          dont_check_state;
+	char          dont_check_volume_state;
 } dis_config_t;
 
 

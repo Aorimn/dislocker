@@ -394,14 +394,14 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
 			break;
 		case DIS_OPT_DONT_CHECK_STATE:
 			if(opt_value == NULL)
-				cfg->dont_check_state = FALSE;
+				cfg->dont_check_volume_state = FALSE;
 			else
 			{
 				int flag = *(int*) opt_value;
 				if(flag == TRUE)
-					cfg->dont_check_state = TRUE;
+					cfg->dont_check_volume_state = TRUE;
 				else
-					cfg->dont_check_state = FALSE;
+					cfg->dont_check_volume_state = FALSE;
 			}
 			break;
 	}

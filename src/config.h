@@ -48,9 +48,9 @@ typedef enum {
 /**
  * Just an enum not to have a random constant written everytime we use this
  */
-enum {
-	READ_ONLY = 1
-};
+typedef enum {
+	DIS_FLAG_READ_ONLY = 1
+} dis_flags_e;
 
 
 typedef enum {
@@ -103,8 +103,10 @@ typedef struct _dis_cfg {
 	 * zero-one
 	 */
 	off_t         offset;
-	/* Mount the BitLocker volume in read-only mode */
-	char          is_ro;
+	/*
+	 * Various flags one can use. See dis_flags_e enum above for possible values
+	 */
+	dis_flags_e   flags;
 	/*
 	 * By default, dislocker will check for unstable state that may corrupt data
 	 * if mounted using fuse

@@ -107,7 +107,7 @@ static int file_main(char* ntfs_file, dis_context_t* dis_ctx)
 	uint8_t* buffer = xmalloc(buf_size);
 	
 	mode_t mode = S_IRUSR|S_IWUSR;
-	if(dis_ctx->cfg.is_ro & READ_ONLY)
+	if(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY)
 		mode = S_IRUSR;
 	
 	int fd_ntfs = xopen_file(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);

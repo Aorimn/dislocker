@@ -125,7 +125,7 @@ int dis_initialize(dis_context_t* dis_ctx)
 			return EXIT_FAILURE;
 		}
 		
-		dis_ctx->cfg.is_ro |= READ_ONLY;
+		dis_ctx->cfg.flags |= DIS_FLAG_READ_ONLY;
 		xprintf(
 			L_WARNING,
 			"Failed to open %s for writing. Falling back to read-only.\n",
@@ -476,7 +476,7 @@ int enlock(dis_context_t* dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	}
 	
 	/* Perform basic checks */
-	if(dis_ctx->cfg.is_ro & READ_ONLY)
+	if(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY)
 	{
 		xprintf(L_DEBUG, "Only decrypting (-r or --read-only option passed)\n");
 		return -EACCES;

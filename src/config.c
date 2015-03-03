@@ -382,14 +382,14 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
 			break;
 		case DIS_OPT_READ_ONLY:
 			if(opt_value == NULL)
-				cfg->is_ro &= (char) ~READ_ONLY;
+				cfg->flags &= (unsigned) ~DIS_FLAG_READ_ONLY;
 			else
 			{
 				int flag = *(int*) opt_value;
 				if(flag == TRUE)
-					cfg->is_ro |= READ_ONLY;
+					cfg->flags |= DIS_FLAG_READ_ONLY;
 				else
-					cfg->is_ro &= (char) ~READ_ONLY;
+					cfg->flags &= (unsigned) ~DIS_FLAG_READ_ONLY;
 			}
 			break;
 		case DIS_OPT_DONT_CHECK_STATE:
@@ -487,7 +487,7 @@ void dis_print_args(dis_config_t* cfg)
 	else
 		xprintf(L_DEBUG, "   Using the first valid metadata block\n");
 	
-	if(cfg->is_ro & READ_ONLY)
+	if(cfg->flags & DIS_FLAG_READ_ONLY)
 		xprintf(
 			L_DEBUG,
 			"   Not allowing any write on the BitLocker volume "

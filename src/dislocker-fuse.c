@@ -73,7 +73,7 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 	}
 	else if(strcmp(path, NTFS_FILENAME) == 0)
 	{
-		mode_t m = (dis_ctx->cfg.is_ro & READ_ONLY) ? 0444 : 0666;
+		mode_t m = (dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY) ? 0444 : 0666;
 		stbuf->st_mode = S_IFREG | m;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = (off_t)dis_ctx->io_data.volume_size;
@@ -113,7 +113,7 @@ static int fs_open(const char *path, struct fuse_file_info *fi)
 		return -ENOENT;
 	
 	
-	if(dis_ctx->cfg.is_ro & READ_ONLY)
+	if(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY)
 	{
 		if((fi->flags & 3) != O_RDONLY)
 			return -EACCES;

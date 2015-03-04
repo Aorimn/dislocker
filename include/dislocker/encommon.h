@@ -49,7 +49,7 @@ typedef struct _aes_contexts {
 	
 	AES_CONTEXT TWEAK_E_ctx;
 	AES_CONTEXT TWEAK_D_ctx; /* useless, never used */
-} contexts_t;
+} dis_aes_contexts_t;
 
 
 
@@ -95,7 +95,7 @@ typedef struct _data {
 	int                 volume_fd;
 	
 	/* Contexts used to encrypt or decrypt */
-	contexts_t*         enc_ctx;
+	dis_aes_contexts_t* enc_ctx;
 	
 	/* Volume's state is kept here */
 	int                 volume_state;

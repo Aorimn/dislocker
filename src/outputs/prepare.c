@@ -45,7 +45,7 @@ static uint64_t get_volume_size(dis_iodata_t* io_data);
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
-                     contexts_t* ctx)
+                     dis_aes_contexts_t* ctx)
 {
 	// Check parameters
 	if(!dataset || !fvek_datum || !ctx)

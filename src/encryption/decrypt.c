@@ -378,8 +378,8 @@ static int aes_ccm_compute_unencrypted_tag(
 /*
  * Below are some prototypes of functions used by decrypt_sector
  */
-void decrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
-void decrypt_with_diffuser   (contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+void decrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+void decrypt_with_diffuser   (dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
 
@@ -423,7 +423,7 @@ int decrypt_sector(dis_iodata_t* io_data, uint8_t* sector, off_t sector_address,
  * @param sector_address Address of the sector to decrypt
  * @param buffer The place where we have to put decrypted data
  */
-void decrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void decrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 	union {
@@ -451,7 +451,7 @@ void decrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* se
  * @param sector_address Address of the sector to decrypt
  * @param buffer The place where we have to put decrypted data
  */
-void decrypt_with_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void decrypt_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 	

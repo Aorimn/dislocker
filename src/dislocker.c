@@ -80,8 +80,8 @@ int dis_initialize(dis_context_t dis_ctx)
 	int ret = EXIT_SUCCESS;
 	
 	
-	dis_ctx->io_data.enc_ctx = xmalloc(sizeof(contexts_t));
-	memset(dis_ctx->io_data.enc_ctx, 0, sizeof(contexts_t));
+	dis_ctx->io_data.enc_ctx = xmalloc(sizeof(dis_aes_contexts_t));
+	memset(dis_ctx->io_data.enc_ctx, 0, sizeof(dis_aes_contexts_t));
 	
 	
 	/* Initialize outputs */

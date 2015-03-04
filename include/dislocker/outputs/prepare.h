@@ -37,7 +37,7 @@
 /**
  * Function used to initialize keys used for decryption/encryption
  */
-int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, contexts_t* ctx);
+int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, dis_aes_contexts_t* aes_ctx);
 
 /**
  * Function used to prepare a structure which hold data used for

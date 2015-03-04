@@ -32,8 +32,8 @@
 /*
  * Below are some prototypes of functions used by decrypt_sector 
  */
-void encrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
-void encrypt_with_diffuser   (contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+void encrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+void encrypt_with_diffuser   (dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
 
@@ -77,7 +77,7 @@ int encrypt_sector(dis_iodata_t* io_data, uint8_t* sector, off_t sector_address,
  * @param sector_address Address of the sector to encrypt
  * @param buffer The place where we have to put encrypted data
  */
-void encrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void encrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 	
@@ -105,7 +105,7 @@ void encrypt_without_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* se
  * @param sector_address Address of the sector to encrypt
  * @param buffer The place where we have to put encrypted data
  */
-void encrypt_with_diffuser(contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void encrypt_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 	

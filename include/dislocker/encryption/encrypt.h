@@ -20,30 +20,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef PREPARE_H
-#define PREPARE_H
-
-
-#include <stdint.h>
-
-#include "dislocker.h"
-#include "config.h"
-#include "encommon.h"
-#include "metadata/datums.h"
-#include "metadata/metadata.h"
+#ifndef ENCRYPT_H
+#define ENCRYPT_H
 
 
 
-/**
- * Function used to initialize keys used for decryption/encryption
+#include "dislocker/encommon.h"
+
+
+
+/*
+ * Prototypes
  */
-int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, contexts_t* ctx);
-
-/**
- * Function used to prepare a structure which hold data used for
- * decryption/encryption
- */
-int prepare_crypt(dis_context_t dis_ctx);
+int encrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
-#endif /* PREPARE_H */
+#endif /* ENCRYPT_H */

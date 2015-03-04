@@ -25,9 +25,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "datums.h"
-#include "encryption/decrypt.h"
-#include "fvek.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/encryption/decrypt.h"
+#include "dislocker/metadata/fvek.h"
 
 
 

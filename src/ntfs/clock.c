@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#include "clock.h"
+#include "dislocker/ntfs/clock.h"
 
 
 // Constant used to convert NTFS timestamp into a UTC one

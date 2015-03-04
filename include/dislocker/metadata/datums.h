@@ -24,12 +24,12 @@
 #define DATUM_HEADER_H
 
 
-#include "common.h"
-#include "metadata.h"
-#include "extended_info.h"
-#include "guid.h"
-#include "ntfs/clock.h"
-#include "ntfs/encoding.h"
+#include "dislocker/common.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/extended_info.h"
+#include "dislocker/metadata/guid.h"
+#include "dislocker/ntfs/clock.h"
+#include "dislocker/ntfs/encoding.h"
 
 
 

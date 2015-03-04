@@ -24,8 +24,8 @@
 #include <time.h>
 #include <wchar.h>
 
-#include "datums.h"
-#include "vmk.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/metadata/vmk.h"
 
 
 

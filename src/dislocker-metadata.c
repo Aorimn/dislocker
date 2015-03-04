@@ -29,8 +29,8 @@
 #include <getopt.h>
 #include <locale.h>
 
-#include "dislocker.h"
-#include "metadata/print_metadata.h"
+#include "dislocker/dislocker.h"
+#include "dislocker/metadata/print_metadata.h"
 
 
 void usage()

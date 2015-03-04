@@ -22,7 +22,7 @@
  */
 
 
-#include "stretch_key.h"
+#include "dislocker/accesses/stretch_key.h"
 
 
 #define SHA256_DIGEST_LENGTH 32

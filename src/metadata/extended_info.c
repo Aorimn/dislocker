@@ -21,7 +21,7 @@
  * USA.
  */
 
-#include "extended_info.h"
+#include "dislocker/metadata/extended_info.h"
 
 
 /**

@@ -20,25 +20,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef USER_PASS_H
-#define USER_PASS_H
+#ifndef PREPARE_H
+#define PREPARE_H
 
 
-#include "common.h"
-#include "../stretch_key.h"
-#include "ntfs/encoding.h"
-#include "metadata/metadata.h"
+#include <stdint.h>
+
+#include "dislocker/dislocker.h"
+#include "dislocker/config.h"
+#include "dislocker/encommon.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/metadata/metadata.h"
 
 
 
-/*
- * Prototypes
+/**
+ * Function used to initialize keys used for decryption/encryption
  */
+int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek, contexts_t* ctx);
 
-int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
+/**
+ * Function used to prepare a structure which hold data used for
+ * decryption/encryption
+ */
+int prepare_crypt(dis_context_t dis_ctx);
 
-int user_key(const uint8_t *user_password, const uint8_t *salt, uint8_t *result_key);
 
-int prompt_up(uint8_t** up);
-
-#endif // USER_PASS_H
+#endif /* PREPARE_H */

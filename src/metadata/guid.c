@@ -22,7 +22,7 @@
  */
 
 
-#include "guid.h"
+#include "dislocker/metadata/guid.h"
 
 
 

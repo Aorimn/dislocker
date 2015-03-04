@@ -22,13 +22,13 @@
  */
 
 
-#include "accesses.h"
-#include "bek/bekfile.h"
-#include "rp/recovery_password.h"
-#include "user_pass/user_pass.h"
+#include "dislocker/accesses/accesses.h"
+#include "dislocker/accesses/bek/bekfile.h"
+#include "dislocker/accesses/rp/recovery_password.h"
+#include "dislocker/accesses/user_pass/user_pass.h"
 
-#include "metadata/vmk.h"
-#include "metadata/fvek.h"
+#include "dislocker/metadata/vmk.h"
+#include "dislocker/metadata/fvek.h"
 
 
 int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)

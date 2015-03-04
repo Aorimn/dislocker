@@ -20,19 +20,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef ACCESSES_H
-#define ACCESSES_H
+#ifndef USER_PASS_H
+#define USER_PASS_H
 
 
-#include "dislocker.h"
+#include "dislocker/common.h"
+#include "dislocker/accesses/stretch_key.h"
+#include "dislocker/ntfs/encoding.h"
+#include "dislocker/metadata/metadata.h"
 
 
 
-
-/**
+/*
  * Prototypes
  */
-int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset);
 
+int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
 
-#endif /* ACCESSES_H */
+int user_key(const uint8_t *user_password, const uint8_t *salt, uint8_t *result_key);
+
+int prompt_up(uint8_t** up);
+
+#endif // USER_PASS_H

@@ -24,10 +24,10 @@
 #define METADATA_H
 
 
-#include "common.h"
-#include "config.h"
-#include "guid.h"
-#include "ntfs/clock.h"
+#include "dislocker/common.h"
+#include "dislocker/config.h"
+#include "dislocker/metadata/guid.h"
+#include "dislocker/ntfs/clock.h"
 
 
 /** Known BitLocker versions */

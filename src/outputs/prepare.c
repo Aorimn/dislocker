@@ -24,8 +24,8 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "prepare.h"
-#include "sectors.h"
+#include "dislocker/outputs/prepare.h"
+#include "dislocker/sectors.h"
 
 
 

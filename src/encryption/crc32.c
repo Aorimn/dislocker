@@ -20,7 +20,7 @@
    *  -- Romain Coltel 
    */
 
-#include "crc32.h"
+#include "dislocker/encryption/crc32.h"
 
   /* ============================================================= */
   /*  COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or       */

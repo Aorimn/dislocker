@@ -22,10 +22,9 @@
  */
 
 
-#include "common.h"
-#include "metadata/datums.h"
-#include "encryption/diffuser.h"
-#include "encrypt.h"
+#include "dislocker/common.h"
+#include "dislocker/encryption/diffuser.h"
+#include "dislocker/encryption/encrypt.h"
 
 
 

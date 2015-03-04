@@ -24,8 +24,8 @@
 
 #include <getopt.h>
 
-#include "common.h"
-#include "config.h"
+#include "dislocker/common.h"
+#include "dislocker/config.h"
 
 
 

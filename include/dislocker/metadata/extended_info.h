@@ -20,29 +20,38 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef SECTORS_H
-#define SECTORS_H
+#ifndef EXTENDED_INFO_H
+#define EXTENDED_INFO_H
 
-#include "dislocker.h"
+#include "dislocker/common.h"
+
+
+
+
+/**
+ * This structure is new to Windows 8
+ * It's the virtualization datum's payload
+ */
+typedef struct _extended_info {
+	uint16_t unknown1;
+	uint16_t size;
+	uint32_t unknown2;
+	uint64_t flags;
+	uint64_t convertlog_addr;
+	uint32_t convertlog_size;
+	uint32_t sector_size1;
+	uint32_t sector_size2;
+} extended_info_t;
+
 
 
 
 /*
- * Functions prototypes
+ * Here are prototypes of functions dealing extended info
  */
-int read_decrypt_sectors(
-	dis_iodata_t* io_data,
-	size_t nb_read_sector,
-	uint16_t sector_size,
-	off_t sector_start,
-	uint8_t* output
-);
-int encrypt_write_sectors(
-	dis_iodata_t* io_data,
-	size_t nb_write_sector,
-	uint16_t sector_size,
-	off_t sector_start,
-	uint8_t* input
-);
+void print_extended_info(LEVELS level, extended_info_t* xinfo);
 
-#endif /* SECTORS_H */
+
+
+
+#endif // EXTENDED_INFO_H

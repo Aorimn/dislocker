@@ -20,25 +20,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef GUID_H
-#define GUID_H
+#ifndef VMK_H
+#define VMK_H
 
 
-#include "common.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/metadata/guid.h"
+#include "dislocker/metadata/metadata.h"
 
-
-// GUID type = array of 16 unsigned bytes
-typedef uint8_t guid_t[16];
 
 
 /*
- * Prototypes
+ * Functions prototypes
  */
-void format_guid(uint8_t *raw_guid, char* formated_guid);
+int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum);
 
-int check_match_guid(guid_t guid_1, guid_t guid_2);
+int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum);
+
+int get_vmk_datum_from_range(void* dataset, uint16_t min_range, uint16_t max_range, void** vmk_datum);
+
+int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
+            size_t key_size, datum_key_t** vmk);
 
 
-
-#endif // GUID_H
-
+#endif /* VMK_H */

@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "dislocker.h"
+#include "dislocker/dislocker.h"
 
 
 
@@ -42,10 +42,10 @@
 
 
 
-#include "common.h"
-#include "encommon.h"
-#include "dislocker.h"
-#include "metadata/metadata.h"
+#include "dislocker/common.h"
+#include "dislocker/encommon.h"
+#include "dislocker/dislocker.h"
+#include "dislocker/metadata/metadata.h"
 
 
 /**

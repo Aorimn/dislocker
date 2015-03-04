@@ -24,15 +24,15 @@
 #define ENCOMMON_H
 
 
-#include "common.h"
-#include "config.h"
-#include "metadata/vmk.h"
-#include "metadata/metadata.h"
-#include "metadata/extended_info.h"
+#include "dislocker/common.h"
+#include "dislocker/config.h"
+#include "dislocker/metadata/vmk.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/extended_info.h"
 
 
 #include "polarssl/aes.h"
-#include "ssl_bindings.h"
+#include "dislocker/ssl_bindings.h"
 
 
 #define AES_CTX_LENGTH 256

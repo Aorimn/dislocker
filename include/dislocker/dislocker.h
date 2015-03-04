@@ -25,8 +25,8 @@
 
 #include <stdint.h>
 
-#include "config.h"
-#include "encommon.h"
+#include "dislocker/config.h"
+#include "dislocker/encommon.h"
 
 
 

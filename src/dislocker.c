@@ -32,22 +32,22 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "accesses/accesses.h"
+#include "dislocker/accesses/accesses.h"
 
 
-#include "sectors.h"
-#include "metadata/datums.h"
-#include "metadata/metadata.h"
-#include "metadata/print_metadata.h"
-#include "metadata/fvek.h"
-#include "metadata/vmk.h"
-#include "sectors.h"
-#include "outputs/prepare.h"
+#include "dislocker/sectors.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/print_metadata.h"
+#include "dislocker/metadata/fvek.h"
+#include "dislocker/metadata/vmk.h"
+#include "dislocker/sectors.h"
+#include "dislocker/outputs/prepare.h"
 
-#include "xstd/xstdio.h"
+#include "dislocker/xstd/xstdio.h"
 
-#include "config.h"
-#include "dislocker.h"
+#include "dislocker/config.h"
+#include "dislocker/dislocker.h"
 
 #include <locale.h>
 

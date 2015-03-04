@@ -23,11 +23,11 @@
 #ifndef READ_BEKFILE_H
 #define READ_BEKFILE_H
 
-#include "ntfs/clock.h"
-#include "metadata/guid.h"
-#include "metadata/datums.h"
-#include "metadata/extended_info.h"
-#include "metadata/metadata.h"
+#include "dislocker/ntfs/clock.h"
+#include "dislocker/metadata/guid.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/metadata/extended_info.h"
+#include "dislocker/metadata/metadata.h"
 
 
 /*

@@ -24,9 +24,9 @@
 
 #include <errno.h>
 
-#include "recovery_password.h"
-#include "metadata/vmk.h"
-#include "xstd/xsys_select.h"
+#include "dislocker/accesses/rp/recovery_password.h"
+#include "dislocker/metadata/vmk.h"
+#include "dislocker/xstd/xsys_select.h"
 
 
 

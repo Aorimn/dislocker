@@ -20,19 +20,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef ENCRYPT_H
-#define ENCRYPT_H
+#ifndef SECTORS_H
+#define SECTORS_H
 
-
-
-#include "encommon.h"
+#include "dislocker/dislocker.h"
 
 
 
 /*
- * Prototypes
+ * Functions prototypes
  */
-int encrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+int read_decrypt_sectors(
+	dis_iodata_t* io_data,
+	size_t nb_read_sector,
+	uint16_t sector_size,
+	off_t sector_start,
+	uint8_t* output
+);
+int encrypt_write_sectors(
+	dis_iodata_t* io_data,
+	size_t nb_write_sector,
+	uint16_t sector_size,
+	off_t sector_start,
+	uint8_t* input
+);
 
-
-#endif /* ENCRYPT_H */
+#endif /* SECTORS_H */

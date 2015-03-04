@@ -20,23 +20,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef ENCODING_H
-#define ENCODING_H
+#ifndef PRINT_METADATA_H
+#define PRINT_METADATA_H
 
-#include <wchar.h>
-
-#include "common.h"
-
-
-
-/*
- * Prototypes of functions from encoding.c
- */
-int utf16towchars(uint16_t* utf16, size_t utf16_length, wchar_t* utf32);
-
-int asciitoutf16(const uint8_t* ascii, uint16_t* utf16);
-
-int utf16bigtolittleendian(uint16_t* utf16, size_t utf16_length);
+#include "dislocker/common.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/datums.h"
 
 
-#endif /* ENCODING_H */
+void print_volume_header(LEVELS level, volume_header_t *volume_header);
+
+void print_information(LEVELS level, bitlocker_information_t *information);
+
+void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos);
+
+void print_dataset(LEVELS level, bitlocker_dataset_t* dataset);
+
+void print_data(LEVELS level, void* metadata);
+
+const char* get_state(state_t state);
+
+
+#endif // PRINT_METADATA_H

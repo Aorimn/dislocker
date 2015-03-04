@@ -21,9 +21,9 @@
  * USA.
  */
 
-#include "encryption/crc32.h"
-#include "metadata.h"
-#include "print_metadata.h"
+#include "dislocker/encryption/crc32.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/print_metadata.h"
 
 
 /**

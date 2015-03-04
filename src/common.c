@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "common.h"
+#include "dislocker/common.h"
 
 /**
  * Here are wrappers for low-level and common used functions

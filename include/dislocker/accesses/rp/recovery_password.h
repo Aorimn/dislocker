@@ -24,9 +24,9 @@
 #define RECOVERY_PASSWORD_H
 
 
-#include "common.h"
-#include "../stretch_key.h"
-#include "metadata/metadata.h"
+#include "dislocker/common.h"
+#include "dislocker/accesses/stretch_key.h"
+#include "dislocker/metadata/metadata.h"
 
 
 /*

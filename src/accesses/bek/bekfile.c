@@ -38,10 +38,10 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "common.h"
-#include "metadata/metadata.h"
-#include "metadata/vmk.h"
-#include "bekfile.h"
+#include "dislocker/common.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/vmk.h"
+#include "dislocker/accesses/bek/bekfile.h"
 
 
 

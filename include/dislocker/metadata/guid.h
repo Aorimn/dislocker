@@ -20,22 +20,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef CLOCK_H
-#define CLOCK_H
-
-#include <time.h>
-
-#include "common.h"
+#ifndef GUID_H
+#define GUID_H
 
 
-/* Deal with ntfs timestamps */
-typedef uint64_t ntfs_time_t;
+#include "dislocker/common.h"
+
+
+// GUID type = array of 16 unsigned bytes
+typedef uint8_t guid_t[16];
 
 
 /*
- * Prototypes of functions from clock.c
+ * Prototypes
  */
-void ntfs2utc(ntfs_time_t t, time_t *ts);
+void format_guid(uint8_t *raw_guid, char* formated_guid);
+
+int check_match_guid(guid_t guid_1, guid_t guid_2);
 
 
-#endif /* CLOCK_H */
+
+#endif // GUID_H
+

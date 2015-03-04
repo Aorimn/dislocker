@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "dislocker.h"
+#include "dislocker/dislocker.h"
 
 #if defined(__DARWIN) || defined(__FREEBSD)
 #  define O_LARGEFILE 0

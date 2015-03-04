@@ -20,25 +20,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef PRINT_METADATA_H
-#define PRINT_METADATA_H
+#ifndef CLOCK_H
+#define CLOCK_H
 
-#include "common.h"
-#include "metadata.h"
-#include "datums.h"
+#include <time.h>
 
-
-void print_volume_header(LEVELS level, volume_header_t *volume_header);
-
-void print_information(LEVELS level, bitlocker_information_t *information);
-
-void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos);
-
-void print_dataset(LEVELS level, bitlocker_dataset_t* dataset);
-
-void print_data(LEVELS level, void* metadata);
-
-const char* get_state(state_t state);
+#include "dislocker/common.h"
 
 
-#endif // PRINT_METADATA_H
+/* Deal with ntfs timestamps */
+typedef uint64_t ntfs_time_t;
+
+
+/*
+ * Prototypes of functions from clock.c
+ */
+void ntfs2utc(ntfs_time_t t, time_t *ts);
+
+
+#endif /* CLOCK_H */

@@ -22,8 +22,8 @@
  */
 
 
-#include "xstdlib.h"
-#include "xstdio.h"
+#include "dislocker/xstd/xstdlib.h"
+#include "dislocker/xstd/xstdio.h"
 
 
 

@@ -20,27 +20,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef VMK_H
-#define VMK_H
+#ifndef DECRYPT_H
+#define DECRYPT_H
 
 
-#include "datums.h"
-#include "guid.h"
-#include "metadata.h"
+#define AUTHENTICATOR_LENGTH 16
+
+
+#include "dislocker/encommon.h"
+
 
 
 
 /*
- * Functions prototypes
+ * Prototypes
  */
-int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum);
+int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size);
 
-int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum);
-
-int get_vmk_datum_from_range(void* dataset, uint16_t min_range, uint16_t max_range, void** vmk_datum);
-
-int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
-            size_t key_size, datum_key_t** vmk);
+int decrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
-#endif /* VMK_H */
+
+#endif /* DECRYPT_H */
+

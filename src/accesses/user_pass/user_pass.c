@@ -24,8 +24,8 @@
 #  define _WITH_GETLINE
 #endif /* __FREEBSD */
 
-#include "user_pass.h"
-#include "metadata/vmk.h"
+#include "dislocker/accesses/user_pass/user_pass.h"
+#include "dislocker/metadata/vmk.h"
 
 #include <termios.h>
 #include <stdio.h>

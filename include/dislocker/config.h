@@ -24,7 +24,7 @@
 #define DISLOCKER_CFG_H
 
 
-#include "xstd/xstdio.h"
+#include "dislocker/xstd/xstdio.h"
 #include <sys/types.h>
 #include <unistd.h>
 

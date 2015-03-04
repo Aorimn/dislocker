@@ -26,11 +26,11 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "common.h"
-#include "encryption/decrypt.h"
-#include "encryption/encrypt.h"
-#include "metadata/metadata.h"
-#include "sectors.h"
+#include "dislocker/common.h"
+#include "dislocker/encryption/decrypt.h"
+#include "dislocker/encryption/encrypt.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/sectors.h"
 
 
 /*

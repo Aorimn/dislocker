@@ -19,7 +19,7 @@ INSTALL		=	install
 DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BITS=64
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
-INC		=	-I. -I/usr/local/include
+INC		=	-I../include -I/usr/local/include
 LIB		=	-lpthread -lpolarssl -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE

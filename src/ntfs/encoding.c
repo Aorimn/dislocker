@@ -21,7 +21,7 @@
  * USA.
  */
 
-#include "encoding.h"
+#include "dislocker/ntfs/encoding.h"
 
 
 /**

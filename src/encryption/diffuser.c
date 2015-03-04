@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include "diffuser.h"
+#include "dislocker/encryption/diffuser.h"
 
 
 #define ROTATE_LEFT(a,n)  (((a) << (n)) | ((a) >> ((sizeof(a) * 8)-(n))))

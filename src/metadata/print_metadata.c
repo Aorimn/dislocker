@@ -23,7 +23,7 @@
 
 #include <time.h>
 
-#include "print_metadata.h"
+#include "dislocker/metadata/print_metadata.h"
 
 
 /** BitLocker's states into string */

@@ -30,10 +30,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "common.h"
-#include "metadata/print_metadata.h"
-#include "metadata/metadata.h"
-#include "accesses/bek/bekfile.h"
+#include "dislocker/common.h"
+#include "dislocker/metadata/print_metadata.h"
+#include "dislocker/metadata/metadata.h"
+#include "dislocker/accesses/bek/bekfile.h"
 
 #define USAGE "Usage: %1$s [-h] [-f file.bek]\n" \
               "  Reads .BEK files and prints information about them\n"

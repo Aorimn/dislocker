@@ -22,8 +22,8 @@
  */
 
 
-#include "encryption/decrypt.h"
-#include "vmk.h"
+#include "dislocker/encryption/decrypt.h"
+#include "dislocker/metadata/vmk.h"
 
 
 

@@ -20,27 +20,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef DECRYPT_H
-#define DECRYPT_H
+#ifndef FVEK_H
+#define FVEK_H
 
 
-#define AUTHENTICATOR_LENGTH 16
-
-
-#include "encommon.h"
-#include "metadata/datums.h"
-
+#include "dislocker/metadata/metadata.h"
 
 
 
 /*
- * Prototypes
+ * Functions prototypes
  */
-int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size);
+int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum);
 
-int decrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum);
 
 
 
-#endif /* DECRYPT_H */
-
+#endif /* FVEK_H */

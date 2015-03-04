@@ -24,8 +24,8 @@
 #define COMMON_H
 
 /* Generic includes */
-#include "xstd/xstdio.h"
-#include "xstd/xstdlib.h"
+#include "dislocker/xstd/xstdio.h"
+#include "dislocker/xstd/xstdlib.h"
 #include <stdint.h>
 #include <string.h>
 

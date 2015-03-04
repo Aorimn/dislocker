@@ -20,21 +20,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef FVEK_H
-#define FVEK_H
+#ifndef ACCESSES_H
+#define ACCESSES_H
 
 
-#include "metadata.h"
+#include "dislocker/dislocker.h"
 
 
 
-/*
- * Functions prototypes
+
+/**
+ * Prototypes
  */
-int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum);
-
-int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum);
+int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset);
 
 
-
-#endif /* FVEK_H */
+#endif /* ACCESSES_H */

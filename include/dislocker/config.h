@@ -50,12 +50,12 @@ typedef enum {
  */
 typedef enum {
 	/* Make the volume read-only, in order not to corrupt it */
-	DIS_FLAG_READ_ONLY = 1,
+	DIS_FLAG_READ_ONLY               = (1 << 0),
 	/*
 	 * By default, dislocker will check for unstable state that may corrupt data
 	 * if mounted using fuse
 	 */
-	DIS_FLAG_DONT_CHECK_VOLUME_STATE
+	DIS_FLAG_DONT_CHECK_VOLUME_STATE = (1 << 1),
 } dis_flags_e;
 
 

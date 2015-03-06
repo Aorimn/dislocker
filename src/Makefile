@@ -46,7 +46,7 @@ SOURCES		=	dislocker.c common.c config.c sectors.c \
 			metadata/guid.c metadata/print_metadata.c \
 			accesses/rp/recovery_password.c accesses/stretch_key.c \
 			accesses/user_pass/user_pass.c accesses/bek/bekfile.c \
-			accesses/accesses.c \
+			accesses/accesses.c encryption/encommon.c \
 			encryption/decrypt.c encryption/encrypt.c \
 			encryption/diffuser.c encryption/crc32.c \
 			ntfs/clock.c ntfs/encoding.c \

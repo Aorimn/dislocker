@@ -53,6 +53,20 @@ typedef struct _aes_contexts {
 
 
 
+typedef enum {
+	DIS_ENC_FLAG_USE_DIFFUSER = (1 << 0)
+} dis_enc_flags_e;
+
+typedef struct _dis_crypt {
+	dis_aes_contexts_t ctx;
+	
+	dis_enc_flags_e flags;
+	
+	uint16_t sector_size;
+} *dis_crypt_t;
+
+
+
 /**
  * Structure used for operation on disk (encryption/decryption)
  */
@@ -94,8 +108,8 @@ typedef struct _data {
 	/* File descriptor to access the volume */
 	int                 volume_fd;
 	
-	/* Contexts used to encrypt or decrypt */
-	dis_aes_contexts_t* enc_ctx;
+	/* Structure used to encrypt or decrypt */
+	dis_crypt_t         crypt;
 	
 	/* Volume's state is kept here */
 	int                 volume_state;
@@ -124,6 +138,16 @@ typedef struct _data {
 	pthread_mutex_t     mutex_lseek_rw;
 } dis_iodata_t;
 
+
+
+/*
+ * Prototypes
+ */
+dis_crypt_t dis_crypt_new(uint16_t sector_size, int use_diffuser);
+
+dis_aes_contexts_t* dis_crypt_aes_contexts(dis_crypt_t crypt);
+
+void dis_crypt_destroy(dis_crypt_t crypt);
 
 
 #endif /* ENCOMMON_H */

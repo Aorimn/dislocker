@@ -41,16 +41,17 @@ static uint64_t get_volume_size(dis_iodata_t* io_data);
  * 
  * @param dataset BitLocker dataset
  * @param fvek The entire 32 bytes FVEK, without the KEY structure
- * @param ctx Contexts to initialize, used by AES-CBC for data en/decryption
+ * @param crypt Crypto structure to decrypt sectors
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
-                     dis_aes_contexts_t* ctx)
+                     dis_crypt_t crypt)
 {
 	// Check parameters
-	if(!dataset || !fvek_datum || !ctx)
+	if(!dataset || !fvek_datum || !crypt)
 		return FALSE;
 	
+	dis_aes_contexts_t* ctx = dis_crypt_aes_contexts(crypt);
 	uint8_t* fvek    = NULL;
 	size_t size_fvek = 0;
 	

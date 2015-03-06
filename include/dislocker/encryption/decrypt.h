@@ -27,7 +27,7 @@
 #define AUTHENTICATOR_LENGTH 16
 
 
-#include "dislocker/encommon.h"
+#include "dislocker/encryption/encommon.h"
 
 
 
@@ -37,7 +37,7 @@
  */
 int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size);
 
-int decrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+int decrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
 

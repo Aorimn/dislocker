@@ -79,9 +79,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	
 	int ret = EXIT_SUCCESS;
 	
-	
-	dis_ctx->io_data.enc_ctx = xmalloc(sizeof(dis_aes_contexts_t));
-	memset(dis_ctx->io_data.enc_ctx, 0, sizeof(dis_aes_contexts_t));
+	int use_diffuser = FALSE;
 	
 	
 	/* Initialize outputs */
@@ -275,11 +273,21 @@ int dis_initialize(dis_context_t dis_ctx)
 			return EXIT_FAILURE;
 		}
 		
+		/*
+		 * Init the crypto structure
+		 */
+		if(dataset->algorithm == AES_128_DIFFUSER ||
+		   dataset->algorithm == AES_256_DIFFUSER)
+			use_diffuser = TRUE;
+		dis_ctx->io_data.crypt = dis_crypt_new(
+			dis_ctx->io_data.volume_header->sector_size,
+			use_diffuser
+		);
 		
 		/*
 		 * Init the decrypt keys' contexts
 		 */
-		if(!init_keys(dataset, dis_ctx->io_data.fvek, dis_ctx->io_data.enc_ctx))
+		if(!init_keys(dataset, dis_ctx->io_data.fvek, dis_ctx->io_data.crypt))
 		{
 			xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
 			dis_destroy(dis_ctx);
@@ -721,8 +729,7 @@ int dis_destroy(dis_context_t dis_ctx)
 	if(dis_ctx->io_data.fvek)
 		xfree(dis_ctx->io_data.fvek);
 	
-	if(dis_ctx->io_data.enc_ctx)
-		xfree(dis_ctx->io_data.enc_ctx);
+	dis_crypt_destroy(dis_ctx->io_data.crypt);
 	
 	pthread_mutex_destroy(&dis_ctx->io_data.mutex_lseek_rw);
 	

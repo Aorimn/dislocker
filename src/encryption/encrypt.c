@@ -40,29 +40,34 @@ void encrypt_with_diffuser   (dis_aes_contexts_t* ctx, uint16_t sector_size, uin
 /**
  * Interface to encrypt a sector
  * 
- * @param io_data Data needed by FUSE and the encryption to deal with encrypted data
+ * @param crypt Data needed by the encryption to deal with encrypted data
  * @param sector The sector to encrypt
+ * @param sector_address The address of the sector to encrypt
  * @param buffer The place where we have to put encrypted data
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int encrypt_sector(dis_iodata_t* io_data, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+int encrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	// Check parameters
-	if(!io_data || !sector || !buffer)
+	if(!crypt || !sector || !buffer)
 		return FALSE;
 	
-	
-	switch(io_data->information->dataset.algorithm)
-	{
-		case AES_128_DIFFUSER:
-		case AES_256_DIFFUSER:
-			encrypt_with_diffuser(io_data->enc_ctx, io_data->sector_size, sector, sector_address, buffer);
-			break;
-		case AES_128_NO_DIFFUSER:
-		case AES_256_NO_DIFFUSER:
-			encrypt_without_diffuser(io_data->enc_ctx, io_data->sector_size, sector, sector_address, buffer);
-			break;
-	}
+	if(crypt->flags & DIS_ENC_FLAG_USE_DIFFUSER)
+		encrypt_with_diffuser(
+			&crypt->ctx,
+			crypt->sector_size,
+			sector,
+			sector_address,
+			buffer
+		);
+	else
+		encrypt_without_diffuser(
+			&crypt->ctx,
+			crypt->sector_size,
+			sector,
+			sector_address,
+			buffer
+		);
 	
 	return TRUE;
 }

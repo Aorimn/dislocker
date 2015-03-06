@@ -43,8 +43,8 @@
 
 
 #include "dislocker/common.h"
-#include "dislocker/encommon.h"
 #include "dislocker/dislocker.h"
+#include "dislocker/encryption/encommon.h"
 #include "dislocker/metadata/metadata.h"
 
 

@@ -459,7 +459,7 @@ static void* thread_decrypt(void* params)
 		{
 			/* Decrypt the sector */
 			if(!decrypt_sector(
-				io_data,
+				io_data->crypt,
 				loop_input,
 				offset,
 				loop_output
@@ -539,7 +539,7 @@ static void* thread_encrypt(void* params)
 		else
 		{
 			if(!encrypt_sector(
-				io_data,
+				io_data->crypt,
 				loop_input,
 				offset,
 				loop_output
@@ -636,7 +636,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	else
 	{
 		decrypt_sector(
-			io_data,
+			io_data->crypt,
 			input,
 			to,
 			output

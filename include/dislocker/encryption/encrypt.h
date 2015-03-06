@@ -25,14 +25,14 @@
 
 
 
-#include "dislocker/encommon.h"
+#include "dislocker/encryption/encommon.h"
 
 
 
 /*
  * Prototypes
  */
-int encrypt_sector(dis_iodata_t* global_data, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+int encrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 
 #endif /* ENCRYPT_H */

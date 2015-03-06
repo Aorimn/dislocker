@@ -27,6 +27,7 @@
 #define AUTHENTICATOR_LENGTH 16
 
 
+#include "dislocker/metadata/datums.h"
 #include "dislocker/encryption/encommon.h"
 
 

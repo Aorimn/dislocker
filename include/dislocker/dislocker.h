@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 #include "dislocker/config.h"
-#include "dislocker/encryption/encommon.h"
+#include "dislocker/sectors.h"
 
 
 

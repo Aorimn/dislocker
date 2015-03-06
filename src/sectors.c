@@ -24,7 +24,6 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
-#include <pthread.h>
 
 #include "dislocker/common.h"
 #include "dislocker/encryption/decrypt.h"

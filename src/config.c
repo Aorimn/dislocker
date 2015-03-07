@@ -196,7 +196,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 			case 's':
 			{
 				int t = TRUE;
-				dis_setopt(cfg, DIS_OPT_DONT_CHECK_STATE, &t);
+				dis_setopt(cfg, DIS_OPT_DONT_CHECK_VOLUME_STATE, &t);
 				break;
 			}
 			case 'u':
@@ -392,7 +392,7 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
 					cfg->flags &= (unsigned) ~DIS_FLAG_READ_ONLY;
 			}
 			break;
-		case DIS_OPT_DONT_CHECK_STATE:
+		case DIS_OPT_DONT_CHECK_VOLUME_STATE:
 			if(opt_value == NULL)
 				cfg->flags &= (unsigned) ~DIS_FLAG_DONT_CHECK_VOLUME_STATE;
 			else
@@ -402,6 +402,15 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
 					cfg->flags |= DIS_FLAG_DONT_CHECK_VOLUME_STATE;
 				else
 					cfg->flags &= (unsigned) ~DIS_FLAG_DONT_CHECK_VOLUME_STATE;
+			}
+			break;
+		case DIS_OPT_INITIALIZE_STATE:
+			if(opt_value == NULL)
+				cfg->init_stop_at = DIS_STATE_COMPLETE_EVERYTHING;
+			else
+			{
+				int state = *(int*) opt_value;
+				cfg->init_stop_at = state;
 			}
 			break;
 	}

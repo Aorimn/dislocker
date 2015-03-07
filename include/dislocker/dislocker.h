@@ -30,31 +30,6 @@
 
 
 
-/**
- * dis_initialize() function does a lot of things. So, in order to provide
- * flexibility, place some kind of breakpoint after majors steps.
- */
-typedef enum {
-	DIS_STATE_COMPLETE_EVERYTHING = 0,
-	DIS_STATE_AFTER_OPEN_VOLUME,
-	DIS_STATE_AFTER_VOLUME_HEADER,
-	DIS_STATE_AFTER_VOLUME_CHECK,
-	DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK,
-	DIS_STATE_AFTER_VMK,
-	DIS_STATE_AFTER_FVEK,
-	DIS_STATE_BEFORE_DECRYPTION_CHECKING,
-} dis_state_e;
-
-
-#define checkupdate_dis_state(ctx, state)                       \
-	do {                                                        \
-		(ctx)->curr_state = (state);                            \
-		if((state) == (ctx)->stop_at) {                         \
-			xprintf(L_DEBUG, "Exiting at state %d\n", (state)); \
-			return EXIT_SUCCESS;                                \
-		}                                                       \
-	} while(0);
-
 
 /**
  * Main structure to pass to dislocker functions. These keeps various
@@ -77,7 +52,6 @@ typedef struct _dis_ctx {
 	 * States dislocker initialisation is at or will be stopped at.
 	 */
 	dis_state_e curr_state;
-	dis_state_e stop_at;
 } *dis_context_t;
 
 

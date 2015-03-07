@@ -266,11 +266,14 @@ int dis_initialize(dis_context_t dis_ctx)
 		/*
 		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
 		 */
-		if(dis_get_access(dis_ctx, dataset) == EXIT_FAILURE)
+		if((ret = dis_get_access(dis_ctx, dataset)) != EXIT_SUCCESS)
 		{
-			xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
-			dis_destroy(dis_ctx);
-			return EXIT_FAILURE;
+			if(ret == EXIT_FAILURE)
+			{
+				xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+				dis_destroy(dis_ctx);
+			}
+			return ret;
 		}
 		
 		/*
@@ -279,6 +282,7 @@ int dis_initialize(dis_context_t dis_ctx)
 		if(dataset->algorithm == AES_128_DIFFUSER ||
 		   dataset->algorithm == AES_256_DIFFUSER)
 			use_diffuser = TRUE;
+		
 		dis_ctx->io_data.crypt = dis_crypt_new(
 			dis_ctx->io_data.volume_header->sector_size,
 			use_diffuser
@@ -307,7 +311,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	}
 	
 	
-	// TODO add the BEFORE_DECRYPTION_CHECKING event here, so add the check here too
+	// TODO add the DIS_STATE_BEFORE_DECRYPTION_CHECKING event here, so add the check here too
 	
 	
 	/* Don't do the check for each and every enc/decryption operation */

@@ -60,6 +60,7 @@ typedef enum {
 
 
 typedef enum {
+	/* Below are options dis_getopts() can parse out of the command line */
 	DIS_OPT_VOLUME_PATH = 1,
 	DIS_OPT_CLEAR_KEY,
 	DIS_OPT_BEK_FILE_PATH,
@@ -71,8 +72,42 @@ typedef enum {
 	DIS_OPT_FORCE_BLOCK,
 	DIS_OPT_VOLUME_OFFSET,
 	DIS_OPT_READ_ONLY,
-	DIS_OPT_DONT_CHECK_STATE
+	DIS_OPT_DONT_CHECK_VOLUME_STATE,
+	
+	/* Below are options for users of the library (i.e: developers) */
+	DIS_OPT_INITIALIZE_STATE
 } dis_opt_e;
+
+
+
+
+/**
+ * dis_initialize() function does a lot of things. So, in order to provide
+ * flexibility, place some kind of breakpoint after majors steps.
+ */
+typedef enum {
+	DIS_STATE_COMPLETE_EVERYTHING = 0,
+	DIS_STATE_AFTER_OPEN_VOLUME,
+	DIS_STATE_AFTER_VOLUME_HEADER,
+	DIS_STATE_AFTER_VOLUME_CHECK,
+	DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK,
+	DIS_STATE_AFTER_VMK,
+	DIS_STATE_AFTER_FVEK,
+	DIS_STATE_BEFORE_DECRYPTION_CHECKING,
+} dis_state_e;
+
+
+
+#define checkupdate_dis_state(ctx, state)                       \
+	do {                                                        \
+		(ctx)->curr_state = (state);                            \
+		if((state) == (ctx)->cfg.init_stop_at) {                \
+			xprintf(L_DEBUG, "Exiting at state %d\n", (state)); \
+			return (state);                                     \
+		}                                                       \
+	} while(0);
+
+
 
 
 /**
@@ -113,6 +148,9 @@ typedef struct _dis_cfg {
 	 * Various flags one can use. See dis_flags_e enum above for possible values
 	 */
 	dis_flags_e   flags;
+	
+	/* Where dis_initialize() should stop */
+	dis_state_e   init_stop_at;
 } dis_config_t;
 
 

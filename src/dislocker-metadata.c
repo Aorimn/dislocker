@@ -104,10 +104,11 @@ int main(int argc, char **argv)
 	dis_setopt(&dis_ctx->cfg, DIS_OPT_VERBOSITY,     &verbosity);
 	
 	/* We don't want to give decryption mean, we only want the metadata */
-	dis_ctx->stop_at = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
+	dis_state_e init_state = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
+	dis_setopt(&dis_ctx->cfg, DIS_OPT_INITIALIZE_STATE, &init_state);
 	
 	/* Initialize dislocker */
-	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
+	if(dis_initialize(dis_ctx) != DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;

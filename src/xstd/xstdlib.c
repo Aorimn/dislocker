@@ -35,6 +35,11 @@
  */
 void* xmalloc(size_t size)
 {
+	if(size == 0)
+	{
+		xprintf(L_CRITICAL, "malloc(0) is not accepted, aborting\n");
+		exit(2);
+	}
 	void* p = malloc(size);
 	
 	xprintf(L_DEBUG, "New memory allocation at %p (%#zx byte allocated)\n", p, size);

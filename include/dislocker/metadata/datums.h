@@ -103,6 +103,11 @@ typedef struct _header_safe
 	uint16_t error_status;
 } datum_header_safe_t;
 
+_Static_assert(
+	sizeof(struct _header_safe) == 8,
+	"Datum header structure's size isn't equal to 8"
+);
+
 
 
 

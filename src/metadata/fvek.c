@@ -48,8 +48,10 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 	
 	void* vmk_key = NULL;
 	size_t vmk_key_size = 0;
+	datum_aes_ccm_t* fvek = NULL;
 	
 	unsigned int fvek_size = 0;
+	unsigned int header_size = 0;
 	
 	
 	/* First get the AES-CCM datum where the FVEK is */
@@ -73,8 +75,19 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 		return FALSE;
 	}
 	
+	fvek = (datum_aes_ccm_t*)*fvek_datum;
+	header_size = datum_types_prop[fvek->header.datum_type].size_header;
+	fvek_size = fvek->header.datum_size - header_size;
+	
 	/* Finally decrypt the FVEK with the VMK */
-	if(!decrypt_key((datum_aes_ccm_t*)*fvek_datum, vmk_key, fvek_datum, &fvek_size))
+	if(!decrypt_key(
+			(unsigned char*) fvek + header_size,
+			fvek_size,
+			fvek->mac,
+			fvek->nonce,
+			vmk_key,
+			fvek_datum
+	))
 	{
 		if(*fvek_datum)
 		{

@@ -58,43 +58,35 @@ static int aes_ccm_compute_unencrypted_tag(
  * @param output_size The size of the decrypted result
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size)
+int decrypt_key(
+	unsigned char* input,
+	unsigned int   input_size,
+	unsigned char* mac,
+	unsigned char* nonce,
+	unsigned char* key,
+	void** output)
 {
 	// Check parameters
-	if(!input || !key || !output || !output_size)
+	if(!input || !mac || !nonce || !key || !output)
 		return FALSE;
 	
 	
 	AES_CONTEXT ctx;
-	unsigned int header_size = 0;
-	unsigned char* aes_input_buffer = NULL;
-	unsigned int input_size = 0;
 	
 	uint8_t mac_first [AUTHENTICATOR_LENGTH];
 	uint8_t mac_second[AUTHENTICATOR_LENGTH];
 	
 	
-	
-	header_size = datum_types_prop[input->header.datum_type].size_header;
-	*output_size = input->header.datum_size - header_size;
-	input_size = *output_size;
-	
 	/*
 	 * Allocate output buffer
 	 */
-	*output = xmalloc(*output_size);
-	memset(*output, 0, *output_size);
-	
-	/*
-	 * The aes input buffer is data to decrypt
-	 */
-	aes_input_buffer = xmalloc(*output_size);
-	memcpy(aes_input_buffer, (unsigned char*)input + header_size, *output_size);  
+	*output = xmalloc(input_size);
+	memset(*output, 0, input_size);
 	
 	/*
 	 * Get the MAC
 	 */
-	memcpy(mac_first, input->mac, AUTHENTICATOR_LENGTH);
+	memcpy(mac_first, mac, AUTHENTICATOR_LENGTH);
 	
 	
 	
@@ -110,16 +102,23 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
 	 */
 	xprintf(L_DEBUG, "}--------[ Data passed to aes_ccm_encrypt_decrypt ]--------{\n");
 	xprintf(L_DEBUG, "-- Nonce:\n");
-	hexdump(L_DEBUG, input->nonce, 0xc);
+	hexdump(L_DEBUG, nonce, 0xc);
 	xprintf(L_DEBUG, "-- Input buffer:\n");
-	hexdump(L_DEBUG, aes_input_buffer, input_size);
+	hexdump(L_DEBUG, input, input_size);
 	xprintf(L_DEBUG, "-- MAC:\n");
 	hexdump(L_DEBUG, mac_first, AUTHENTICATOR_LENGTH);
 	xprintf(L_DEBUG, "}----------------------------------------------------------{\n");
 	
-	aes_ccm_encrypt_decrypt(&ctx, input->nonce, 0xc, aes_input_buffer, input_size, mac_first, AUTHENTICATOR_LENGTH, (unsigned char*) *output);
-	
-	xfree(aes_input_buffer);
+	aes_ccm_encrypt_decrypt(
+		&ctx,
+		nonce,
+		0xc,
+		input,
+		input_size,
+		mac_first,
+		AUTHENTICATOR_LENGTH,
+		(unsigned char*) *output
+	);
 	
 	
 	
@@ -127,7 +126,14 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
 	 * Compute to check decryption
 	 */
 	memset(mac_second, 0, AUTHENTICATOR_LENGTH);
-	aes_ccm_compute_unencrypted_tag(&ctx, input->nonce, 0xc, (unsigned char*) *output, *output_size, mac_second);
+	aes_ccm_compute_unencrypted_tag(
+		&ctx,
+		nonce,
+		0xc,
+		(unsigned char*) *output,
+		input_size,
+		mac_second
+	);
 	
 	
 	memset(&ctx, 0, sizeof(AES_CONTEXT));

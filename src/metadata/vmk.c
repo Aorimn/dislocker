@@ -119,6 +119,7 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 		return FALSE;
 	
 	unsigned int vmk_size = 0;
+	unsigned int header_size = 0;
 	
 	xprintf(L_DEBUG, "=====================[ ENCRYPTED VMK ]====================\n");
 	print_one_datum(L_DEBUG, *vmk);
@@ -127,7 +128,17 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 	hexdump(L_DEBUG, recovery_key, key_size);
 	xprintf(L_DEBUG, "==========================================================\n");
 	
-	if(!decrypt_key((datum_aes_ccm_t*)vmk_datum, recovery_key, (void**)vmk, &vmk_size))
+	header_size = datum_types_prop[vmk_datum->header.datum_type].size_header;
+	vmk_size = vmk_datum->header.datum_size - header_size;
+	
+	if(!decrypt_key(
+			(unsigned char*) vmk_datum + header_size,
+			vmk_size,
+			vmk_datum->mac,
+			vmk_datum->nonce,
+			recovery_key,
+			(void**) vmk
+	))
 	{
 		if(*vmk)
 		{

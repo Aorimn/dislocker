@@ -346,6 +346,13 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	uint16_t sector_size = dis_ctx->io_data.sector_size;
 	
 	
+	/* Check the initialization's state */
+	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
+	{
+		xprintf(L_ERROR, "Initialization not completed. Abort.\n");
+		return -EFAULT;
+	}
+	
 	/* Check the state the BitLocker volume is in */
 	if(dis_ctx->io_data.volume_state == FALSE)
 	{
@@ -480,6 +487,13 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	off_t  sector_start;
 	size_t sector_to_add = 0;
 	
+	
+	/* Check the initialization's state */
+	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
+	{
+		xprintf(L_ERROR, "Initialization not completed. Abort.\n");
+		return -EFAULT;
+	}
 	
 	/* Check the state the BitLocker volume is in */
 	if(dis_ctx->io_data.volume_state == FALSE)

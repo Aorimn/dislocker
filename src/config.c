@@ -409,7 +409,7 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
 				cfg->init_stop_at = DIS_STATE_COMPLETE_EVERYTHING;
 			else
 			{
-				int state = *(int*) opt_value;
+				dis_state_e state = *(dis_state_e*) opt_value;
 				cfg->init_stop_at = state;
 			}
 			break;

@@ -309,24 +309,24 @@ int get_header_safe(void* data, datum_header_safe_t* header);
 
 int get_payload_safe(void* data, void** payload, size_t* size_payload);
 
-void print_one_datum(LEVELS level, void* datum);
+void print_one_datum(DIS_LOGS level, void* datum);
 
-void print_header(LEVELS level, datum_header_safe_t* header);
+void print_header(DIS_LOGS level, datum_header_safe_t* header);
 
-void print_datum_generic(LEVELS level, void* vdatum);
-void print_datum_erased(LEVELS level, void* vdatum);
-void print_datum_key(LEVELS level, void* vdatum);
-void print_datum_unicode(LEVELS level, void* vdatum);
-void print_datum_stretch_key(LEVELS level, void* vdatum);
-void print_datum_use_key(LEVELS level, void* vdatum);
-void print_datum_aes_ccm(LEVELS level, void* vdatum);
-void print_datum_tpmenc(LEVELS level, void* vdatum);
-void print_datum_vmk(LEVELS level, void* vdatum);
-void print_datum_external(LEVELS level, void* vdatum);
-void print_datum_virtualization(LEVELS level, void* vdatum);
+void print_datum_generic(DIS_LOGS level, void* vdatum);
+void print_datum_erased(DIS_LOGS level, void* vdatum);
+void print_datum_key(DIS_LOGS level, void* vdatum);
+void print_datum_unicode(DIS_LOGS level, void* vdatum);
+void print_datum_stretch_key(DIS_LOGS level, void* vdatum);
+void print_datum_use_key(DIS_LOGS level, void* vdatum);
+void print_datum_aes_ccm(DIS_LOGS level, void* vdatum);
+void print_datum_tpmenc(DIS_LOGS level, void* vdatum);
+void print_datum_vmk(DIS_LOGS level, void* vdatum);
+void print_datum_external(DIS_LOGS level, void* vdatum);
+void print_datum_virtualization(DIS_LOGS level, void* vdatum);
 
-void print_nonce(LEVELS level, uint8_t* nonce);
-void print_mac(LEVELS level, uint8_t* mac);
+void print_nonce(DIS_LOGS level, uint8_t* nonce);
+void print_mac(DIS_LOGS level, uint8_t* mac);
 
 int get_next_datum(bitlocker_dataset_t* dataset, int16_t type, int16_t datum_type, void* datum_begin, void** datum_result);
 
@@ -338,7 +338,7 @@ int datum_type_must_be(void* datum, datum_t datum_type);
 int has_clear_key(void* dataset, datum_vmk_t** vmk_datum);
 
 
-typedef void(*print_datum_f)(LEVELS, void*);
+typedef void(*print_datum_f)(DIS_LOGS, void*);
 static const print_datum_f print_datum_tab[NB_DATUM_TYPES] =
 {
 	print_datum_erased,

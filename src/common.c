@@ -216,7 +216,7 @@ off_t xlseek(int fd, off_t offset, int whence)
  * @param data Data to print
  * @param data_len Length of the data to print
  */
-void hexdump(LEVELS level, uint8_t* data, size_t data_len)
+void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 {
 	size_t i, j, max = 0;
 	size_t offset = 16;

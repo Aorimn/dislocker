@@ -44,7 +44,7 @@ static const char* states_str[] =
  * 
  * @param volume_header The volume header to print
  */
-void print_volume_header(LEVELS level, volume_header_t *volume_header)
+void print_volume_header(DIS_LOGS level, volume_header_t *volume_header)
 {
 	char rec_id[37];
 	
@@ -98,7 +98,7 @@ const char* get_state(state_t state)
  * 
  * @param information The BitLocker header to print
  */
-void print_information(LEVELS level, bitlocker_information_t *information)
+void print_information(DIS_LOGS level, bitlocker_information_t *information)
 {
 	int metadata_size = information->version == V_SEVEN ? information->size << 4 : information->size;
 	
@@ -129,7 +129,7 @@ void print_information(LEVELS level, bitlocker_information_t *information)
  * 
  * @param dataset The dataset to print
  */
-void print_dataset(LEVELS level, bitlocker_dataset_t* dataset)
+void print_dataset(DIS_LOGS level, bitlocker_dataset_t* dataset)
 {
 	time_t ts;
 	char* date = NULL;
@@ -162,7 +162,7 @@ void print_dataset(LEVELS level, bitlocker_dataset_t* dataset)
  * 
  * @param eow_infos The EOW information structure to print
  */
-void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos)
+void print_eow_infos(DIS_LOGS level, bitlocker_eow_infos_t *eow_infos)
 {
 	xprintf(level, "=======================[ BitLocker EOW informations ]========================\n");
 	xprintf(level, "  Signature: '%.8s'\n", eow_infos->signature);
@@ -189,7 +189,7 @@ void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos)
  * 
  * @param metadata The metadata from where data will be printed
  */
-void print_data(LEVELS level, void* metadata)
+void print_data(DIS_LOGS level, void* metadata)
 {
 	// Check parameters
 	if(!metadata)

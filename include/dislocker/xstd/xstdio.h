@@ -50,10 +50,10 @@ typedef enum {
 	L_WARNING,
 	L_INFO,
 	L_DEBUG
-} LEVELS;
+} DIS_LOGS;
 
 /* Do NOT count the L_QUIET level */
-#define NB_LEVELS 5
+#define DIS_LOGS_NB 5
 
 
 
@@ -69,8 +69,8 @@ void close_input_fd();
 
 void chomp(char* string);
 
-int xprintf(LEVELS level, const char* format, ...);
-int xvprintf(LEVELS level, const char* format, va_list ap);
+int xprintf(DIS_LOGS level, const char* format, ...);
+int xvprintf(DIS_LOGS level, const char* format, va_list ap);
 
 void xperror(char* append);
 

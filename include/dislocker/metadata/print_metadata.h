@@ -28,15 +28,15 @@
 #include "dislocker/metadata/datums.h"
 
 
-void print_volume_header(LEVELS level, volume_header_t *volume_header);
+void print_volume_header(DIS_LOGS level, volume_header_t *volume_header);
 
-void print_information(LEVELS level, bitlocker_information_t *information);
+void print_information(DIS_LOGS level, bitlocker_information_t *information);
 
-void print_eow_infos(LEVELS level, bitlocker_eow_infos_t *eow_infos);
+void print_eow_infos(DIS_LOGS level, bitlocker_eow_infos_t *eow_infos);
 
-void print_dataset(LEVELS level, bitlocker_dataset_t* dataset);
+void print_dataset(DIS_LOGS level, bitlocker_dataset_t* dataset);
 
-void print_data(LEVELS level, void* metadata);
+void print_data(DIS_LOGS level, void* metadata);
 
 const char* get_state(state_t state);
 

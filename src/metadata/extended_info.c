@@ -30,7 +30,7 @@
  * @param level The level to print the message
  * @param xinfo The extended_info_t structure to print
  */
-void print_extended_info(LEVELS level, extended_info_t* xinfo)
+void print_extended_info(DIS_LOGS level, extended_info_t* xinfo)
 {
 	xprintf(level, "Unknown:\n");
 	hexdump(level, (uint8_t*)&xinfo->unknown1, 2);

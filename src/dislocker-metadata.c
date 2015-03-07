@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	datum_vmk_t* vmk_clear_key_datum = NULL;
 	
 	off_t offset     = 0;
-	LEVELS verbosity = L_INFO;
+	DIS_LOGS verbosity = L_INFO;
 	
 	while((optchar = getopt(argc, argv, "o:V:hv")) != -1)
 	{

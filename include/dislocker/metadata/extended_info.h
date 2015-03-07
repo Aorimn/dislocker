@@ -49,7 +49,7 @@ typedef struct _extended_info {
 /*
  * Here are prototypes of functions dealing extended info
  */
-void print_extended_info(LEVELS level, extended_info_t* xinfo);
+void print_extended_info(DIS_LOGS level, extended_info_t* xinfo);
 
 
 

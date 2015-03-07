@@ -238,7 +238,7 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
  * @param level The level to print the message
  * @param datum The datum to print
  */
-void print_one_datum(LEVELS level, void* datum)
+void print_one_datum(DIS_LOGS level, void* datum)
 {
 	datum_header_safe_t* header = (datum_header_safe_t*) datum;
 	print_header(level, header);
@@ -255,7 +255,7 @@ void print_one_datum(LEVELS level, void* datum)
  * @param level The level to print the message
  * @param header The header to print
  */
-void print_header(LEVELS level, datum_header_safe_t* header)
+void print_header(DIS_LOGS level, datum_header_safe_t* header)
 {
 	xprintf(level, "Total datum size: 0x%1$04hx (%1$hd) bytes\n", header->datum_size);
 	
@@ -285,7 +285,7 @@ void print_header(LEVELS level, datum_header_safe_t* header)
  * @param level The level to print the message
  * @param vdatum The datum to print
  */
-void print_datum_generic(LEVELS level, void* vdatum)
+void print_datum_generic(DIS_LOGS level, void* vdatum)
 {
 	datum_generic_type_t* datum = (datum_generic_type_t*) vdatum;
 	
@@ -301,13 +301,13 @@ void print_datum_generic(LEVELS level, void* vdatum)
  * @param level The level to print the message
  * @param datum The datum to print
  */
-void print_datum_erased(LEVELS level, void* vdatum)
+void print_datum_erased(DIS_LOGS level, void* vdatum)
 {
 	xprintf(level, "This datum is of ERASED type and should thus be nullified");
 	hexdump(level, vdatum, sizeof(datum_erased_t));
 }
 
-void print_datum_key(LEVELS level, void* vdatum)
+void print_datum_key(DIS_LOGS level, void* vdatum)
 {
 	datum_key_t* datum = (datum_key_t*) vdatum;
 	char* cipher_str_type = cipherstr((cipher_t)datum->algo);
@@ -321,7 +321,7 @@ void print_datum_key(LEVELS level, void* vdatum)
 	xfree(cipher_str_type);
 }
 
-void print_datum_unicode(LEVELS level, void* vdatum)
+void print_datum_unicode(DIS_LOGS level, void* vdatum)
 {
 	datum_unicode_t* datum = (datum_unicode_t*) vdatum;
 	
@@ -338,7 +338,7 @@ void print_datum_unicode(LEVELS level, void* vdatum)
 	xfree(wchar_s);
 }
 
-void print_datum_stretch_key(LEVELS level, void* vdatum)
+void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 {
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) vdatum;
 	
@@ -354,7 +354,7 @@ void print_datum_stretch_key(LEVELS level, void* vdatum)
 	xprintf(level, "   ---------------------------\n");
 }
 
-void print_datum_use_key(LEVELS level, void* vdatum)
+void print_datum_use_key(DIS_LOGS level, void* vdatum)
 {
 	datum_use_key_t* datum = (datum_use_key_t*) vdatum;
 	
@@ -368,7 +368,7 @@ void print_datum_use_key(LEVELS level, void* vdatum)
 	xprintf(level, "   ---------------------------\n");
 }
 
-void print_datum_aes_ccm(LEVELS level, void* vdatum)
+void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
 {
 	datum_aes_ccm_t* datum = (datum_aes_ccm_t*) vdatum;
 	
@@ -381,7 +381,7 @@ void print_datum_aes_ccm(LEVELS level, void* vdatum)
 			datum->header.datum_size - sizeof(datum_aes_ccm_t));
 }
 
-void print_datum_tpmenc(LEVELS level, void* vdatum)
+void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 {
 	datum_tpm_enc_t* datum = (datum_tpm_enc_t*) vdatum;
 	
@@ -391,7 +391,7 @@ void print_datum_tpmenc(LEVELS level, void* vdatum)
 			datum->header.datum_size - sizeof(datum_tpm_enc_t));
 }
 
-void print_datum_vmk(LEVELS level, void* vdatum)
+void print_datum_vmk(DIS_LOGS level, void* vdatum)
 {
 	datum_vmk_t* datum = (datum_vmk_t*) vdatum;
 	char extkey_id[37];
@@ -423,7 +423,7 @@ void print_datum_vmk(LEVELS level, void* vdatum)
 	xprintf(level, "   ------------------------------\n");
 }
 
-void print_datum_external(LEVELS level, void* vdatum)
+void print_datum_external(DIS_LOGS level, void* vdatum)
 {
 	datum_external_t* datum = (datum_external_t*) vdatum;
 	
@@ -462,7 +462,7 @@ void print_datum_external(LEVELS level, void* vdatum)
 	free(date);
 }
 
-void print_datum_virtualization(LEVELS level, void* vdatum)
+void print_datum_virtualization(DIS_LOGS level, void* vdatum)
 {
 	datum_virtualization_t* datum = (datum_virtualization_t*) vdatum;
 	
@@ -486,7 +486,7 @@ void print_datum_virtualization(LEVELS level, void* vdatum)
  * @param level The level to print the message
  * @param nonce The nonce to print
  */
-void print_nonce(LEVELS level, uint8_t* nonce)
+void print_nonce(DIS_LOGS level, uint8_t* nonce)
 {
 	int i = 0;
 	char s[12*3 + 1] = {0,};
@@ -504,7 +504,7 @@ void print_nonce(LEVELS level, uint8_t* nonce)
  * @param level The level to print the message
  * @param mac The MAC to print
  */
-void print_mac(LEVELS level, uint8_t* mac)
+void print_mac(DIS_LOGS level, uint8_t* mac)
 {
 	int i = 0;
 	char s[16*3 + 1] = {0,};

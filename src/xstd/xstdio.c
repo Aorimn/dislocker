@@ -38,7 +38,7 @@
 
 
 /* Files descriptors to know where to put logs */
-static FILE* fds[NB_LEVELS] = {0,};
+static FILE* fds[DIS_LOGS_NB] = {0,};
 
 
 /* Keep track of the verbosity level */
@@ -46,7 +46,7 @@ static int verbosity = L_QUIET;
 
 
 /* Levels transcription into strings */
-static char* msg_tab[NB_LEVELS] = {
+static char* msg_tab[DIS_LOGS_NB] = {
 	"CRITICAL",
 	"ERROR",
 	"WARNING",
@@ -67,7 +67,7 @@ static int            tty_fd = -1;
  * @param v Application verbosity
  * @param file File where putting logs (stdout if NULL)
  */
-void xstdio_init(LEVELS v, const char* file)
+void xstdio_init(DIS_LOGS v, const char* file)
 {
 	verbosity = v;
 	
@@ -198,14 +198,14 @@ void chomp(char* string)
  * @param ... Cf printf(3)
  * @return The number of characters printed
  */
-int xprintf(LEVELS level, const char* format, ...)
+int xprintf(DIS_LOGS level, const char* format, ...)
 {
 	int ret = -1;
 	
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
 	
-	if(level >= NB_LEVELS)
+	if(level >= DIS_LOGS_NB)
 		level = L_DEBUG;
 	
 	
@@ -230,13 +230,13 @@ int xprintf(LEVELS level, const char* format, ...)
  * @param format String to display (cf vprintf(3))
  * @param ap Cf vprintf(3)
  */
-int xvprintf(LEVELS level, const char* format, va_list ap)
+int xvprintf(DIS_LOGS level, const char* format, va_list ap)
 {
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
 	
 	
-	if(level >= NB_LEVELS)
+	if(level >= DIS_LOGS_NB)
 		level = L_DEBUG;
 	
 	

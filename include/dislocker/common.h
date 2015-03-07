@@ -72,7 +72,7 @@ ssize_t xread(int fd, void* buf, size_t count);
 ssize_t xwrite(int fd, void* buf, size_t count);
 off_t xlseek(int fd, off_t offset, int whence);
 
-void hexdump(LEVELS level, uint8_t* data, size_t data_size);
+void hexdump(DIS_LOGS level, uint8_t* data, size_t data_size);
 
 void xor_buffer(unsigned char* buf1, const unsigned char* buf2, unsigned char* output, size_t size);
 

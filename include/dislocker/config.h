@@ -132,7 +132,7 @@ typedef struct _dis_cfg {
 	char*         fvek_file;
 	
 	/* Output verbosity */
-	LEVELS        verbosity;
+	DIS_LOGS      verbosity;
 	/* Output file */
 	char*         log_file;
 	

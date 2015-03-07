@@ -183,7 +183,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 			}
 			case 'q':
 			{
-				LEVELS l = L_QUIET;
+				DIS_LOGS l = L_QUIET;
 				dis_setopt(cfg, DIS_OPT_VERBOSITY, &l);
 				break;
 			}
@@ -347,7 +347,7 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
 				cfg->verbosity = 0;
 			else
 			{
-				LEVELS l = *(LEVELS*) opt_value;
+				DIS_LOGS l = *(DIS_LOGS*) opt_value;
 				if(l >= L_QUIET && l <= L_DEBUG)
 					cfg->verbosity = l;
 				else

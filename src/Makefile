@@ -113,7 +113,7 @@ endif
 
 
 ifdef DEBUG
-DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG)
+DBGFLAGS	=	-ggdb -D DEBUG=$(DEBUG) -D__DIS_CORE_DUMPS
 override CFLAGS	+=	$(DBGFLAGS)
 endif
 

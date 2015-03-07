@@ -34,7 +34,6 @@
 
 #include "dislocker/accesses/accesses.h"
 
-
 #include "dislocker/sectors.h"
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/metadata.h"
@@ -51,6 +50,11 @@
 
 #include <locale.h>
 
+#ifndef __DIS_CORE_DUMPS
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+
 
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables
@@ -64,8 +68,23 @@
 
 dis_context_t dis_new()
 {
+	/* Allocate dislocker's context */
 	dis_context_t dis_ctx = xmalloc(sizeof(struct _dis_ctx));
 	memset(dis_ctx, 0, sizeof(struct _dis_ctx));
+	
+#ifndef __DIS_CORE_DUMPS
+	/* As we manage passwords and secrets, do not authorize core dumps */
+	struct rlimit limit;
+	limit.rlim_cur = 0;
+	limit.rlim_max = 0;
+	if (setrlimit(RLIMIT_CORE, &limit) != 0)
+	{
+		fprintf(stderr, "Cannot disable core dumps.\n");
+		xfree(dis_ctx);
+		return NULL;
+	}
+#endif
+	
 	return dis_ctx;
 }
 

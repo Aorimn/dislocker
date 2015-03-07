@@ -90,10 +90,14 @@ static void hide_opt(char* opt)
 /**
  * Parse arguments strings
  * 
+ * @warning If -h/--help is encountered, the help is printed and the program
+ * exits (using exit(EXIT_SUCCESS)).
+ * 
  * @param cfg The config pointer to dis_config_t structure
  * @param argc Number of arguments given to the program
  * @param argv Arguments given to the program
- * @return Return the number of arguments which are still waiting to be studied
+ * @return Return the number of arguments which are still waiting to be studied.
+ * If -1 is returned, then an error occurred and the configuration isn't set.
  */
 int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 {
@@ -221,7 +225,7 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 			{
 				dis_usage();
 				dis_free_args(cfg);
-				exit(EXIT_FAILURE);
+				return -1;
 			}
 		}
 	}

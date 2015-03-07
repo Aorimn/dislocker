@@ -165,6 +165,8 @@ int  dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value);
 void dis_free_args(dis_config_t* cfg);
 void dis_print_args(dis_config_t* cfg);
 
+int dis_is_read_only(dis_config_t* cfg);
+int dis_is_volume_state_checked(dis_config_t* cfg);
 
 
 #endif /* DISLOCKER_CFG_H */

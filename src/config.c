@@ -506,3 +506,17 @@ void dis_print_args(dis_config_t* cfg)
 	xprintf(L_DEBUG, "... End config ---\n");
 }
 
+
+/**
+ * Getters for the flags
+ */
+int dis_is_read_only(dis_config_t* cfg)
+{
+	return (cfg->flags & DIS_FLAG_READ_ONLY);
+}
+
+int dis_is_volume_state_checked(dis_config_t* cfg)
+{
+	return !(cfg->flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE);
+}
+

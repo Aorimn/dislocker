@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <limits.h>
 #include <errno.h>
 #include <pthread.h>
 
@@ -63,6 +64,11 @@
 #if defined(__DARWIN) || defined(__FREEBSD)
 #  define O_LARGEFILE 0
 #endif /* __DARWIN || __FREEBSD */
+
+
+
+/* Get low-level errors the library encoutered by looking at this variable */
+int dis_errno;
 
 
 

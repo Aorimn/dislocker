@@ -362,7 +362,11 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	size_t sector_count;
 	off_t  sector_start;
 	size_t sector_to_add = 0;
-	uint16_t sector_size = dis_ctx->io_data.sector_size;
+	uint16_t sector_size;
+	
+	
+	if(!dis_ctx || !buffer)
+		return -EINVAL;
 	
 	
 	/* Check the initialization's state */
@@ -384,6 +388,14 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	{
 		xprintf(L_DEBUG, "Received a request with a null size\n");
 		return 0;
+	}
+	
+	if(size > INT_MAX)
+	{
+		xprintf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
+			size
+		);
+		return -EOVERFLOW;
 	}
 	
 	/* Check requested offset */
@@ -428,6 +440,7 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	 */
 	
 	/* Do not add sectors if we're at the edge of one already */
+	sector_size = dis_ctx->io_data.sector_size;
 	if((offset % sector_size) != 0)
 		sector_to_add += 1;
 	if(((offset + (off_t)size) % sector_size) != 0)
@@ -501,11 +514,14 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	uint8_t* buf = NULL;
 	int      ret = 0;
 	
-	uint16_t sector_size = dis_ctx->io_data.sector_size;
+	uint16_t sector_size;
 	size_t sector_count;
 	off_t  sector_start;
 	size_t sector_to_add = 0;
 	
+	
+	if(!dis_ctx || !buffer)
+		return -EINVAL;
 	
 	/* Check the initialization's state */
 	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
@@ -532,6 +548,14 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	{
 		xprintf(L_DEBUG, "Received a request with a null size\n");
 		return 0;
+	}
+	
+	if(size > INT_MAX)
+	{
+		xprintf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
+			size
+		);
+		return -EOVERFLOW;
 	}
 	
 	if(offset < 0)
@@ -663,6 +687,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	 */
 	
 	/* Do not add sectors if we're at the edge of one already */
+	sector_size = dis_ctx->io_data.sector_size;
 	if((offset % sector_size) != 0)
 		sector_to_add += 1;
 	if(((offset + (off_t)size) % sector_size) != 0)

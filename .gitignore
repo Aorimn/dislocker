@@ -1,17 +1,17 @@
 *.o
 *.kate-swp
-*~
+#*~
 *.swp
 *.gz
-dislocker
-dislocker-bek
-dislocker-file
-dislocker-find
-dislocker-fuse
-dislocker-metadata
-libdislocker.so
-libdislocker.so.0
-libdislocker.so.0.4.1
+src/dislocker
+src/dislocker-bek
+src/dislocker-file
+src/dislocker-find
+src/dislocker-fuse
+src/dislocker-metadata
+src/libdislocker.so
+src/libdislocker.so.0
+src/libdislocker.so.0.4.1
 
 # Unit test files
 *.gcno

@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "dislocker/return_values.h"
 #include "dislocker/common.h"
 
 /**
@@ -42,6 +43,9 @@
  * @param flags The mode(s) along the opening (read/write/...)
  * @return The file descriptor returned by the actual open
  */
+#define DIS_XOPEN_ARBITRARY_VALUE 42
+#define DIS_XOPEN_FAIL_STR "Failed to open file"
+#define DIS_XOPEN_FAIL_LEN sizeof(DIS_XOPEN_FAIL_STR)
 int xopen(const char* file, int flags)
 {
 	int fd = -1;
@@ -50,28 +54,29 @@ int xopen(const char* file, int flags)
 	
 	if((fd = open(file, flags)) < 0)
 	{
-		char* err_string = NULL;
-		size_t arbitrary_value = 42;
-		char* before = "Failed to open file";
-		char* after = xmalloc(arbitrary_value);
+		char err_string[DIS_XOPEN_FAIL_LEN + DIS_XOPEN_ARBITRARY_VALUE + 4] = {0,};
+		char file_truncated[DIS_XOPEN_ARBITRARY_VALUE] = {0,};
 		
-		snprintf(after, arbitrary_value, "%s", file);
+		dis_errno = errno;
 		
-		if(arbitrary_value < strlen(file))
+		snprintf(file_truncated, DIS_XOPEN_ARBITRARY_VALUE, "%s", file);
+		
+		if(DIS_XOPEN_ARBITRARY_VALUE < strlen(file))
 		{
-			after[arbitrary_value-4] = '.';
-			after[arbitrary_value-3] = '.';
-			after[arbitrary_value-2] = '.';
+			file_truncated[DIS_XOPEN_ARBITRARY_VALUE-4] = '.';
+			file_truncated[DIS_XOPEN_ARBITRARY_VALUE-3] = '.';
+			file_truncated[DIS_XOPEN_ARBITRARY_VALUE-2] = '.';
 		}
 		
-		size_t len = strlen(before);
+		snprintf(
+			err_string,
+			DIS_XOPEN_FAIL_LEN + DIS_XOPEN_ARBITRARY_VALUE + 4,
+			DIS_XOPEN_FAIL_STR " '%s'",
+			file_truncated
+		);
 		
-		err_string = xmalloc(len + arbitrary_value + 4);
-		snprintf(err_string, len + arbitrary_value + 4, "%s '%s'", before, after);
-		
-		xfree(after);
-		
-		xperror(err_string);
+		xprintf(L_ERROR, "%s: %s\n", err_string, strerror(dis_errno));
+		exit(2);
 	}
 	
 	xprintf(L_DEBUG, "Opened (fd #%d).\n", fd);
@@ -86,6 +91,8 @@ int xopen(const char* file, int flags)
  * @param fd The result of an xopen call
  * @return The result of the close call
  */
+#define DIS_XCLOSE_FAIL_STR "Failed to close previously opened stream"
+#define DIS_XCLOSE_FAIL_LEN sizeof(DIS_XCLOSE_FAIL_STR)
 int xclose(int fd)
 {
 	int res = -1;
@@ -94,15 +101,9 @@ int xclose(int fd)
 	
 	if((res = close(fd)) < 0)
 	{
-		char* err_string = NULL;
-		char* before = "Failed to close previously opened stream";
-		
-		size_t len = strlen(before) + 1;
-		
-		err_string = xmalloc(len + 4);
-		snprintf(err_string, len + 4, "%s #%d", before, fd);
-		
-		xperror(err_string);
+		dis_errno = errno;
+		xprintf(L_ERROR, DIS_XCLOSE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		exit(2);
 	}
 	
 	return res;
@@ -117,6 +118,8 @@ int xclose(int fd)
  * @param count The number of bytes to read
  * @return The number of bytes read
  */
+#define DIS_XREAD_FAIL_STR "Failed to read in"
+#define DIS_XREAD_FAIL_LEN sizeof(DIS_XREAD_FAIL_STR)
 ssize_t xread(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
@@ -129,15 +132,9 @@ ssize_t xread(int fd, void* buf, size_t count)
 	
 	if((res = read(fd, buf, count)) < 0)
 	{
-		char* err_string = NULL;
-		char* before = "Failed to read in";
-		
-		size_t len = strlen(before) + 1;
-		
-		err_string = xmalloc(len + 4);
-		snprintf(err_string, len + 4, "%s #%d", before, fd);
-		
-		xperror(err_string);
+		dis_errno = errno;
+		xprintf(L_ERROR, DIS_XREAD_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		exit(2);
 	}
 	
 	return res;
@@ -152,6 +149,8 @@ ssize_t xread(int fd, void* buf, size_t count)
  * @param count The number of bytes to write
  * @return The number of bytes written
  */
+#define DIS_XWRITE_FAIL_STR "Failed to write in"
+#define DIS_XWRITE_FAIL_LEN sizeof(DIS_XWRITE_FAIL_STR)
 ssize_t xwrite(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
@@ -164,15 +163,9 @@ ssize_t xwrite(int fd, void* buf, size_t count)
 	
 	if((res = write(fd, buf, count)) < 0)
 	{
-		char* err_string = NULL;
-		char* before = "Failed to write in";
-		
-		size_t len = strlen(before) + 1;
-		
-		err_string = xmalloc(len + 4);
-		snprintf(err_string, len + 4, "%s #%d", before, fd);
-		
-		xperror(err_string);
+		dis_errno = errno;
+		xprintf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		exit(2);
 	}
 	
 	return res;
@@ -187,6 +180,8 @@ ssize_t xwrite(int fd, void* buf, size_t count)
  * @param whence  According to this whence
  * @return The result of the lseek call
  */
+#define DIS_XSEEK_FAIL_STR "Failed to seek in"
+#define DIS_XSEEK_FAIL_LEN sizeof(DIS_XSEEK_FAIL_STR)
 off_t xlseek(int fd, off_t offset, int whence)
 {
 	off_t res = -1;
@@ -195,15 +190,9 @@ off_t xlseek(int fd, off_t offset, int whence)
 	
 	if((res = lseek(fd, offset, whence)) < 0)
 	{
-		char* err_string = NULL;
-		char* before = "Failed to seek in";
-		
-		size_t len = strlen(before);
-		
-		err_string = xmalloc(len + 4);
-		snprintf(err_string, len + 4, "%s #%d", before, fd);
-		
-		xperror(err_string);
+		dis_errno = errno;
+		xprintf(L_ERROR, DIS_XSEEK_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		exit(2);
 	}
 	
 	return res;

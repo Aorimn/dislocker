@@ -46,6 +46,7 @@
 
 #include "dislocker/xstd/xstdio.h"
 
+#include "dislocker/return_values.h"
 #include "dislocker/config.h"
 #include "dislocker/dislocker.h"
 
@@ -102,7 +103,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	bitlocker_information_t* information = NULL;
 	bitlocker_dataset_t* dataset = NULL;
 	
-	int ret = EXIT_SUCCESS;
+	int ret = DIS_RET_SUCCESS;
 	
 	int use_diffuser = FALSE;
 	
@@ -121,7 +122,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	{
 		xprintf(L_CRITICAL, "No BitLocker volume path given. Abort.\n");
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_VOLUME_NOT_GIVEN;
 	}
 	
 	
@@ -145,7 +146,7 @@ int dis_initialize(dis_context_t dis_ctx)
 				dis_ctx->cfg.volume_path, strerror(errno)
 			);
 			dis_destroy(dis_ctx);
-			return EXIT_FAILURE;
+			return DIS_RET_ERROR_FILE_OPEN;
 		}
 		
 		dis_ctx->cfg.flags |= DIS_FLAG_READ_ONLY;
@@ -187,7 +188,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			"Error during reading the volume: not enough byte read.\n"
 		);
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_VOLUME_HEADER_READ;
 	}
 	
 	/* For debug purpose, print the volume header retrieved */
@@ -201,7 +202,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	{
 		xprintf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
 	}
 	
 	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_CHECK);
@@ -219,7 +220,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			"Can't compute regions from volume header. Abort.\n"
 		);
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_METADATA_OFFSET;
 	}
 	
 	
@@ -236,7 +237,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			"A problem occured during the retrieving of metadata. Abort.\n"
 		);
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_METADATA_CHECK;
 	}
 	
 	if(dis_ctx->cfg.force_block == 0 || !metadata)
@@ -246,7 +247,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			"Can't find a valid set of metadata on the disk. Abort.\n"
 		);
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_METADATA_CHECK;
 	}
 	
 	information = metadata;
@@ -261,7 +262,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			information->version
 		);
 		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
 	}
 	
 	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
@@ -285,19 +286,16 @@ int dis_initialize(dis_context_t dis_ctx)
 		{
 			xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
 			dis_destroy(dis_ctx);
-			return EXIT_FAILURE;
+			return DIS_RET_ERROR_DATASET_CHECK;
 		}
 		
 		/*
 		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
 		 */
-		if((ret = dis_get_access(dis_ctx, dataset)) != EXIT_SUCCESS)
+		if((ret = dis_get_access(dis_ctx, dataset)) != DIS_RET_SUCCESS)
 		{
-			if(ret == EXIT_FAILURE)
-			{
-				xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
-				dis_destroy(dis_ctx);
-			}
+			xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+			dis_destroy(dis_ctx);
 			return ret;
 		}
 		
@@ -316,11 +314,14 @@ int dis_initialize(dis_context_t dis_ctx)
 		/*
 		 * Init the decrypt keys' contexts
 		 */
-		if(!init_keys(dataset, dis_ctx->io_data.fvek, dis_ctx->io_data.crypt))
+		if(init_keys(
+			dataset,
+			dis_ctx->io_data.fvek,
+			dis_ctx->io_data.crypt) != DIS_RET_SUCCESS)
 		{
 			xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
 			dis_destroy(dis_ctx);
-			return EXIT_FAILURE;
+			return DIS_RET_ERROR_CRYPTO_INIT;
 		}
 	}
 	
@@ -329,11 +330,8 @@ int dis_initialize(dis_context_t dis_ctx)
 	 * Fill the dis_iodata_t structure which will be used for encryption &
 	 * decryption afterward
 	 */
-	if(!prepare_crypt(dis_ctx))
-	{
+	if((ret = prepare_crypt(dis_ctx)) != DIS_RET_SUCCESS)
 		xprintf(L_CRITICAL, "Can't prepare the crypt structure. Abort.\n");
-		ret = EXIT_FAILURE;
-	}
 	
 	
 	// TODO add the DIS_STATE_BEFORE_DECRYPTION_CHECKING event here, so add the check here too
@@ -350,7 +348,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	}
 	
 	/* Clean everything before returning if there's an error */
-	if(ret == EXIT_FAILURE)
+	if(ret != DIS_RET_SUCCESS)
 		dis_destroy(dis_ctx);
 	else
 		dis_ctx->curr_state = DIS_STATE_COMPLETE_EVERYTHING;

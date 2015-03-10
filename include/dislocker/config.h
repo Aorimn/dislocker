@@ -24,6 +24,7 @@
 #define DISLOCKER_CFG_H
 
 
+#include "dislocker/return_values.h"
 #include "dislocker/xstd/xstdio.h"
 #include <sys/types.h>
 #include <unistd.h>
@@ -103,7 +104,7 @@ typedef enum {
 		(ctx)->curr_state = (state);                            \
 		if((state) == (ctx)->cfg.init_stop_at) {                \
 			xprintf(L_DEBUG, "Exiting at state %d\n", (state)); \
-			return (state);                                     \
+			return DIS_RET_SUCCESS;                                     \
 		}                                                       \
 	} while(0);
 

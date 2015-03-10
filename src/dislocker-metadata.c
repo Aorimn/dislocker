@@ -29,6 +29,7 @@
 #include <getopt.h>
 #include <locale.h>
 
+#include "dislocker/return_values.h"
 #include "dislocker/dislocker.h"
 #include "dislocker/metadata/print_metadata.h"
 
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
 	dis_setopt(&dis_ctx->cfg, DIS_OPT_INITIALIZE_STATE, &init_state);
 	
 	/* Initialize dislocker */
-	if(dis_initialize(dis_ctx) != DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK)
+	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;

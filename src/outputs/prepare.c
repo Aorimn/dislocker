@@ -27,6 +27,8 @@
 #include "dislocker/outputs/prepare.h"
 #include "dislocker/sectors.h"
 
+#include "dislocker/return_values.h"
+
 
 
 /**
@@ -49,7 +51,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 {
 	// Check parameters
 	if(!dataset || !fvek_datum || !crypt)
-		return FALSE;
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
 	
 	dis_aes_contexts_t* ctx = dis_crypt_aes_contexts(crypt);
 	uint8_t* fvek    = NULL;
@@ -58,7 +60,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 	if(!get_payload_safe(fvek_datum, (void**)&fvek, &size_fvek))
 	{
 		xprintf(L_ERROR, "Can't get the FVEK datum payload. Abort.\n");
-		return FALSE;
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
 	}
 	
 	xprintf(L_DEBUG,
@@ -86,7 +88,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 				AES_SETENC_KEY(&ctx->FVEK_E_ctx, fvek, 128);
 				AES_SETDEC_KEY(&ctx->FVEK_D_ctx, fvek, 128);
 				memclean(fvek, size_fvek);
-				return TRUE;
+				return DIS_RET_SUCCESS;
 				
 			case AES_256_DIFFUSER:
 				AES_SETENC_KEY(&ctx->TWEAK_E_ctx, fvek + 0x20, 256);
@@ -96,7 +98,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 				AES_SETENC_KEY(&ctx->FVEK_E_ctx, fvek, 256);
 				AES_SETDEC_KEY(&ctx->FVEK_D_ctx, fvek, 256);
 				memclean(fvek, size_fvek);
-				return TRUE;
+				return DIS_RET_SUCCESS;
 				
 			default:
 			{
@@ -116,7 +118,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 	        dataset->algorithm, fvek_datum->algo);
 	memclean(fvek, size_fvek);
 	
-	return FALSE;
+	return DIS_RET_ERROR_CRYPTO_ALGORITHM_UNSUPPORTED;
 }
 
 
@@ -128,9 +130,14 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
  */
 int prepare_crypt(dis_context_t dis_ctx)
 {
-	dis_iodata_t* io_data   = &dis_ctx->io_data;
+	dis_iodata_t* io_data;
 	
 	int nb_virt_region      = 0;
+	
+	if(!dis_ctx)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+	
+	io_data = &dis_ctx->io_data;
 	io_data->xinfo          = NULL;
 	io_data->sector_size    = io_data->volume_header->sector_size;
 	io_data->part_off       = dis_ctx->cfg.offset;
@@ -140,7 +147,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 	if(pthread_mutex_init(&io_data->mutex_lseek_rw, NULL) != 0)
 	{
 		xprintf(L_ERROR, "Can't initialize mutex: %s\n", strerror(errno));
-		return FALSE;
+		return DIS_RET_ERROR_MUTEX_INIT;
 	}
 	
 	/*
@@ -151,7 +158,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 	if(io_data->volume_size == 0)
 	{
 		xprintf(L_ERROR, "Can't initialize the volume's size\n");
-		return FALSE;
+		return DIS_RET_ERROR_VOLUME_SIZE_NOT_FOUND;
 	}
 	
 	xprintf(
@@ -177,7 +184,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 			L_ERROR,
 			"Can't compute regions.\n"
 		);
-		return FALSE;
+		return DIS_RET_ERROR_METADATA_FILE_SIZE_NOT_FOUND;
 	}
 	
 	io_data->nb_virt_region = (size_t) nb_virt_region;
@@ -198,7 +205,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 			);
 			xfree(type_str);
 			datum = NULL;
-			return FALSE;
+			return DIS_RET_ERROR_VIRTUALIZATION_INFO_DATUM_NOT_FOUND;
 		}
 		io_data->virtualized_size = (off_t)datum->nb_bytes;
 		
@@ -221,7 +228,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 	}
 	
 	
-	return TRUE;
+	return DIS_RET_SUCCESS;
 }
 
 

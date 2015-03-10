@@ -30,6 +30,8 @@
 #include "dislocker/metadata/vmk.h"
 #include "dislocker/metadata/fvek.h"
 
+#include "dislocker/return_values.h"
+
 
 int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 {
@@ -123,7 +125,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 			"None of the provided decryption mean is "
 			"decrypting the keys. Abort.\n"
 		);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_VMK_RETRIEVAL;
 	}
 	
 	dis_ctx->io_data.vmk = vmk_datum;
@@ -147,7 +149,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 	if(dis_ctx->cfg.decryption_mean != DIS_USE_FVEKFILE)
 	{
 		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
-			return EXIT_FAILURE;
+			return DIS_RET_ERROR_FVEK_RETRIEVAL;
 	}
 	
 	
@@ -160,15 +162,15 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 	{
 		xprintf(
 			L_CRITICAL,
-			"Can't recognize the encryption algorithm used: %#x. Abort\n",
+			"Can't recognize the encryption algorithm used: %#hx. Abort\n",
 			fvek_typed_datum->algo
 		);
-		return EXIT_FAILURE;
+		return DIS_RET_ERROR_CRYPTO_ALGORITHM_UNSUPPORTED;
 	}
 	
 	dis_ctx->io_data.fvek = fvek_typed_datum;
 	
 	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_FVEK);
 	
-	return EXIT_SUCCESS;
+	return DIS_RET_SUCCESS;
 }

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "dislocker/return_values.h"
 #include "dislocker/dislocker.h"
 
 
@@ -213,7 +214,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Initialize dislocker */
-	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
+	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;

@@ -229,8 +229,8 @@ travis-install:
 		sudo apt-get install -qq libfuse-dev libpolarssl-dev; \
 	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
 		brew update;                                          \
-		brew install polarssl;                                \
-		brew install osxfuse;                                 \
+		brew install -v polarssl;                             \
+		brew install -v osxfuse;                              \
 	fi
 	make CC=$(CC)
 	sudo make CC=$(CC) install

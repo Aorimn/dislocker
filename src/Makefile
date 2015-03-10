@@ -109,6 +109,7 @@ endif
 ifeq ("$(shell ld --version 2>/dev/null | grep -o GNU | head -n 1)", "GNU")
 LHARDEN		+=	-Wl,-z,now -Wl,-z,relro
 SHARED_HARDEN	+=	-Wl,-z,now -Wl,-z,relro
+override LDFLAGS	+=	-Wl,-rpath=$(libdir)
 endif
 
 

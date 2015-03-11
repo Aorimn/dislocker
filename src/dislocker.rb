@@ -14,7 +14,11 @@ class Dislocker < Formula
   depends_on "osxfuse"
 
   def install
-    system "make -C src"
+    # This is a bit hackish, but is there another way?
+    ssl_libname='polarssl'
+    ssl_libname='mbedtls' if File.exists? "#{lib}/libmbedtls.a"
+
+    system "make -C src SSLIB=#{ssl_libname}"
     system "make -C src install DESTDIR=#{prefix}/"
   end
 end

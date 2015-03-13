@@ -21,7 +21,7 @@ decrypt volume using a clear key which is searched on the volume (default)
 .B -f, --bekfile \fIBEK_FILE\fR
 decrypt volume using the bek file (present on a USB key)
 .TP
-.B -F, --force-block[\fIN\fB]\fR
+.B -F, --force-block=[\fIN\fB]\fR
 force use of metadata block number \fIN\fR (1, 2 or 3).
 Without \fIN\fR, the first block is forced.
 Without this option, the program will try each block until a valid one is found
@@ -40,7 +40,7 @@ put messages into this file (stdout by default)
 BitLocker partition offset in base 10 (default is 0).
 Protip: in your shell, you probably can pass \fB-o $((\fI0xdeadbeef\fB))\fR if you have a 16-based number and are too lazy to convert it in another way.
 .TP
-.B -p, --recovery-password[\fIRECOVERY_PASSWORD\fB]\fR
+.B -p, --recovery-password=[\fIRECOVERY_PASSWORD\fB]\fR
 decrypt volume using the recovery password method.
 If no recovery-password is provided, it will be asked afterward; this has the advantage that the program will validate each block one by one, on the fly, as you type it and not to leak the password on the commandline
 .TP
@@ -55,7 +55,7 @@ do not allow to write on the BitLocker volume (read only mode)
 do not check the volume's state, assume it's ok to mount it.
 Do not use this if you don't know what you're doing
 .TP
-.B -u, --user-password[\fIUSER_PASSWORD\fB]\fR
+.B -u, --user-password=[\fIUSER_PASSWORD\fB]\fR
 decrypt the volume using the user password method.
 If no user-password is provided, it will be asked afterward; this has the advantage not to leak the password on the commandline
 .TP

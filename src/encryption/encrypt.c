@@ -25,7 +25,7 @@
 #include "dislocker/common.h"
 #include "dislocker/encryption/diffuser.h"
 #include "dislocker/encryption/encrypt.h"
-
+#include "dislocker/encryption/encommon.priv.h"
 
 
 

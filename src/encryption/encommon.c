@@ -21,7 +21,10 @@
  * USA.
  */
 
-#include "dislocker/encryption/encommon.h"
+#include "dislocker/return_values.h"
+#include "dislocker/xstd/xstdio.h"
+#include "dislocker/xstd/xstdlib.h"
+#include "dislocker/encryption/encommon.priv.h"
 
 
 /**
@@ -38,15 +41,43 @@ dis_crypt_t dis_crypt_new(uint16_t sector_size, int use_diffuser)
 	dis_crypt_t crypt = xmalloc(sizeof(struct _dis_crypt));
 	memset(crypt, 0, sizeof(struct _dis_crypt));
 	crypt->sector_size = sector_size;
-	if(use_diffuser == TRUE)
+	if(use_diffuser)
 		crypt->flags |= DIS_ENC_FLAG_USE_DIFFUSER;
 	
 	return crypt;
 }
 
-dis_aes_contexts_t* dis_crypt_aes_contexts(dis_crypt_t crypt)
+int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey)
 {
-	return &crypt->ctx;
+	if(!crypt || !fvekey)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+	
+	switch(algorithm)
+	{
+		case AES_128_DIFFUSER:
+			AES_SETENC_KEY(&crypt->ctx.TWEAK_E_ctx, fvekey + 0x20, 128);
+			AES_SETDEC_KEY(&crypt->ctx.TWEAK_D_ctx, fvekey + 0x20, 128);
+			/* no break on purpose */
+		case AES_128_NO_DIFFUSER:
+			AES_SETENC_KEY(&crypt->ctx.FVEK_E_ctx, fvekey, 128);
+			AES_SETDEC_KEY(&crypt->ctx.FVEK_D_ctx, fvekey, 128);
+			return DIS_RET_SUCCESS;
+			
+		case AES_256_DIFFUSER:
+			AES_SETENC_KEY(&crypt->ctx.TWEAK_E_ctx, fvekey + 0x20, 256);
+			AES_SETDEC_KEY(&crypt->ctx.TWEAK_D_ctx, fvekey + 0x20, 256);
+			/* no break on purpose */
+		case AES_256_NO_DIFFUSER:
+			AES_SETENC_KEY(&crypt->ctx.FVEK_E_ctx, fvekey, 256);
+			AES_SETDEC_KEY(&crypt->ctx.FVEK_D_ctx, fvekey, 256);
+			return DIS_RET_SUCCESS;
+			
+		default:
+			xprintf(L_WARNING, "Algo not supported: %#hx\n", algorithm);
+			break;
+	}
+	
+	return DIS_RET_ERROR_CRYPTO_ALGORITHM_UNSUPPORTED;
 }
 
 void dis_crypt_destroy(dis_crypt_t crypt)

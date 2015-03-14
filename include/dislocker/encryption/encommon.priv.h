@@ -20,34 +20,46 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef DECRYPT_H
-#define DECRYPT_H
+#ifndef ENCOMMON_PRIV_H
+#define ENCOMMON_PRIV_H
 
 
-#define AUTHENTICATOR_LENGTH 16
-
-
-#include "dislocker/xstd/xstdio.h" // Only for off_t
 #include "dislocker/encryption/encommon.h"
 
+#include "polarssl/aes.h"
+#include "dislocker/ssl_bindings.h"
 
 
+#define AES_CTX_LENGTH 256
 
-/*
- * Prototypes
+
+/**
+ * AES contexts "used" during encryption/decryption
+ * @see encryption/decrypt.c
+ * @see encryption/encrypt.c
  */
-int decrypt_key(
-	unsigned char* input,
-	unsigned int   input_size,
-	unsigned char* mac,
-	unsigned char* nonce,
-	unsigned char* key,
-	void** output
-);
-
-int decrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uint8_t* buffer);
+struct _aes_contexts {
+	AES_CONTEXT FVEK_E_ctx;
+	AES_CONTEXT FVEK_D_ctx;
+	
+	AES_CONTEXT TWEAK_E_ctx;
+	AES_CONTEXT TWEAK_D_ctx; /* useless, never used */
+};
 
 
 
-#endif /* DECRYPT_H */
+typedef enum {
+	DIS_ENC_FLAG_USE_DIFFUSER = (1 << 0)
+} dis_enc_flags_e;
 
+struct _dis_crypt {
+	struct _aes_contexts ctx;
+	
+	dis_enc_flags_e flags;
+	
+	uint16_t sector_size;
+};
+
+
+
+#endif /* ENCOMMON_PRIV_H */

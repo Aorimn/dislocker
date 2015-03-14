@@ -53,7 +53,6 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 	if(!dataset || !fvek_datum || !crypt)
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
 	
-	dis_aes_contexts_t* ctx = dis_crypt_aes_contexts(crypt);
 	uint8_t* fvek    = NULL;
 	size_t size_fvek = 0;
 	
@@ -78,36 +77,10 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 	
 	while(*palgo != 0)
 	{
-		switch(*palgo)
+		if(dis_crypt_set_fvekey(crypt, *palgo, fvek) == DIS_RET_SUCCESS)
 		{
-			case AES_128_DIFFUSER:
-				AES_SETENC_KEY(&ctx->TWEAK_E_ctx, fvek + 0x20, 128);
-				AES_SETDEC_KEY(&ctx->TWEAK_D_ctx, fvek + 0x20, 128);
-				/* no break on purpose */
-			case AES_128_NO_DIFFUSER:
-				AES_SETENC_KEY(&ctx->FVEK_E_ctx, fvek, 128);
-				AES_SETDEC_KEY(&ctx->FVEK_D_ctx, fvek, 128);
-				memclean(fvek, size_fvek);
-				return DIS_RET_SUCCESS;
-				
-			case AES_256_DIFFUSER:
-				AES_SETENC_KEY(&ctx->TWEAK_E_ctx, fvek + 0x20, 256);
-				AES_SETDEC_KEY(&ctx->TWEAK_D_ctx, fvek + 0x20, 256);
-				/* no break on purpose */
-			case AES_256_NO_DIFFUSER:
-				AES_SETENC_KEY(&ctx->FVEK_E_ctx, fvek, 256);
-				AES_SETDEC_KEY(&ctx->FVEK_D_ctx, fvek, 256);
-				memclean(fvek, size_fvek);
-				return DIS_RET_SUCCESS;
-				
-			default:
-			{
-				unsigned long i = (unsigned long)(palgo - algo);
-				i /= sizeof(uint16_t);
-				xprintf(L_WARNING, "[%lu] Algo not supported: %#hx\n",
-				        i, *palgo);
-				break;
-			}
+			memclean(fvek, size_fvek);
+			return DIS_RET_SUCCESS;
 		}
 		
 		palgo++;

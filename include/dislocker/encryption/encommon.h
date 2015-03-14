@@ -23,14 +23,27 @@
 #ifndef ENCOMMON_H
 #define ENCOMMON_H
 
+#include <stdint.h>
 
-#include "dislocker/common.h"
-
-#include "polarssl/aes.h"
-#include "dislocker/ssl_bindings.h"
-
-
-#define AES_CTX_LENGTH 256
+/**
+ * Cipher used within BitLocker
+ */
+enum cipher_types
+{
+	STRETCH_KEY   = 0x1000,
+	AES_CCM_256_0 = 0x2000,
+	AES_CCM_256_1 = 0x2001, 
+	EXTERN_KEY    = 0x2002,
+	VMK           = 0x2003,
+	AES_CCM_256_2 = 0x2004,
+	HASH_256      = 0x2005,
+	
+	AES_128_DIFFUSER    = 0x8000,
+	AES_256_DIFFUSER    = 0x8001,
+	AES_128_NO_DIFFUSER = 0x8002,
+	AES_256_NO_DIFFUSER = 0x8003,
+};
+typedef uint16_t cipher_t;
 
 
 /**
@@ -38,27 +51,12 @@
  * @see encryption/decrypt.c
  * @see encryption/encrypt.c
  */
-typedef struct _aes_contexts {
-	AES_CONTEXT FVEK_E_ctx;
-	AES_CONTEXT FVEK_D_ctx;
-	
-	AES_CONTEXT TWEAK_E_ctx;
-	AES_CONTEXT TWEAK_D_ctx; /* useless, never used */
-} dis_aes_contexts_t;
+typedef struct _aes_contexts dis_aes_contexts_t;
 
-
-
-typedef enum {
-	DIS_ENC_FLAG_USE_DIFFUSER = (1 << 0)
-} dis_enc_flags_e;
-
-typedef struct _dis_crypt {
-	dis_aes_contexts_t ctx;
-	
-	dis_enc_flags_e flags;
-	
-	uint16_t sector_size;
-} *dis_crypt_t;
+/**
+ * Crypt structure used for the encryption operations
+ */
+typedef struct _dis_crypt* dis_crypt_t;
 
 
 
@@ -67,7 +65,7 @@ typedef struct _dis_crypt {
  */
 dis_crypt_t dis_crypt_new(uint16_t sector_size, int use_diffuser);
 
-dis_aes_contexts_t* dis_crypt_aes_contexts(dis_crypt_t crypt);
+int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey);
 
 void dis_crypt_destroy(dis_crypt_t crypt);
 

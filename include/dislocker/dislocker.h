@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 #include "dislocker/config.h"
-#include "dislocker/sectors.h"
+#include "dislocker/outputs/sectors.h"
 
 
 

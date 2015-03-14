@@ -35,14 +35,13 @@
 
 #include "dislocker/accesses/accesses.h"
 
-#include "dislocker/sectors.h"
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/metadata.h"
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/metadata/fvek.h"
 #include "dislocker/metadata/vmk.h"
-#include "dislocker/sectors.h"
 #include "dislocker/outputs/prepare.h"
+#include "dislocker/outputs/sectors.h"
 
 #include "dislocker/xstd/xstdio.h"
 

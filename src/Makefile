@@ -40,7 +40,7 @@ BINS		=	$(foreach suf, $(SUFFIXES), $(BIN)-$(suf))
 BINS_OBJECTS	=	$(foreach bin, $(BINS), $(bin).o)
 DEFAULT_PROG	=	$(word 1, $(BINS))
 
-SOURCES		=	dislocker.c common.c config.c sectors.c \
+SOURCES		=	dislocker.c common.c config.c \
 			xstd/xstdio.c xstd/xstdlib.c \
 			metadata/datums.c metadata/metadata.c metadata/vmk.c \
 			metadata/fvek.c metadata/extended_info.c \
@@ -51,7 +51,7 @@ SOURCES		=	dislocker.c common.c config.c sectors.c \
 			encryption/decrypt.c encryption/encrypt.c \
 			encryption/diffuser.c encryption/crc32.c \
 			ntfs/clock.c ntfs/encoding.c \
-			outputs/prepare.c
+			outputs/prepare.c outputs/sectors.c
 OBJECTS		=	$(SOURCES:.c=.o)
 
 

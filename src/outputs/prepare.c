@@ -25,7 +25,7 @@
 #include <pthread.h>
 
 #include "dislocker/outputs/prepare.h"
-#include "dislocker/sectors.h"
+#include "dislocker/outputs/sectors.h"
 
 #include "dislocker/return_values.h"
 

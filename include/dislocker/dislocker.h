@@ -24,10 +24,7 @@
 #define DISLOCKER_MAIN_H
 
 #include <stdint.h>
-
-#include "dislocker/config.h"
-#include "dislocker/outputs/sectors.h"
-
+#include "dislocker/xstd/xstdio.h" // Only for off_t
 
 
 
@@ -35,24 +32,7 @@
  * Main structure to pass to dislocker functions. These keeps various
  * information in it.
  */
-typedef struct _dis_ctx {
-	/*
-	 * Dislocker's configuration.
-	 * Note that there's the dis_getopts() function to fill this structure from
-	 * command-line's arguments and the dis_setopt() function
-	 */
-	dis_config_t cfg;
-	
-	/*
-	 * Structure needed for dec/encryption processes.
-	 */
-	dis_iodata_t io_data;
-	
-	/*
-	 * States dislocker initialisation is at or will be stopped at.
-	 */
-	dis_state_e curr_state;
-} *dis_context_t;
+typedef struct _dis_ctx* dis_context_t;
 
 
 

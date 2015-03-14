@@ -25,7 +25,8 @@
 #include <getopt.h>
 
 #include "dislocker/common.h"
-#include "dislocker/config.h"
+#include "dislocker/config.priv.h"
+#include "dislocker/dislocker.priv.h"
 
 
 
@@ -100,7 +101,7 @@ static void hide_opt(char* opt)
  * @return Return the number of arguments which are still waiting to be studied.
  * If -1 is returned, then an error occurred and the configuration isn't set.
  */
-int dis_getopts(dis_config_t* cfg, int argc, char** argv)
+int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 {
 	/** See man getopt_long(3) */
 	extern int optind;
@@ -132,6 +133,11 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 		{0, 0, 0, 0}
 	};
 	
+	if(!dis_ctx || !argv)
+		return -1;
+	
+	dis_config_t* cfg = &dis_ctx->cfg;
+	
 	
 	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
 	{
@@ -140,12 +146,12 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 			case 'c':
 			{
 				int t = TRUE;
-				dis_setopt(cfg, DIS_OPT_CLEAR_KEY, &t);
+				dis_setopt(dis_ctx, DIS_OPT_CLEAR_KEY, &t);
 				break;
 			}
 			case 'f':
 			{
-				dis_setopt(cfg, DIS_OPT_BEK_FILE_PATH, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_BEK_FILE_PATH, optarg);
 				break;
 			}
 			case 'F':
@@ -155,58 +161,58 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 					force = (unsigned char) strtol(optarg, NULL, 10);
 				else
 					force = 1;
-				dis_setopt(cfg, DIS_OPT_FORCE_BLOCK, &force);
+				dis_setopt(dis_ctx, DIS_OPT_FORCE_BLOCK, &force);
 				break;
 			}
 			case 'h':
 			{
 				dis_usage();
-				dis_free_args(cfg);
+				dis_free_args(dis_ctx);
 				exit(EXIT_SUCCESS);
 			}
 			case 'k':
 			{
-				dis_setopt(cfg, DIS_OPT_FVEK_FILE_PATH, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_FVEK_FILE_PATH, optarg);
 				break;
 			}
 			case 'l':
 			{
-				dis_setopt(cfg, DIS_OPT_LOG_FILE_PATH, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
 				break;
 			}
 			case 'o':
 			{
 				off_t offset = (off_t) strtoll(optarg, NULL, 10);
-				dis_setopt(cfg, DIS_OPT_VOLUME_OFFSET, &offset);
+				dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
 				break;
 			}
 			case 'p':
 			{
-				dis_setopt(cfg, DIS_OPT_RECOVERY_PASSWORD, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_RECOVERY_PASSWORD, optarg);
 				hide_opt(optarg);
 				break;
 			}
 			case 'q':
 			{
 				DIS_LOGS l = L_QUIET;
-				dis_setopt(cfg, DIS_OPT_VERBOSITY, &l);
+				dis_setopt(dis_ctx, DIS_OPT_VERBOSITY, &l);
 				break;
 			}
 			case 'r':
 			{
 				int t = TRUE;
-				dis_setopt(cfg, DIS_OPT_READ_ONLY, &t);
+				dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &t);
 				break;
 			}
 			case 's':
 			{
 				int t = TRUE;
-				dis_setopt(cfg, DIS_OPT_DONT_CHECK_VOLUME_STATE, &t);
+				dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &t);
 				break;
 			}
 			case 'u':
 			{
-				dis_setopt(cfg, DIS_OPT_USER_PASSWORD, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_USER_PASSWORD, optarg);
 				hide_opt(optarg);
 				break;
 			}
@@ -218,14 +224,14 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
 			}
 			case 'V':
 			{
-				dis_setopt(cfg, DIS_OPT_VOLUME_PATH, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_VOLUME_PATH, optarg);
 				break;
 			}
 			case '?':
 			default:
 			{
 				dis_usage();
-				dis_free_args(cfg);
+				dis_free_args(dis_ctx);
 				return -1;
 			}
 		}
@@ -259,11 +265,12 @@ int dis_getopts(dis_config_t* cfg, int argc, char** argv)
  * @param opt_value The new value of the option. Note that this is a pointer. If
  * NULL, the default value -which is not necessarily usable- will be set.
  */
-int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
+int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 {
-	if (!cfg)
+	if (!dis_ctx || !opt_value)
 		return FALSE;
 	
+	dis_config_t* cfg = &dis_ctx->cfg;
 	
 	switch(opt_name)
 	{
@@ -429,10 +436,12 @@ int dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value)
  * 
  * @param cfg Dislocker's config
  */
-void dis_free_args(dis_config_t* cfg)
+void dis_free_args(dis_context_t dis_ctx)
 {
-	if (!cfg)
+	if (!dis_ctx)
 		return;
+	
+	dis_config_t* cfg = &dis_ctx->cfg;
 	
 	if(cfg->recovery_password)
 		memclean(cfg->recovery_password,
@@ -459,8 +468,13 @@ void dis_free_args(dis_config_t* cfg)
 /**
  * Print read configuration
  */
-void dis_print_args(dis_config_t* cfg)
+void dis_print_args(dis_context_t dis_ctx)
 {
+	if(!dis_ctx)
+		return;
+	
+	dis_config_t* cfg = &dis_ctx->cfg;
+	
 	xprintf(L_DEBUG, "--- Config...\n");
 	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
 	xprintf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
@@ -515,13 +529,17 @@ void dis_print_args(dis_config_t* cfg)
 /**
  * Getters for the flags
  */
-int dis_is_read_only(dis_config_t* cfg)
+int dis_is_read_only(dis_context_t dis_ctx)
 {
-	return (cfg->flags & DIS_FLAG_READ_ONLY);
+	if(!dis_ctx)
+		return -1;
+	return (dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY);
 }
 
-int dis_is_volume_state_checked(dis_config_t* cfg)
+int dis_is_volume_state_checked(dis_context_t dis_ctx)
 {
-	return !(cfg->flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE);
+	if(!dis_ctx)
+		return -1;
+	return !(dis_ctx->cfg.flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE);
 }
 

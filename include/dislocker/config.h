@@ -24,40 +24,9 @@
 #define DISLOCKER_CFG_H
 
 
-#include "dislocker/return_values.h"
-#include "dislocker/xstd/xstdio.h"
-#include <sys/types.h>
-#include <unistd.h>
+#include "dislocker/dislocker.h"
 
 
-
-/**
- * Different methods to decrypt the VMK
- */
-typedef enum {
-	DIS_USE_CLEAR_KEY         = (1 << 0),
-	DIS_USE_USER_PASSWORD     = (1 << 1),
-	DIS_USE_RECOVERY_PASSWORD = (1 << 2),
-	DIS_USE_BEKFILE           = (1 << 3),
-	DIS_USE_FVEKFILE          = (1 << 4)
-} DIS_DECRYPT_MEAN;
-
-/* Don't use this as a decryption mean, but as the last one */
-#define LAST_MEAN (1 << 5)
-
-
-/**
- * Just an enum not to have a random constant written everytime we use this
- */
-typedef enum {
-	/* Make the volume read-only, in order not to corrupt it */
-	DIS_FLAG_READ_ONLY               = (1 << 0),
-	/*
-	 * By default, dislocker will check for unstable state that may corrupt data
-	 * if mounted using fuse
-	 */
-	DIS_FLAG_DONT_CHECK_VOLUME_STATE = (1 << 1),
-} dis_flags_e;
 
 
 typedef enum {
@@ -98,76 +67,17 @@ typedef enum {
 } dis_state_e;
 
 
-
-#define checkupdate_dis_state(ctx, state)                       \
-	do {                                                        \
-		(ctx)->curr_state = (state);                            \
-		if((state) == (ctx)->cfg.init_stop_at) {                \
-			xprintf(L_DEBUG, "Exiting at state %d\n", (state)); \
-			return DIS_RET_SUCCESS;                                     \
-		}                                                       \
-	} while(0);
-
-
-
-
-/**
- * Structure containing command line options
- */
-typedef struct _dis_cfg {
-	/* BitLocker-volume-to-mount path */
-	char*         volume_path;
-	
-	/* Which method to use to decrypt */
-	DIS_DECRYPT_MEAN  decryption_mean;
-	/* Path to the .bek file in case of using the BEKFILE DECRYPT_MEAN */
-	char*         bek_file;
-	/*
-	 * Recovery password to use in case of using the RECOVERY_PASSWORD
-	 * DECRYPT_MEAN
-	 */
-	uint8_t*      recovery_password;
-	/* User password to use in case of using the USER_PASSWORD DECRYPT_MEAN */
-	uint8_t*      user_password;
-	/* Use directly the FVEK file DECRYPT_MEAN */
-	char*         fvek_file;
-	
-	/* Output verbosity */
-	DIS_LOGS      verbosity;
-	/* Output file */
-	char*         log_file;
-	
-	/* Use this block of metadata and not another one (begin at 1) */
-	unsigned char force_block;
-	
-	/*
-	 * Begin to read the BitLocker volume at this offset, making this offset the
-	 * zero-one
-	 */
-	off_t         offset;
-	/*
-	 * Various flags one can use. See dis_flags_e enum above for possible values
-	 */
-	dis_flags_e   flags;
-	
-	/* Where dis_initialize() should stop */
-	dis_state_e   init_stop_at;
-} dis_config_t;
-
-
-
-
 /*
  * Function's prototypes
  */
 void dis_usage();
-int  dis_getopts(dis_config_t* cfg, int argc, char** argv);
-int  dis_setopt(dis_config_t* cfg, dis_opt_e opt_name, const void* opt_value);
-void dis_free_args(dis_config_t* cfg);
-void dis_print_args(dis_config_t* cfg);
+int  dis_getopts(dis_context_t dis_ctx, int argc, char** argv);
+int  dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value);
+void dis_free_args(dis_context_t dis_ctx);
+void dis_print_args(dis_context_t dis_ctx);
 
-int dis_is_read_only(dis_config_t* cfg);
-int dis_is_volume_state_checked(dis_config_t* cfg);
+int dis_is_read_only(dis_context_t dis_ctx);
+int dis_is_volume_state_checked(dis_context_t dis_ctx);
 
 
 #endif /* DISLOCKER_CFG_H */

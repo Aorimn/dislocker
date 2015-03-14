@@ -46,8 +46,8 @@
 #include "dislocker/xstd/xstdio.h"
 
 #include "dislocker/return_values.h"
-#include "dislocker/config.h"
-#include "dislocker/dislocker.h"
+#include "dislocker/config.priv.h"
+#include "dislocker/dislocker.priv.h"
 
 #include <locale.h>
 
@@ -111,7 +111,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
 	
 	if(dis_ctx->cfg.verbosity >= L_DEBUG)
-		dis_print_args(&dis_ctx->cfg);
+		dis_print_args(dis_ctx);
 	
 	
 	/*
@@ -798,7 +798,7 @@ int dis_destroy(dis_context_t dis_ctx)
 	
 	pthread_mutex_destroy(&dis_ctx->io_data.mutex_lseek_rw);
 	
-	dis_free_args(&dis_ctx->cfg);
+	dis_free_args(dis_ctx);
 	
 	xclose(dis_ctx->io_data.volume_fd);
 	

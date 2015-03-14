@@ -25,7 +25,7 @@
 
 
 #include "dislocker/common.h"
-#include "dislocker/config.h"
+#include "dislocker/config.priv.h"
 #include "dislocker/metadata/guid.h"
 #include "dislocker/ntfs/clock.h"
 

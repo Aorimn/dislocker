@@ -24,7 +24,7 @@
 #define ACCESSES_H
 
 
-#include "dislocker/dislocker.h"
+#include "dislocker/dislocker.priv.h"
 
 
 

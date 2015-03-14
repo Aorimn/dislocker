@@ -30,7 +30,7 @@
 #include "dislocker/encryption/decrypt.h"
 #include "dislocker/encryption/encrypt.h"
 #include "dislocker/metadata/metadata.h"
-#include "dislocker/outputs/sectors.h"
+#include "dislocker/inouts/sectors.h"
 
 
 /*

@@ -40,8 +40,8 @@
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/metadata/fvek.h"
 #include "dislocker/metadata/vmk.h"
-#include "dislocker/outputs/prepare.h"
-#include "dislocker/outputs/sectors.h"
+#include "dislocker/inouts/prepare.h"
+#include "dislocker/inouts/sectors.h"
 
 #include "dislocker/xstd/xstdio.h"
 

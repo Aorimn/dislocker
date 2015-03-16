@@ -110,6 +110,8 @@ int dis_initialize(dis_context_t dis_ctx)
 	/* Initialize outputs */
 	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
 	
+	xprintf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
+	
 	if(dis_ctx->cfg.verbosity >= L_DEBUG)
 		dis_print_args(dis_ctx);
 	

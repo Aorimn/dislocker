@@ -32,13 +32,13 @@
 
 
 #include "dislocker/return_values.h"
-#define checkupdate_dis_state(ctx, state)                       \
-	do {                                                        \
-		(ctx)->curr_state = (state);                            \
-		if((state) == (ctx)->cfg.init_stop_at) {                \
-			xprintf(L_DEBUG, "Exiting at state %d\n", (state)); \
-			return DIS_RET_SUCCESS;                             \
-		}                                                       \
+#define checkupdate_dis_state(ctx, state)                                \
+	do {                                                                 \
+		(ctx)->curr_state = (state);                                     \
+		if((state) == (ctx)->cfg.init_stop_at) {                         \
+			xprintf(L_DEBUG, "Library end init at state %d\n", (state)); \
+			return (state);                                              \
+		}                                                                \
 	} while(0);
 
 

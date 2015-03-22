@@ -245,6 +245,9 @@ travis-test:
 valgrind: clean $(BIN)
 	valgrind --leak-check=full --show-reachable=yes ./$(BIN) $(ARGS)
 
+asan: override CFLAGS += -fsanitize=address
+asan: all
+
 snapshot: clean
 	cd .. && git archive --format=tar --prefix=$(BIN)-$(VERSION)/ HEAD | gzip > /tmp/$(BIN)-$(DATE).tar.gz
 

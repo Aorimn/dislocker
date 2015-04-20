@@ -189,7 +189,6 @@ off_t xlseek(int fd, off_t offset, int whence)
 	{
 		dis_errno = errno;
 		xprintf(L_ERROR, DIS_XSEEK_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-		exit(2);
 	}
 	
 	return res;

@@ -105,52 +105,26 @@ int read_decrypt_sectors(
 	uint8_t* output)
 {
 	// Check parameters
-	if(!output)
+	if(!io_data || !output)
 		return FALSE;
 	
 	
 	size_t   nb_loop = 0;
 	size_t   size    = nb_read_sector * sector_size;
 	uint8_t* input   = malloc(size);
+	off_t    off     = sector_start + io_data->part_off;
 	
 	memset(input , 0, size);
 	memset(output, 0, size);
 	
-	
-	/* Be sure to lock for lseek/read */
-	if(pthread_mutex_lock(&io_data->mutex_lseek_rw) != 0)
-	{
-		free(input);
-		xprintf(L_ERROR, "Can't lock rw mutex: %s\n", strerror(errno));
-		return FALSE;
-	}
-	
-	
-	/* Go where we need to read data */
-	off_t off = sector_start + io_data->part_off;
-	if(lseek(io_data->volume_fd, off, SEEK_SET) < 0)
-	{
-		free(input);
-		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", off);
-		return FALSE;
-	}
-	
 	/* Read the sectors we need */
-	ssize_t read_size = read(io_data->volume_fd, input, size);
+	ssize_t read_size = pread(io_data->volume_fd, input, size, off);
 	
 	if(read_size <= 0)
 	{
 		free(input);
 		xprintf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
 		                 "\n", size, off);
-		return FALSE;
-	}
-	
-	/* Unlock the previously locked mutex */
-	if(pthread_mutex_unlock(&io_data->mutex_lseek_rw) != 0)
-	{
-		free(input);
-		xprintf(L_ERROR, "Can't unlock rw mutex: %s\n", strerror(errno));
 		return FALSE;
 	}
 	
@@ -236,7 +210,7 @@ int encrypt_write_sectors(
 	uint8_t* input)
 {
 	// Check parameter
-	if(!input)
+	if(!io_data || !input)
 		return FALSE;
 	
 	uint8_t* output = malloc(nb_write_sector * sector_size);
@@ -290,37 +264,13 @@ int encrypt_write_sectors(
 	}
 #endif
 	
-	/* Be sure to lock for lseek/write */
-	if(pthread_mutex_lock(&io_data->mutex_lseek_rw) != 0)
-	{
-		free(output);
-		xprintf(L_ERROR, "Can't lock rw mutex: %s\n", strerror(errno));
-		return FALSE;
-	}
-	
-	/* Go where we need to write data */
-	off_t off = sector_start + io_data->part_off;
-	if(lseek(io_data->volume_fd, off, SEEK_SET) < 0)
-	{
-		free(output);
-		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", off);
-		return FALSE;
-	}
-	
 	/* Write the sectors we want */
-	ssize_t write_size = write(
+	ssize_t write_size = pwrite(
 		io_data->volume_fd,
 		output,
-		nb_write_sector * sector_size
+		nb_write_sector * sector_size,
+		sector_start + io_data->part_off
 	);
-	
-	/* Unlock the previously locked mutex */
-	if(pthread_mutex_unlock(&io_data->mutex_lseek_rw) != 0)
-	{
-		xprintf(L_ERROR, "Can't unlock rw mutex: %s\n", strerror(errno));
-		free(output);
-		return FALSE;
-	}
 	
 	free(output);
 	if(write_size <= 0)
@@ -556,6 +506,8 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	if(!output)
 		return;
 	
+	ssize_t read_size;
+	
 	/* 
 	 * NTFS's boot sectors are saved into the field "boot_sectors_backup" into
 	 * metadata's header: the information structure. This field should have been
@@ -575,34 +527,8 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	uint8_t* input = malloc(io_data->sector_size);
 	memset(input, 0, io_data->sector_size);
 	
-	/* Be sure to lock for lseek/read */
-	if(pthread_mutex_lock(&io_data->mutex_lseek_rw) != 0)
-	{
-		free(input);
-		xprintf(L_ERROR, "Can't lock rw mutex: %s\n", strerror(errno));
-		return;
-	}
-	
-	/* Go where we need to read the new sector */
-	if(lseek(io_data->volume_fd, to, SEEK_SET) <0)
-	{
-		free(input);
-		xprintf(L_ERROR, "Unable to lseek to %#" F_OFF_T "\n", to);
-		return;
-	}
-	
-	/* Read the real sector we need */
-	ssize_t read_size = read(io_data->volume_fd, input, io_data->sector_size);
-	
-	
-	/* Unlock the previously locked mutex */
-	if(pthread_mutex_unlock(&io_data->mutex_lseek_rw) != 0)
-	{
-		free(input);
-		xprintf(L_ERROR, "Can't unlock rw mutex: %s\n", strerror(errno));
-		return;
-	}
-	
+	/* Read the real sector we need, at the offset we need it */
+	read_size = pread(io_data->volume_fd, input, io_data->sector_size, to);
 	
 	if(read_size <= 0)
 	{

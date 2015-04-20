@@ -112,12 +112,6 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->backup_sectors_addr   = dis_metadata_ntfs_sectors_address(io_data->metadata);
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 	
-	if(pthread_mutex_init(&io_data->mutex_lseek_rw, NULL) != 0)
-	{
-		xprintf(L_ERROR, "Can't initialize mutex: %s\n", strerror(errno));
-		return DIS_RET_ERROR_MUTEX_INIT;
-	}
-	
 	/*
 	 * We need to grab the volume's size from the first sector, so we can
 	 * announce it on a getattr call

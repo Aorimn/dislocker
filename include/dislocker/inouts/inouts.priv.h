@@ -88,12 +88,6 @@ struct _data {
 		off_t sector_start,
 		uint8_t* input
 	);
-	
-	/*
-	 * FUSE uses threads. We need to protect our "lseek/read" and "lseek/write"
-	 * sequences
-	 */
-	pthread_mutex_t     mutex_lseek_rw;
 };
 
 #endif /* DIS_INOUTS_PRIV_H */

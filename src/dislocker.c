@@ -649,8 +649,6 @@ int dis_destroy(dis_context_t dis_ctx)
 	
 	dis_crypt_destroy(dis_ctx->io_data.crypt);
 	
-	pthread_mutex_destroy(&dis_ctx->io_data.mutex_lseek_rw);
-	
 	dis_metadata_destroy(dis_ctx->metadata);
 	
 	dis_free_args(dis_ctx);

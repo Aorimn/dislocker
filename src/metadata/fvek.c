@@ -131,6 +131,7 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	off_t actual_size   = -1;
 	int   file_fd = -1;
 	datum_key_t* datum_key = NULL;
+	ssize_t rs;
 	
 	union {
 		cipher_t single;
@@ -162,8 +163,21 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	
 	/* Read everything */
 	xlseek(file_fd, 0, SEEK_SET);
-	xread(file_fd, enc_method.multi, sizeof(enc_method));
-	xread(file_fd, fvek_keys,  sizeof(fvek_keys));
+	rs = xread(file_fd, enc_method.multi, sizeof(enc_method));
+	if(rs != sizeof(enc_method))
+	{
+		xprintf(
+			L_ERROR,
+			"Cannot read whole encryption method in the FVEK file\n"
+		);
+		return FALSE;
+	}
+	rs = xread(file_fd, fvek_keys,  sizeof(fvek_keys));
+	if(rs != sizeof(fvek_keys))
+	{
+		xprintf(L_ERROR, "Cannot read whole FVEK keys in the FVEK file\n");
+		return FALSE;
+	}
 	
 	
 	/* Create the FVEK datum */

@@ -128,7 +128,7 @@ int get_input_fd()
 	
 	struct termios ti;
 	
-	if ((tty_fd = xopen("/dev/tty", O_RDONLY | O_NONBLOCK)) < 0)
+	if ((tty_fd = open("/dev/tty", O_RDONLY | O_NONBLOCK)) < 0)
 		return -1;
 	
 	tcgetattr(tty_fd, &ti);
@@ -150,7 +150,7 @@ void close_input_fd()
 	if(tty_fd > -1)
 	{
 		tcsetattr(tty_fd, TCSANOW, &ti_save);
-		xclose(tty_fd);
+		close(tty_fd);
 	}
 }
 

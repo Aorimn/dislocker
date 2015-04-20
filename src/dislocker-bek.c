@@ -87,7 +87,7 @@ int main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	
-	if(( fd = xopen(filename, O_RDONLY) ) < 0) 
+	if(( fd = xopen(filename, O_RDONLY) ) < 0)
 	{
 		xprintf(L_CRITICAL, "Failed to open file %s\n", filename);
 		return EXIT_FAILURE;

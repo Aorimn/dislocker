@@ -61,7 +61,7 @@ static int xopen_file(const char* file, int flags, mode_t mode)
 	
 	xprintf(L_DEBUG, "Trying to open '%s'... ", file);
 	
-	if((fd = xopen(file, flags, mode)) < 0)
+	if((fd = open(file, flags, mode)) < 0)
 	{
 		char* err_string = NULL;
 		size_t arbitrary_value = 42;

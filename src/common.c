@@ -133,7 +133,6 @@ ssize_t xread(int fd, void* buf, size_t count)
 	{
 		dis_errno = errno;
 		xprintf(L_ERROR, DIS_XREAD_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-		exit(2);
 	}
 	
 	return res;
@@ -164,7 +163,6 @@ ssize_t xwrite(int fd, void* buf, size_t count)
 	{
 		dis_errno = errno;
 		xprintf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-		exit(2);
 	}
 	
 	return res;

@@ -91,6 +91,8 @@ dis_context_t dis_new()
 	}
 #endif
 	
+	dis_ctx->fve_fd = -1;
+	
 	return dis_ctx;
 }
 
@@ -130,16 +132,16 @@ int dis_initialize(dis_context_t dis_ctx)
 	
 	/* Open the volume as a (big) normal file */
 	xprintf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
-	dis_ctx->io_data.volume_fd = open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
-	if(dis_ctx->io_data.volume_fd < 0)
+	dis_ctx->fve_fd = open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
+	if(dis_ctx->fve_fd < 0)
 	{
 		/* Trying to open it in read-only if O_RDWR doesn't work */
-		dis_ctx->io_data.volume_fd = xopen(
+		dis_ctx->fve_fd = xopen(
 			dis_ctx->cfg.volume_path,
 			O_RDONLY|O_LARGEFILE
 		);
 		
-		if(dis_ctx->io_data.volume_fd < 0)
+		if(dis_ctx->fve_fd < 0)
 		{
 			xprintf(
 				L_CRITICAL,
@@ -158,7 +160,9 @@ int dis_initialize(dis_context_t dis_ctx)
 		);
 	}
 	
-	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->io_data.volume_fd);
+	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->fve_fd);
+	
+	dis_ctx->io_data.volume_fd = dis_ctx->fve_fd;
 	
 	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_OPEN_VOLUME);
 	

@@ -64,6 +64,9 @@ struct _dis_ctx {
 	 * States dislocker initialisation is at or will be stopped at.
 	 */
 	dis_state_e curr_state;
+	
+	/* The file descriptor to the encrypted volume */
+	int fve_fd;
 };
 
 #endif /* DIS_DISLOCKER_PRIV_H */

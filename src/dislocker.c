@@ -123,7 +123,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	
 	/* Open the volume as a (big) normal file */
 	xprintf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
-	dis_ctx->fve_fd = open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
+	dis_ctx->fve_fd = xopen(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
 	if(dis_ctx->fve_fd < 0)
 	{
 		/* Trying to open it in read-only if O_RDWR doesn't work */

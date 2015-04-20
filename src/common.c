@@ -76,7 +76,7 @@ int xopen(const char* file, int flags)
 		);
 		
 		xprintf(L_ERROR, "%s: %s\n", err_string, strerror(dis_errno));
-		exit(2);
+		return -1;
 	}
 	
 	xprintf(L_DEBUG, "Opened (fd #%d).\n", fd);

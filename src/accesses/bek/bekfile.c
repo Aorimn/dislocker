@@ -73,7 +73,12 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	if(cfg->bek_file)
 	{
 		/* Check if the bek file exists */
-		fd_bek = xopen(cfg->bek_file, O_RDONLY);	
+		fd_bek = xopen(cfg->bek_file, O_RDONLY);
+		if(fd_bek < 0)
+		{
+			xprintf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->bek_file);
+			return FALSE;
+		}
 	}
 	else
 	{

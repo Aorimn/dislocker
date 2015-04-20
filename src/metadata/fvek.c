@@ -144,6 +144,11 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	
 	
 	file_fd = xopen(cfg->fvek_file, O_RDONLY);
+	if(file_fd == -1)
+	{
+		xprintf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->fvek_file);
+		return FALSE;
+	}
 	
 	/* Check the file's size */
 	actual_size = xlseek(file_fd, 0, SEEK_END);

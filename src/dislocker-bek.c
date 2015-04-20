@@ -87,7 +87,7 @@ int main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	
-	if(( fd = open(filename, O_RDONLY) ) < 0) 
+	if(( fd = xopen(filename, O_RDONLY) ) < 0) 
 	{
 		xprintf(L_CRITICAL, "Failed to open file %s\n", filename);
 		return EXIT_FAILURE;
@@ -99,7 +99,7 @@ int main (int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	
-	close(fd);
+	xclose(fd);
 	
 	/* display infos */
 	xprintf(L_INFO, "BEK File Information: %s\n", filename);

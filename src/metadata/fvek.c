@@ -28,23 +28,23 @@
 #include "dislocker/metadata/datums.h"
 #include "dislocker/encryption/decrypt.h"
 #include "dislocker/metadata/fvek.h"
+#include "dislocker/metadata/metadata.priv.h"
 
 
 
 /**
  * Get the FVEK from the VMK
  * 
- * @param dataset The metadata's dataset used
+ * @param dis_metadata The metadata structure
  * @param vmk_datum The datum of type 1 containing the VMK
  * @param fvek_datum The FVEK datum KEY structure
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
+int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 {
 	// Check parameters
-	if(!dataset)
+	if(!dis_meta)
 		return FALSE;
-	
 	
 	void* vmk_key = NULL;
 	size_t vmk_key_size = 0;
@@ -55,14 +55,14 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 	
 	
 	/* First get the AES-CCM datum where the FVEK is */
-	if(!get_next_datum(dataset, 3, 5, 0, fvek_datum))
+	if(!get_next_datum(dis_meta, 3, 5, 0, fvek_datum))
 	{
 		xprintf(L_CRITICAL, "Error in finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
 		return FALSE;
 	}
 	
 	/* Check if the VMK datum is of type KEY (1) */
-	if(!datum_type_must_be(vmk_datum, 1))
+	if(!datum_type_must_be(vmk_datum, DATUM_KEY))
 	{
 		xprintf(L_CRITICAL, "Error, the provided VMK datum's type is incorrect. Abort.\n");
 		return FALSE;
@@ -116,7 +116,7 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
  * - 2 bytes for the encryption method used (AES 128/256 bits, with or without
  * diffuser). These two bytes are between 0x8000 -> 0x8003 included, {@see
  * cipher_types@datums.h}.
- * - 512 bytes that are usable directly in init_keys()@dislocker.c
+ * - 512 bytes that are usable directly in init_keys()@outputs/prepare.c
  * 
  * @param cfg The configuration structure, therefore having the FVEK file
  * @param fvek_datum The FVEK datum KEY structure

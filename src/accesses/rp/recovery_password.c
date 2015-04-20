@@ -40,15 +40,15 @@
 /**
  * Get the VMK datum using a recovery password
  * 
- * @param dataset The dataset where a clear key is assumed to be
+ * @param dis_metadata The metadata structure
  * @param cfg The configuration structure
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum)
+int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset || !cfg)
+	if(!dis_meta || !cfg)
 		return FALSE;
 	
 	uint8_t* recovery_key = NULL;
@@ -74,7 +74,7 @@ int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_
 	 * password, so go get this salt and the VMK datum first
 	 * We use here the range which should be upper (or equal) than 0x800
 	 */
-	if(!get_vmk_datum_from_range((void*)dataset, 0x800, 0xfff, (void**)vmk_datum))
+	if(!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, (void**)vmk_datum))
 	{
 		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
 		*vmk_datum = NULL;

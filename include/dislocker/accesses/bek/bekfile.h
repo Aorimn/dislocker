@@ -23,6 +23,7 @@
 #ifndef READ_BEKFILE_H
 #define READ_BEKFILE_H
 
+#include "dislocker/config.priv.h"
 #include "dislocker/ntfs/clock.h"
 #include "dislocker/metadata/guid.h"
 #include "dislocker/metadata/datums.h"
@@ -34,7 +35,7 @@
  * Prototypes
  */
 
-int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum);
+int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum);
 
 int get_bek_dataset(int fd, void** bek_dataset);
 

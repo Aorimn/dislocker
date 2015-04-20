@@ -27,10 +27,11 @@
 #include <errno.h>
 
 #include "dislocker/common.h"
+#include "dislocker/return_values.h"
 #include "dislocker/encryption/decrypt.h"
 #include "dislocker/encryption/encrypt.h"
 #include "dislocker/metadata/metadata.h"
-#include "dislocker/inouts/sectors.h"
+#include "dislocker/inouts/inouts.priv.h"
 
 
 /*
@@ -202,7 +203,7 @@ int read_decrypt_sectors(
 		arg.modulo        = 0;
 		arg.modulo_result = 42;
 		
-		args.io_data      = io_data;
+		arg.io_data       = io_data;
 		
 		thread_decrypt(&arg);
 	}
@@ -283,7 +284,7 @@ int encrypt_write_sectors(
 		arg.modulo        = 0;
 		arg.modulo_result = 42;
 		
-		args.io_data      = io_data;
+		arg.io_data       = io_data;
 		
 		thread_encrypt(&arg);
 	}
@@ -348,18 +349,16 @@ static void* thread_decrypt(void* params)
 	uint8_t* loop_input      = args->input;
 	uint8_t* loop_output     = args->output;
 	
-	size_t   virt_loop       = 0;
-	off_t    metadata_offset = 0;
-	uint16_t version         = io_data->information->version;
-	
-	off_t size               = 0;
+	int      hover           = 0;
+	uint16_t version         = dis_metadata_information_version(io_data->metadata);
+	uint16_t sector_size     = args->sector_size;
 	
 	
 	// TODO see to be more intelligent on these loops
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
-	                               offset      += args->sector_size,
-	                               loop_input  += args->sector_size,
-	                               loop_output += args->sector_size)
+	                               offset      += sector_size,
+	                               loop_input  += sector_size,
+	                               loop_output += sector_size)
 	{
 		if(args->modulo != 0 && args->modulo != 1
 			&& (loop % args->modulo) == args->modulo_result)
@@ -379,39 +378,23 @@ static void* thread_decrypt(void* params)
 		 *   encryption was paused during BitLocker's turn on.
 		 */
 		
-		off_t sector_offset = args->sector_start / args->sector_size + loop;
+		off_t sector_offset = args->sector_start / sector_size + loop;
 		
 		/* Check for zero out areas */
-		for(virt_loop = 0; virt_loop < io_data->nb_virt_region; virt_loop++)
+		hover = dis_metadata_is_overwritten(
+			io_data->metadata,
+			offset,
+			sector_size);
+		if(hover == DIS_RET_ERROR_METADATA_FILE_OVERWRITE)
 		{
-			size = (off_t)io_data->virt_region[virt_loop].size;
-			if(size == 0)
-				continue;
-			
-			metadata_offset = (off_t)io_data->virt_region[virt_loop].addr;
-			if(offset >= metadata_offset &&
-				offset <= metadata_offset + size)
-			{
-				xprintf(L_DEBUG,
-					"  > Zeroing sector from 0x%" F_OFF_T
-					" (%" F_SIZE_T " bytes)\n",
-					offset, args->sector_size
-				);
-				memset(loop_output, 0, args->sector_size);
-				break;
-			}
-		}
-		
-		/*
-		 * If we've broke from the previous loop, that means we have to continue
-		 */
-		if(virt_loop != io_data->nb_virt_region)
+			memset(loop_output, 0, sector_size);
 			continue;
+		}
 		
 		
 		/* Check for sectors fixing and non-encrypted sectors */
 		if(version == V_SEVEN &&
-		   (uint64_t)sector_offset < io_data->information->nb_backup_sectors)
+		   (uint64_t)sector_offset < io_data->nb_backup_sectors)
 		{
 			/*
 			 * The firsts sectors are encrypted in a different place on a
@@ -424,15 +407,15 @@ static void* thread_decrypt(void* params)
 			);
 		}
 		else if(version == V_SEVEN &&
-		       (uint64_t)offset >= io_data->information->encrypted_volume_size)
+		       (uint64_t)offset >= io_data->encrypted_volume_size)
 		{
 			/* Do not decrypt when there's nothing to */
 			xprintf(L_DEBUG,
 				"  > Copying sector from 0x%" F_OFF_T
 				" (%" F_SIZE_T " bytes)\n",
-				offset, args->sector_size
+				offset, sector_size
 			);
-			memcpy(loop_output, loop_input, args->sector_size);
+			memcpy(loop_output, loop_input, sector_size);
 		}
 		else if(version == V_VISTA && sector_offset < 16)
 		{
@@ -450,9 +433,9 @@ static void* thread_decrypt(void* params)
 				xprintf(L_DEBUG,
 					"  > Copying sector from 0x%" F_OFF_T
 					" (%" F_SIZE_T " bytes)\n",
-					offset, args->sector_size
+					offset, sector_size
 				);
-				memcpy(loop_output, loop_input, args->sector_size);
+				memcpy(loop_output, loop_input, sector_size);
 			}
 		}
 		else
@@ -492,13 +475,14 @@ static void* thread_encrypt(void* params)
 	uint8_t* loop_input  = args->input;
 	uint8_t* loop_output = args->output;
 	
-	uint16_t version     = io_data->information->version;
+	uint16_t version     = dis_metadata_information_version(io_data->metadata);
+	uint16_t sector_size = args->sector_size;
 	
 	
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
-	                               offset      += args->sector_size,
-	                               loop_input  += args->sector_size,
-	                               loop_output += args->sector_size)
+	                               offset      += sector_size,
+	                               loop_input  += sector_size,
+	                               loop_output += sector_size)
 	{
 		if(args->modulo != 0 && args->modulo != 1
 			&& (loop % args->modulo) == args->modulo_result)
@@ -511,7 +495,7 @@ static void* thread_encrypt(void* params)
 		 * decryption function above")
 		 */
 		
-		off_t sector_offset = args->sector_start / args->sector_size + loop;
+		off_t sector_offset = args->sector_start / sector_size + loop;
 		
 		/*
 		 * NOTE: Seven specificities are dealt with earlier in the process
@@ -529,12 +513,12 @@ static void* thread_encrypt(void* params)
 					loop_output
 				);
 			else
-				memcpy(loop_output, loop_input, args->sector_size);
+				memcpy(loop_output, loop_input, sector_size);
 		}
 		else if(version == V_SEVEN &&
-		       (uint64_t)offset >= io_data->information->encrypted_volume_size)
+		       (uint64_t)offset >= io_data->encrypted_volume_size)
 		{
-			memcpy(loop_output, loop_input, args->sector_size);
+			memcpy(loop_output, loop_input, sector_size);
 		}
 		else
 		{
@@ -574,11 +558,13 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	
 	/* 
 	 * NTFS's boot sectors are saved into the field "boot_sectors_backup" into
-	 * metadata's header: the information structure.
+	 * metadata's header: the information structure. This field should have been
+	 * reported into the "backup_sectors_addr" field of the dis_iodata_t
+	 * structure.
 	 * So we can use them here to give a good NTFS partition's beginning.
 	 */
 	off_t from = sector_address;
-	off_t to   = from + (off_t)io_data->information->boot_sectors_backup;
+	off_t to   = from + (off_t)io_data->backup_sectors_addr;
 	
 	xprintf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
 	                 "\n", from, to);
@@ -629,7 +615,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	to -= io_data->part_off;
 	
 	/* If the sector wasn't yet encrypted, don't decrypt it */
-	if((uint64_t)to >= io_data->information->encrypted_volume_size)
+	if((uint64_t)to >= io_data->encrypted_volume_size)
 	{
 		memcpy(output, input, io_data->sector_size);
 	}
@@ -662,22 +648,12 @@ static void fix_read_sector_vista(dis_iodata_t* io_data,
 	if(!input || !output)
 		return;
 	
-	xprintf(L_DEBUG, "  Fixing sector (Vista): replacing signature "
-	                 "and MFTMirror field by: %#llx\n",
-	                 io_data->information->mftmirror_backup);
-	
 	/* 
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
 	 */
 	memcpy(output, input, io_data->sector_size);
 	
-	volume_header_t* formatted_output = (volume_header_t*)output;
-	
-	/* This is for the NTFS signature */
-	memcpy(formatted_output->signature, NTFS_SIGNATURE, NTFS_SIGNATURE_SIZE);
-	
-	/* And this is for the MFT Mirror field */
-	formatted_output->mft_mirror = io_data->information->mftmirror_backup;
+	dis_metadata_vista_vbr_fve2ntfs(io_data->metadata, output);
 }
 
 
@@ -701,25 +677,6 @@ static void fix_write_sector_vista(dis_iodata_t* io_data,
 	 */
 	memcpy(output, input, io_data->sector_size);
 	
-	volume_header_t* formatted_output = (volume_header_t*)output;
-	
-	/* This is for the BitLocker signature */
-	memcpy(formatted_output->signature,
-	       BITLOCKER_SIGNATURE, BITLOCKER_SIGNATURE_SIZE);
-	
-	/* And this is for the metadata LCN */
-	formatted_output->metadata_lcn =
-		io_data->information->information_off[0] /
-		(uint64_t)(
-			formatted_output->sectors_per_cluster *
-			formatted_output->sector_size
-		);
-	
-	xprintf(
-		L_DEBUG,
-		"  Fixing sector (Vista): replacing signature "
-		"and MFTMirror field by: %#llx\n",
-		formatted_output->metadata_lcn
-	);
+	dis_metadata_vista_vbr_ntfs2fve(io_data->metadata, output);
 }
 

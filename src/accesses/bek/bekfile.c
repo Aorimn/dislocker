@@ -39,7 +39,7 @@
 #include <inttypes.h>
 
 #include "dislocker/common.h"
-#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/metadata.priv.h"
 #include "dislocker/metadata/vmk.h"
 #include "dislocker/accesses/bek/bekfile.h"
 
@@ -53,10 +53,10 @@
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum)
+int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset || !cfg)
+	if(!dis_meta || !cfg)
 		return FALSE;
 	
 	guid_t key_guid = {0,};
@@ -100,7 +100,9 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	
 	
 	/* Get the external datum */
-	get_next_datum(bek_dataset, -1, DATUM_EXTERNAL_KEY, NULL, vmk_datum);
+	void* dataset = dis_metadata_set_dataset(dis_meta, bek_dataset);
+	get_next_datum(dis_meta, -1, DATUM_EXTERNAL_KEY, NULL, vmk_datum);
+	dis_metadata_set_dataset(dis_meta, dataset);
 	
 	/* Check the result datum */
 	if(!*vmk_datum || !datum_type_must_be(*vmk_datum, DATUM_EXTERNAL_KEY))
@@ -143,7 +145,7 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	 * find the VMK datum in the BitLocker metadata in order to
 	 * decrypt the VMK using this already found key in the bekfile
 	 */
-	if(!get_vmk_datum_from_guid((void*)dataset, key_guid, vmk_datum))
+	if(!get_vmk_datum_from_guid(dis_meta, key_guid, vmk_datum))
 	{
 		format_guid(key_guid, rec_id);
 		

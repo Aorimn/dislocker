@@ -30,7 +30,10 @@
 #include <locale.h>
 
 #include "dislocker/return_values.h"
+#include "dislocker/config.h"
 #include "dislocker/dislocker.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/metadata/metadata.h"
 #include "dislocker/metadata/print_metadata.h"
 
 
@@ -59,8 +62,7 @@ int main(int argc, char **argv)
 	int optchar = 0;
 	char *volume_path = NULL;
 	
-	bitlocker_dataset_t* dataset = NULL;
-	datum_vmk_t* vmk_clear_key_datum = NULL;
+	void* vmk_clear_key_datum = NULL;
 	
 	off_t offset     = 0;
 	DIS_LOGS verbosity = L_INFO;
@@ -79,7 +81,7 @@ int main(int argc, char **argv)
 				verbosity = L_DEBUG;
 				break;
 			case 'V':
-				volume_path = strdup(optarg);
+				volume_path = optarg;
 				break;
 			case '?':
 			default:
@@ -100,47 +102,42 @@ int main(int argc, char **argv)
 	/*
 	 * Initialize dislocker's configuration
 	 */
-	dis_setopt(&dis_ctx->cfg, DIS_OPT_VOLUME_PATH,   volume_path);
-	dis_setopt(&dis_ctx->cfg, DIS_OPT_VOLUME_OFFSET, &offset);
-	dis_setopt(&dis_ctx->cfg, DIS_OPT_VERBOSITY,     &verbosity);
+	dis_setopt(dis_ctx, DIS_OPT_VOLUME_PATH,   volume_path);
+	dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
+	dis_setopt(dis_ctx, DIS_OPT_VERBOSITY,     &verbosity);
 	
 	/* We don't want to give decryption mean, we only want the metadata */
 	dis_state_e init_state = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
-	dis_setopt(&dis_ctx->cfg, DIS_OPT_INITIALIZE_STATE, &init_state);
+	dis_setopt(dis_ctx, DIS_OPT_INITIALIZE_STATE, &init_state);
 	
 	/* Initialize dislocker */
-	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
+	if(dis_initialize(dis_ctx) < 0)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
 	}
 	
 	
+	dis_metadata_t dis_metadata = dis_metadata_get(dis_ctx);
+	
+	
 	// Printing volume header
-	print_volume_header(L_INFO, dis_ctx->io_data.volume_header);
+	print_volume_header(L_INFO, dis_metadata);
 	xprintf(L_INFO, "\n");
 	
 	// Printing BitLocker information metadata
-	print_information(L_INFO, dis_ctx->io_data.information);
+	print_information(L_INFO, dis_metadata);
 	xprintf(L_INFO, "\n");
 	
 	// Now we're looking at the data themselves
-	print_data(L_INFO, dis_ctx->io_data.information);
+	print_data(L_INFO, dis_metadata);
 	
-	
-	// Get the information's dataset
-	if(!get_dataset(dis_ctx->io_data.information, &dataset))
-	{
-		xprintf(L_CRITICAL, "Can't find a valid dataset. Abort.\n");
-		dis_destroy(dis_ctx);
-		return EXIT_FAILURE;
-	}
 	
 	// Search for a clear key
-	if(has_clear_key(dataset, &vmk_clear_key_datum))
+	if(dis_metadata_has_clear_key(dis_metadata, &vmk_clear_key_datum))
 	{
 		xprintf(L_INFO, "=======[ There's a clear key here ]========\n");
-		print_one_datum(L_INFO, (void*)vmk_clear_key_datum);
+		print_one_datum(L_INFO, vmk_clear_key_datum);
 		xprintf(L_INFO, "=============[ Clear key end ]=============\n");
 	}
 	else

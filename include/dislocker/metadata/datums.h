@@ -312,14 +312,20 @@ void print_datum_virtualization(DIS_LOGS level, void* vdatum);
 void print_nonce(DIS_LOGS level, uint8_t* nonce);
 void print_mac(DIS_LOGS level, uint8_t* mac);
 
-int get_next_datum(bitlocker_dataset_t* dataset, int16_t type, int16_t datum_type, void* datum_begin, void** datum_result);
+int get_next_datum(
+	dis_metadata_t dis_metadata,
+	int16_t type,
+	int16_t datum_type,
+	void* datum_begin,
+	void** datum_result
+);
 
 int get_nested_datum(void* datum, void** datum_nested);
 int get_nested_datumtype(void* datum, datum_t datum_type, void** datum_nested);
 
 int datum_type_must_be(void* datum, datum_t datum_type);
 
-int has_clear_key(void* dataset, datum_vmk_t** vmk_datum);
+int dis_metadata_has_clear_key(dis_metadata_t dis_meta, void** vmk_datum);
 
 
 typedef void(*print_datum_f)(DIS_LOGS, void*);

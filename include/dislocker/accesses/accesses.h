@@ -20,11 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef ACCESSES_H
-#define ACCESSES_H
+#ifndef DIS_ACCESSES_H
+#define DIS_ACCESSES_H
 
 
-#include "dislocker/dislocker.priv.h"
+#include "dislocker/dislocker.h"
 
 
 
@@ -32,7 +32,7 @@
 /**
  * Prototypes
  */
-int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset);
+int dis_get_access(dis_context_t dis_ctx);
 
 
-#endif /* ACCESSES_H */
+#endif /* DIS_ACCESSES_H */

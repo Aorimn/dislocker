@@ -22,6 +22,7 @@
  */
 
 
+#include "dislocker/dislocker.priv.h"
 #include "dislocker/accesses/accesses.h"
 #include "dislocker/accesses/bek/bekfile.h"
 #include "dislocker/accesses/rp/recovery_password.h"
@@ -33,7 +34,7 @@
 #include "dislocker/return_values.h"
 
 
-int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
+int dis_get_access(dis_context_t dis_ctx)
 {
 	void* vmk_datum = NULL;
 	void* fvek_datum = NULL;
@@ -48,7 +49,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 	{
 		if(dis_ctx->cfg.decryption_mean & DIS_USE_CLEAR_KEY)
 		{
-			if(!get_vmk_from_clearkey(dataset, &vmk_datum))
+			if(!get_vmk_from_clearkey(dis_ctx->metadata, &vmk_datum))
 			{
 				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_CLEAR_KEY;
 			}
@@ -61,7 +62,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_USER_PASSWORD)
 		{
-			if(!get_vmk_from_user_pass(dataset, &dis_ctx->cfg, &vmk_datum))
+			if(!get_vmk_from_user_pass(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
 			{
 				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_USER_PASSWORD;
 			}
@@ -74,7 +75,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_RECOVERY_PASSWORD)
 		{
-			if(!get_vmk_from_rp(dataset, &dis_ctx->cfg, &vmk_datum))
+			if(!get_vmk_from_rp(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
 			{
 				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_RECOVERY_PASSWORD;
 			}
@@ -87,7 +88,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_BEKFILE)
 		{
-			if(!get_vmk_from_bekfile(dataset, &dis_ctx->cfg, &vmk_datum))
+			if(!get_vmk_from_bekfile(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
 			{
 				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_BEKFILE;
 			}
@@ -148,7 +149,7 @@ int dis_get_access(dis_context_t dis_ctx, bitlocker_dataset_t* dataset)
 	 */
 	if(dis_ctx->cfg.decryption_mean != DIS_USE_FVEKFILE)
 	{
-		if(!get_fvek(dataset, vmk_datum, &fvek_datum))
+		if(!get_fvek(dis_ctx->metadata, vmk_datum, &fvek_datum))
 			return DIS_RET_ERROR_FVEK_RETRIEVAL;
 	}
 	

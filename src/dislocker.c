@@ -33,8 +33,6 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "dislocker/accesses/accesses.h"
-
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/metadata.h"
 #include "dislocker/metadata/print_metadata.h"
@@ -99,11 +97,6 @@ dis_context_t dis_new()
 
 int dis_initialize(dis_context_t dis_ctx)
 {
-	void* metadata = NULL;
-	
-	bitlocker_information_t* information = NULL;
-	bitlocker_dataset_t* dataset = NULL;
-	
 	int ret = DIS_RET_SUCCESS;
 	
 	
@@ -169,139 +162,32 @@ int dis_initialize(dis_context_t dis_ctx)
 	setlocale(LC_ALL, "");
 	
 	
-	
-	/*
-	 * Deal with the volume first
-	 */
-	xprintf(L_INFO, "Looking for BitLocker metadata...\n");
-	
-	/* Initialize structures */
-	dis_ctx->io_data.volume_header = xmalloc(sizeof(volume_header_t));
-	memset(dis_ctx->io_data.volume_header, 0, sizeof(volume_header_t));
-	
-	
-	/* Getting volume infos */
-	if(!get_volume_header(
-		dis_ctx->io_data.volume_header,
-		dis_ctx->io_data.volume_fd,
-		dis_ctx->cfg.offset))
+	dis_ctx->metadata = dis_metadata_new(dis_ctx);
+	if(dis_ctx->metadata == NULL)
 	{
-		xprintf(
-			L_CRITICAL,
-			"Error during reading the volume: not enough byte read.\n"
-		);
+		xprintf(L_CRITICAL, "Can't allocate metadata object. Abort.\n");
 		dis_destroy(dis_ctx);
-		return DIS_RET_ERROR_VOLUME_HEADER_READ;
+		return DIS_RET_ERROR_ALLOC;
 	}
 	
-	/* For debug purpose, print the volume header retrieved */
-	print_volume_header(L_DEBUG, dis_ctx->io_data.volume_header);
-	
-	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_HEADER);
-	
-	
-	/* Checking the volume header */
-	if(!check_volume_header(dis_ctx->io_data.volume_header, dis_ctx->io_data.volume_fd, &dis_ctx->cfg))
+	ret = dis_metadata_initialize(dis_ctx->metadata);
+	if(ret != DIS_RET_SUCCESS)
 	{
-		xprintf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
-		dis_destroy(dis_ctx);
-		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
+		/*
+		 * If it's less than 0, then it's an error, if not, it's an early
+		 * return of this function.
+		 */
+		if(ret < 0)
+			dis_destroy(dis_ctx);
+		return ret;
 	}
-	
-	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_CHECK);
-	
-	
-	/* Fill the regions the metadata occupy on disk */
-	if(!begin_compute_regions(
-		dis_ctx->io_data.volume_header,
-		dis_ctx->io_data.volume_fd,
-		dis_ctx->cfg.offset,
-		dis_ctx->io_data.virt_region))
-	{
-		xprintf(
-			L_CRITICAL,
-			"Can't compute regions from volume header. Abort.\n"
-		);
-		dis_destroy(dis_ctx);
-		return DIS_RET_ERROR_METADATA_OFFSET;
-	}
-	
-	
-	/* Getting BitLocker metadata and validate them */
-	if(!get_metadata_lazy_checked(
-		dis_ctx->io_data.volume_header,
-		dis_ctx->io_data.volume_fd,
-		&metadata,
-		&dis_ctx->cfg,
-		dis_ctx->io_data.virt_region))
-	{
-		xprintf(
-			L_CRITICAL,
-			"A problem occured during the retrieving of metadata. Abort.\n"
-		);
-		dis_destroy(dis_ctx);
-		return DIS_RET_ERROR_METADATA_CHECK;
-	}
-	
-	if(dis_ctx->cfg.force_block == 0 || !metadata)
-	{
-		xprintf(
-			L_CRITICAL,
-			"Can't find a valid set of metadata on the disk. Abort.\n"
-		);
-		dis_destroy(dis_ctx);
-		return DIS_RET_ERROR_METADATA_CHECK;
-	}
-	
-	information = metadata;
-	
-	/* Checking BitLocker version */
-	if(information->version > V_SEVEN)
-	{
-		xprintf(
-			L_CRITICAL,
-			"Program designed only for BitLocker version 2 and less, "
-			"the version here is %hd. Abort.\n",
-			information->version
-		);
-		dis_destroy(dis_ctx);
-		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
-	}
-	
-	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
-	
-	/* For debug purpose, print the metadata */
-	print_information(L_DEBUG, information);
-	print_data(L_DEBUG, metadata);
-	
-	dis_ctx->io_data.information = information;
-	
-	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK);
 	
 	
 	/*
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
-	if(information->curr_state != DECRYPTED)
+	if(dis_ctx->metadata->information->curr_state != DECRYPTED)
 	{
-		/* Now that we have the information, get the dataset within it */
-		if(get_dataset(metadata, &dataset) != TRUE)
-		{
-			xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
-			dis_destroy(dis_ctx);
-			return DIS_RET_ERROR_DATASET_CHECK;
-		}
-		
-		/*
-		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
-		 */
-		if((ret = dis_get_access(dis_ctx, dataset)) != DIS_RET_SUCCESS)
-		{
-			xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
-			dis_destroy(dis_ctx);
-			return ret;
-		}
-		
 		/*
 		 * Init the crypto structure
 		 */
@@ -314,7 +200,7 @@ int dis_initialize(dis_context_t dis_ctx)
 		 * Init the decrypt keys' contexts
 		 */
 		if(init_keys(
-			dataset,
+			dis_metadata_set_dataset(dis_ctx->metadata, NULL),
 			dis_ctx->io_data.fvek,
 			dis_ctx->io_data.crypt) != DIS_RET_SUCCESS)
 		{
@@ -341,7 +227,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	
 	int look_state = dis_ctx->cfg.flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE;
 	if(look_state == 0 &&
-		!check_state(dis_ctx->io_data.information))
+		!check_state(dis_ctx->metadata))
 	{
 		dis_ctx->io_data.volume_state = FALSE;
 	}
@@ -594,51 +480,25 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	 * Don't authorize to write on metadata, NTFS firsts sectors and on another
 	 * area we shouldn't write to (don't know its signification yet).
 	 */
-	off_t metadata_offset = 0;
-	off_t metadata_size   = 0;
-	size_t virt_loop      = 0;
-	
-	for(virt_loop = 0; virt_loop < dis_ctx->io_data.nb_virt_region; virt_loop++)
-	{
-		metadata_size = (off_t)dis_ctx->io_data.virt_region[virt_loop].size;
-		if(metadata_size == 0)
-			continue;
-		
-		metadata_offset = (off_t)dis_ctx->io_data.virt_region[virt_loop].addr;
-		
-		if(offset >= metadata_offset &&
-		   offset < metadata_offset + metadata_size)
-		{
-			xprintf(L_INFO, "Denying write request on the metadata (1:%#"
-			        F_OFF_T ")\n", offset);
-			return -EFAULT;
-		}
-		
-		if(offset < metadata_offset &&
-		   offset + (off_t)size > metadata_offset)
-		{
-			xprintf(L_INFO, "Denying write request on the metadata (2:%#"
-			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
-			return -EFAULT;
-		}
-	}
+	if(dis_metadata_is_overwritten(dis_ctx->metadata, offset, size) != DIS_RET_SUCCESS)
+		return -EFAULT;
 	
 	
 	/*
 	 * For BitLocker 7's volume, redirect writes to firsts sectors to the backed
 	 * up ones
 	 */
-	if(dis_ctx->io_data.information->version == V_SEVEN &&
-	   offset < dis_ctx->io_data.virtualized_size)
+	if(dis_ctx->metadata->information->version == V_SEVEN &&
+	   offset < dis_ctx->metadata->virtualized_size)
 	{
 		xprintf(L_DEBUG, "  Entering virtualized area\n");
-		if(offset + (off_t)size <= dis_ctx->io_data.virtualized_size)
+		if(offset + (off_t)size <= dis_ctx->metadata->virtualized_size)
 		{
 			/*
 			 * If all the request is within the virtualized area, just change
 			 * the offset
 			 */
-			offset = offset + (off_t)dis_ctx->io_data.information->boot_sectors_backup;
+			offset = offset + (off_t)dis_ctx->metadata->information->boot_sectors_backup;
 			xprintf(L_DEBUG, "  `-> Just redirecting to %#"F_OFF_T"\n", offset);
 		}
 		else
@@ -653,12 +513,12 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 			 */
 			xprintf(L_DEBUG, "  `-> Splitting the request in two, recursing\n");
 			
-			size_t nsize = (size_t)(dis_ctx->io_data.virtualized_size - offset);
+			size_t nsize = (size_t)(dis_ctx->metadata->virtualized_size - offset);
 			ret = enlock(dis_ctx, buffer, offset, nsize);
 			if(ret < 0)
 				return ret;
 			
-			offset  = dis_ctx->io_data.virtualized_size;
+			offset  = dis_ctx->metadata->virtualized_size;
 			size   -= nsize;
 			buffer += nsize;
 		}
@@ -778,16 +638,9 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 
 
-
 int dis_destroy(dis_context_t dis_ctx)
 {
 	/* Finish cleaning things */
-	if(dis_ctx->io_data.information)
-		xfree(dis_ctx->io_data.information);
-	
-	if(dis_ctx->io_data.volume_header)
-		xfree(dis_ctx->io_data.volume_header);
-	
 	if(dis_ctx->io_data.vmk)
 		xfree(dis_ctx->io_data.vmk);
 	
@@ -797,6 +650,8 @@ int dis_destroy(dis_context_t dis_ctx)
 	dis_crypt_destroy(dis_ctx->io_data.crypt);
 	
 	pthread_mutex_destroy(&dis_ctx->io_data.mutex_lseek_rw);
+	
+	dis_metadata_destroy(dis_ctx->metadata);
 	
 	dis_free_args(dis_ctx);
 	

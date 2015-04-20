@@ -24,6 +24,7 @@
 #define FVEK_H
 
 
+#include "dislocker/config.priv.h"
 #include "dislocker/metadata/metadata.h"
 
 
@@ -31,7 +32,7 @@
 /*
  * Functions prototypes
  */
-int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum);
+int get_fvek(dis_metadata_t dis_metadata, void* vmk_datum, void** fvek_datum);
 
 int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum);
 

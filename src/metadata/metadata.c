@@ -21,9 +21,255 @@
  * USA.
  */
 
+#include "dislocker/accesses/accesses.h"
+
 #include "dislocker/encryption/crc32.h"
-#include "dislocker/metadata/metadata.h"
+#include "dislocker/metadata/metadata.priv.h"
 #include "dislocker/metadata/print_metadata.h"
+#include "dislocker/dislocker.priv.h"
+
+
+
+static int get_volume_header(
+	volume_header_t *volume_header,
+	int fd,
+	off_t partition_offset
+);
+
+static int check_volume_header(
+	dis_metadata_t dis_metadata,
+	int volume_fd,
+	dis_config_t *cfg
+);
+
+static int begin_compute_regions(
+	volume_header_t* vh,
+	int fd,
+	off_t disk_offset,
+	dis_regions_t* regions
+);
+
+static int end_compute_regions(dis_metadata_t dis_meta);
+
+static int get_metadata(off_t source, void **metadata, int fd);
+
+static int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
+
+static int get_eow_information(off_t source, void** eow_infos, int fd);
+
+static int get_metadata_lazy_checked(
+	volume_header_t* volume_header,
+	int fd,
+	void** metadata,
+	dis_config_t *cfg,
+	dis_regions_t *regions
+);
+
+static int get_eow_check_valid(
+	volume_header_t *volume_header,
+	int fd,
+	void **eow_infos,
+	dis_config_t* cfg
+);
+
+
+
+
+dis_metadata_t dis_metadata_new(dis_context_t dis_ctx)
+{
+	if(!dis_ctx)
+		return NULL;
+	
+	dis_metadata_t dis_meta = xmalloc(sizeof(struct _dis_metadata));
+	memset(dis_meta, 0, sizeof(struct _dis_metadata));
+	
+	dis_meta->volume_header = xmalloc(sizeof(volume_header_t));
+	
+	memset(dis_meta->volume_header, 0, sizeof(volume_header_t));
+	
+	dis_meta->dis_ctx = dis_ctx;
+	
+	return dis_meta;
+}
+
+
+dis_metadata_t dis_metadata_get(dis_context_t dis_ctx)
+{
+	if(!dis_ctx)
+		return NULL;
+	
+	return dis_ctx->metadata;
+}
+
+
+int dis_metadata_initialize(dis_metadata_t dis_meta)
+{
+	if(!dis_meta)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+	
+	dis_context_t dis_ctx = dis_meta->dis_ctx;
+	
+	int ret = DIS_RET_SUCCESS;
+	
+	void*                    metadata    = NULL;
+	bitlocker_information_t* information = NULL;
+	bitlocker_dataset_t*     dataset     = NULL;
+	
+	
+	/* Getting volume infos */
+	if(!get_volume_header(
+		dis_meta->volume_header,
+		dis_ctx->fve_fd,
+		dis_ctx->cfg.offset))
+	{
+		xprintf(
+			L_CRITICAL,
+			"Error during reading the volume: not enough byte read.\n"
+		);
+		return DIS_RET_ERROR_VOLUME_HEADER_READ;
+	}
+	
+	/* For debug purpose, print the volume header retrieved */
+	print_volume_header(L_DEBUG, dis_meta);
+	
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_HEADER);
+	
+	
+	/* Checking the volume header */
+	if(!check_volume_header(dis_meta, dis_ctx->fve_fd, &dis_ctx->cfg))
+	{
+		xprintf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
+		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
+	}
+	
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_CHECK);
+	
+	
+	/* Fill the regions the metadata occupy on disk */
+	if(!begin_compute_regions(
+		dis_meta->volume_header,
+		dis_ctx->fve_fd,
+		dis_ctx->cfg.offset,
+		dis_meta->virt_region))
+	{
+		xprintf(
+			L_CRITICAL,
+			"Can't compute regions from volume header. Abort.\n"
+		);
+		return DIS_RET_ERROR_METADATA_OFFSET;
+	}
+	
+	
+	/* Getting BitLocker metadata and validate them */
+	if(!get_metadata_lazy_checked(
+		dis_meta->volume_header,
+		dis_ctx->fve_fd,
+		&metadata,
+		&dis_ctx->cfg,
+		dis_meta->virt_region))
+	{
+		xprintf(
+			L_CRITICAL,
+			"A problem occured during the retrieving of metadata. Abort.\n"
+		);
+		return DIS_RET_ERROR_METADATA_CHECK;
+	}
+	
+	if(dis_ctx->cfg.force_block == 0 || !metadata)
+	{
+		xprintf(
+			L_CRITICAL,
+			"Can't find a valid set of metadata on the disk. Abort.\n"
+		);
+		return DIS_RET_ERROR_METADATA_CHECK;
+	}
+	
+	/* Don't use dis_meta->information here as metadata are not validated yet */
+	information = metadata;
+	
+	
+	/* Checking BitLocker version */
+	if(information->version > V_SEVEN)
+	{
+		xprintf(
+			L_CRITICAL,
+			"Program designed only for BitLocker version 2 and less, "
+			"the version here is %hd. Abort.\n",
+			information->version
+		);
+		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
+	}
+	
+	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
+	
+	dis_meta->information = information;
+	
+	/* Now that we have the information, get the dataset within it */
+	if(get_dataset(metadata, &dataset) != TRUE)
+	{
+		xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
+		return DIS_RET_ERROR_DATASET_CHECK;
+	}
+	
+	dis_meta->dataset = dataset;
+	
+	
+	/* For debug purpose, print the metadata */
+	print_information(L_DEBUG, dis_meta);
+	print_data(L_DEBUG, dis_meta);
+	
+	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK);
+	
+	/*
+	 * If the state of the volume is currently decrypted, there's no key to grab
+	 */
+	if(information->curr_state != DECRYPTED)
+	{
+		/*
+		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
+		 */
+		if((ret = dis_get_access(dis_ctx)) != DIS_RET_SUCCESS)
+		{
+			/*
+			 * If it's less than 0, then it's an error, if not, it's an early
+			 * return of this function.
+			 */
+			if(ret < 0)
+				xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+			return ret;
+		}
+	}
+	
+	/*
+	 * Initialize region to report as filled with zeroes, if asked from the NTFS
+	 * layer. This is to mimic BitLocker's behaviour.
+	 */
+	if((ret = end_compute_regions(dis_meta)) != DIS_RET_SUCCESS)
+	{
+		xprintf(L_CRITICAL, "Unable to compute regions. Abort.\n");
+		return ret;
+	}
+	
+	return ret;
+}
+
+
+int dis_metadata_destroy(dis_metadata_t dis_meta)
+{
+	if(!dis_meta)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+	
+	if(dis_meta->volume_header)
+		xfree(dis_meta->volume_header);
+	
+	if(dis_meta->information)
+		xfree(dis_meta->information);
+	
+	xfree(dis_meta);
+	
+	return DIS_RET_SUCCESS;
+}
+
 
 
 /**
@@ -34,7 +280,7 @@
  * @param offset The initial partition offset
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
+static int get_volume_header(volume_header_t *volume_header, int fd, off_t offset)
 {
 	if(!volume_header || fd < 0)
 		return FALSE;
@@ -87,11 +333,12 @@ static inline int get_version_from_volume_header(volume_header_t *volume_header)
  * @param cfg Config asked by the user and used
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_config_t *cfg)
+static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_config_t *cfg)
 {
-	if(!volume_header || volume_fd < 0 || !cfg)
+	if(!dis_meta || volume_fd < 0 || !cfg)
 		return FALSE;
 	
+	volume_header_t* volume_header = dis_meta->volume_header;
 	guid_t volume_guid;
 	
 	/* Checking sector size */
@@ -150,10 +397,13 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
 		
 		if(get_eow_information(source, &eow_infos, volume_fd))
 		{
+			dis_meta->eow_information = eow_infos;
+			
 			// Second: print them
-			print_eow_infos(L_DEBUG, (bitlocker_eow_infos_t*)eow_infos);
+			print_eow_infos(L_DEBUG, dis_meta);
 			
 			xfree(eow_infos);
+			dis_meta->eow_information = NULL;
 			
 			// Third: check if this struct passes checks
 			if(get_eow_check_valid(volume_header, volume_fd, &eow_infos, cfg))
@@ -204,7 +454,7 @@ int check_volume_header(volume_header_t *volume_header, int volume_fd, dis_confi
  * first addr member of this array
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int begin_compute_regions(volume_header_t* vh,
+static int begin_compute_regions(volume_header_t* vh,
                           int fd,
                           off_t disk_offset,
                           dis_regions_t* regions)
@@ -267,23 +517,23 @@ int begin_compute_regions(volume_header_t* vh,
  * This finalizes the initialization of the regions informations, putting the
  * metadata file sizes in the right place.
  * 
- * @param regions Where to put regions' sizes
- * @param volume_header The volume header structure
- * @param information One of the BitLocker information structure
- * @return -1 on failure, the number of virtualized regions
+ * @param dis_metadata The metadata structure
+ * @return DIS_RET_SUCCESS on success, other value on failure
  */
-int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
-                        bitlocker_information_t* information)
+static int end_compute_regions(dis_metadata_t dis_meta)
 {
-	if(!regions || !volume_header || !information)
-		return -1;
+	if(!dis_meta)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+	
+	dis_regions_t*           regions       = dis_meta->virt_region;
+	volume_header_t*         volume_header = dis_meta->volume_header;
+	bitlocker_information_t* information   = dis_meta->information;
 	
 	uint16_t sector_size         = volume_header->sector_size;
 	uint8_t  sectors_per_cluster = volume_header->sectors_per_cluster;
 	uint32_t cluster_size        = 0;
 	uint64_t metafiles_size      = 0;
 	
-	int nb_virt_region = 0;
 	
 	/*
 	 * Alignment isn't the same for W$ Vista (size-of-a-cluster aligned on
@@ -313,7 +563,7 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 	regions[0].size = metafiles_size;
 	regions[1].size = metafiles_size;
 	regions[2].size = metafiles_size;
-	nb_virt_region = 3;
+	dis_meta->nb_virt_region = 3;
 	
 	
 	if(information->version == V_VISTA)
@@ -329,7 +579,7 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 		 * A second part, new from Windows 8, follows...
 		 */
 		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(&information->dataset, -1,
+		if(!get_next_datum(dis_meta, -1,
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
 			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
@@ -342,30 +592,48 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
 			);
 			xfree(type_str);
 			datum = NULL;
-			return FALSE;
+			return DIS_RET_ERROR_VIRTUALIZATION_INFO_DATUM_NOT_FOUND;
 		}
 		
-		nb_virt_region++;
+		dis_meta->nb_virt_region++;
 		regions[3].addr = information->boot_sectors_backup;
 		regions[3].size = datum->nb_bytes;
 		
 		/* Another area to report as filled with zeroes, new to W8 as well */
 		if(information->curr_state == SWITCHING_ENCRYPTION)
 		{
-			nb_virt_region++;
+			dis_meta->nb_virt_region++;
 			regions[4].addr = information->encrypted_volume_size;
 			regions[4].size = information->unknown_size;
+		}
+		
+		dis_meta->virtualized_size = (off_t)datum->nb_bytes;
+		
+		xprintf(
+			L_DEBUG,
+			"Virtualized info size: %#" F_OFF_T "\n",
+			dis_meta->virtualized_size
+		);
+		
+		
+		/* Extended info is new to Windows 8 */
+		size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
+		size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
+		if(actual_size > win7_size)
+		{
+			dis_meta->xinfo = &datum->xinfo;
+			xprintf(L_DEBUG, "Got extended info\n");
 		}
 	}
 	else
 	{
 		/* Explicitly mark a BitLocker version as unsupported */
 		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", information->version);
-		return -1;
+		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
 	}
 	
 	
-	return nb_virt_region;
+	return DIS_RET_SUCCESS;
 }
 
 
@@ -380,7 +648,7 @@ int end_compute_regions(dis_regions_t* regions, volume_header_t* volume_header,
  * @param fd A file descriptor to the volume
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_metadata(off_t source, void **metadata, int fd)
+static int get_metadata(off_t source, void **metadata, int fd)
 {
 	if(!source || fd < 0 || !metadata)
 		return FALSE;
@@ -455,7 +723,7 @@ int get_metadata(off_t source, void **metadata, int fd)
  * @param dataset The resulting dataset
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
+static int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 {
 	// Check parameters
 	if(!metadata)
@@ -488,7 +756,7 @@ int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
  * @param fd A file descriptor to the volume
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_eow_information(off_t source, void** eow_infos, int fd)
+static int get_eow_information(off_t source, void** eow_infos, int fd)
 {
 	if(!source || fd < 0 || !eow_infos)
 		return FALSE;
@@ -563,9 +831,9 @@ int get_eow_information(off_t source, void** eow_infos, int fd)
  * use in this function
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_metadata_lazy_checked(volume_header_t *volume_header,
-                                   int fd, void **metadata, dis_config_t *cfg,
-                                   dis_regions_t *regions)
+static int get_metadata_lazy_checked(
+	volume_header_t *volume_header, int fd, void **metadata, dis_config_t *cfg,
+	dis_regions_t *regions)
 {
 	// Check parameters
 	if(!volume_header || fd < 0 || !metadata || !cfg)
@@ -668,7 +936,8 @@ int get_metadata_lazy_checked(volume_header_t *volume_header,
  * @param cfg Configuration used
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos, dis_config_t* cfg)
+static int get_eow_check_valid(
+	volume_header_t *volume_header, int fd, void **eow_infos, dis_config_t* cfg)
 {
 	// Check parameters
 	if(!volume_header || fd < 0 || !eow_infos || !cfg)
@@ -722,12 +991,12 @@ int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos
 		eow_infos_size = eow_infos_hdr->infos_size;
 		computed_crc32 = crc32((unsigned char*)*eow_infos, eow_infos_size);
 		
-		xprintf(L_INFO, "Looking if %#x == %#x for EOW information validation\n",
+		xprintf(L_DEBUG, "Looking if %#x == %#x for EOW information validation\n",
 		        computed_crc32, eow_infos_hdr->crc32);
 		
 		if(computed_crc32 == eow_infos_hdr->crc32)
 		{
-			xprintf(L_INFO, "We have a winner (n°%d)!\n", current);
+			xprintf(L_DEBUG, "We have a winner (n°%d)!\n", current);
 			break;
 		}
 		else
@@ -743,14 +1012,16 @@ int get_eow_check_valid(volume_header_t *volume_header, int fd, void **eow_infos
 /**
  * Check for dangerous state the BitLocker volume can be in.
  * 
- * @param information The BitLocker metadata header
+ * @param dis_metadata The metadata structure
  * @return TRUE if it's safe to use the volume, FALSE otherwise
  */
-int check_state(bitlocker_information_t* information)
+int check_state(dis_metadata_t dis_metadata)
 {
 	// Check parameter
-	if(!information)
+	if(!dis_metadata)
 		return FALSE;
+	
+	bitlocker_information_t* information = dis_metadata->information;
 	
 	char* enc = "enc";
 	char* dec = "dec";
@@ -802,4 +1073,191 @@ int check_state(bitlocker_information_t* information)
 	return TRUE;
 }
 
+
+void dis_metadata_vista_vbr_fve2ntfs(dis_metadata_t dis_meta, void* vbr)
+{
+	if(!dis_meta || !vbr)
+		return;
+	
+	volume_header_t* volume_header = (volume_header_t*) vbr;
+	
+	xprintf(
+		L_DEBUG,
+		"  Fixing sector (Vista): replacing signature "
+		"and MFTMirror field by: %#llx\n",
+		dis_meta->volume_header->mft_mirror
+	);
+	
+	
+	/* This is for the NTFS signature */
+	memcpy(volume_header->signature, NTFS_SIGNATURE, NTFS_SIGNATURE_SIZE);
+	
+	/* And this is for the MFT Mirror field */
+	volume_header->mft_mirror = dis_meta->volume_header->mft_mirror;
+}
+
+
+void dis_metadata_vista_vbr_ntfs2fve(dis_metadata_t dis_meta, void* vbr)
+{
+	if(!dis_meta || !vbr)
+		return;
+	
+	volume_header_t* volume_header = (volume_header_t*) vbr;
+	
+	/* This is for the BitLocker signature */
+	memcpy(
+		volume_header->signature,
+		BITLOCKER_SIGNATURE,
+		BITLOCKER_SIGNATURE_SIZE
+	);
+	
+	/* And this is for the metadata LCN */
+	volume_header->metadata_lcn =
+		dis_meta->information->information_off[0] /
+		(uint64_t)(
+			volume_header->sectors_per_cluster *
+			volume_header->sector_size
+		);
+	
+	xprintf(
+		L_DEBUG,
+		"  Fixing sector (Vista): replacing signature "
+		"and MFTMirror field by: %#llx\n",
+		volume_header->metadata_lcn
+	);
+}
+
+
+int dis_metadata_is_overwritten(
+	dis_metadata_t dis_meta, off_t offset, size_t size)
+{
+	if(!dis_meta)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+	
+	off_t metadata_offset = 0;
+	off_t metadata_size   = 0;
+	size_t virt_loop      = 0;
+	
+	for(virt_loop = 0; virt_loop < dis_meta->nb_virt_region; virt_loop++)
+	{
+		metadata_size = (off_t)dis_meta->virt_region[virt_loop].size;
+		if(metadata_size == 0)
+			continue;
+		
+		metadata_offset = (off_t)dis_meta->virt_region[virt_loop].addr;
+		
+		if(offset >= metadata_offset &&
+		   offset < metadata_offset + metadata_size)
+		{
+			xprintf(L_INFO, "In metadata file (1:%#"
+			        F_OFF_T ")\n", offset);
+			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
+		}
+		
+		if(offset < metadata_offset &&
+		   offset + (off_t)size > metadata_offset)
+		{
+			xprintf(L_INFO, "In metadata file (2:%#"
+			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
+			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
+		}
+	}
+	
+	return DIS_RET_SUCCESS;
+}
+
+
+/**
+ * Retrieve the volume size from the first sector.
+ * 
+ * @param volume_header The partition MBR to look at. NTFS or FVE, np
+ * @return The volume size or 0, which indicates the size couldn't be retrieved
+ */
+uint64_t dis_metadata_volume_size_from_vbr(dis_metadata_t dis_meta)
+{
+	if(!dis_meta)
+		return 0;
+	
+	volume_header_t* volume_header = dis_meta->volume_header;
+	uint64_t volume_size = 0;
+	
+	if(volume_header->nb_sectors_16b)
+	{
+		volume_size = (uint64_t)volume_header->sector_size
+		                         * volume_header->nb_sectors_16b;
+	}
+	else if(volume_header->nb_sectors_32b)
+	{
+		volume_size = (uint64_t)volume_header->sector_size
+		                         * volume_header->nb_sectors_32b;
+	}
+	else if(volume_header->nb_sectors_64b)
+	{
+		volume_size = (uint64_t)volume_header->sector_size
+		                         * volume_header->nb_sectors_64b;
+	}
+	
+	return volume_size;
+}
+
+
+void* dis_metadata_set_dataset(dis_metadata_t dis_meta, void* new_dataset)
+{
+	if(!dis_meta)
+		return NULL;
+	
+	if(!new_dataset)
+		return dis_meta->dataset;
+	
+	void* old_dataset = dis_meta->dataset;
+	dis_meta->dataset = new_dataset;
+	return old_dataset;
+}
+
+
+void* dis_metadata_set_volume_header(dis_metadata_t dis_meta, void* new_volume_header)
+{
+	if(!dis_meta)
+		return NULL;
+	
+	if(!new_volume_header)
+		return dis_meta->volume_header;
+	
+	void* old_volume_header = dis_meta->volume_header;
+	dis_meta->volume_header = new_volume_header;
+	return old_volume_header;
+}
+
+
+uint16_t dis_metadata_sector_size(dis_metadata_t dis_meta)
+{
+	return dis_meta->volume_header->sector_size;
+}
+
+
+version_t dis_metadata_information_version(dis_metadata_t dis_meta)
+{
+	return dis_meta->information->version;
+}
+
+
+uint64_t dis_metadata_encrypted_volume_size(dis_metadata_t dis_meta)
+{
+	return dis_meta->information->encrypted_volume_size;
+}
+
+uint64_t dis_metadata_ntfs_sectors_address(dis_metadata_t dis_meta)
+{
+	return dis_meta->information->boot_sectors_backup;
+}
+uint64_t dis_metadata_mftmirror(dis_metadata_t dis_meta)
+{
+	return dis_meta->information->mftmirror_backup;
+}
+
+
+uint32_t dis_metadata_backup_sectors_count(dis_metadata_t dis_meta)
+{
+	return dis_meta->information->nb_backup_sectors;
+}
 

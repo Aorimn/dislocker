@@ -27,7 +27,8 @@
 
 #include "dislocker/dislocker.h"
 #include "dislocker/config.priv.h"
-#include "dislocker/inouts/sectors.priv.h"
+#include "dislocker/inouts/inouts.priv.h"
+#include "dislocker/metadata/metadata.priv.h"
 
 
 
@@ -54,6 +55,11 @@ struct _dis_ctx {
 	 * command-line's arguments and the dis_setopt() function
 	 */
 	dis_config_t cfg;
+	
+	/*
+	 * Structure to keep volume metadata around.
+	 */
+	dis_metadata_t metadata;
 	
 	/*
 	 * Structure needed for dec/encryption processes.

@@ -40,10 +40,10 @@
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum)
+int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset || !cfg)
+	if(!dis_meta || !cfg)
 		return FALSE;
 	
 	uint8_t user_hash[32] = {0,};
@@ -68,7 +68,7 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	 * There may be another mean to find the correct datum, but I don't see
 	 * another one here
 	 */
-	if(!get_vmk_datum_from_range((void*)dataset, 0x2000, 0x2000, (void**)vmk_datum))
+	if(!get_vmk_datum_from_range(dis_meta, 0x2000, 0x2000, (void**)vmk_datum))
 	{
 		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
 		*vmk_datum = NULL;

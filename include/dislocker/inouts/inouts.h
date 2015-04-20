@@ -20,26 +20,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef VMK_H
-#define VMK_H
+#ifndef DIS_INOUTS_H
+#define DIS_INOUTS_H
 
+#include <stdint.h>
 
-#include "dislocker/metadata/datums.h"
-#include "dislocker/metadata/guid.h"
+#include "dislocker/dislocker.h"
 
-
-
-/*
- * Functions prototypes
+/**
+ * Structure used for operation on disk (encryption/decryption)
  */
-int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum);
-
-int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid, void** vmk_datum);
-
-int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16_t max_range, void** vmk_datum);
-
-int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
-            size_t key_size, datum_key_t** vmk);
+typedef struct _data dis_iodata_t;
 
 
-#endif /* VMK_H */
+
+/**
+ * Function to get the volume's size
+ */
+uint64_t dis_inouts_volume_size(dis_context_t dis_ctx);
+
+/**
+ * Function to get the volume's sector size
+ */
+uint16_t dis_inouts_sector_size(dis_context_t dis_ctx);
+
+
+#endif /* DIS_INOUTS_H */

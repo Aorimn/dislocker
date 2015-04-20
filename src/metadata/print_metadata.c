@@ -23,6 +23,8 @@
 
 #include <time.h>
 
+#include "dislocker/metadata/metadata.priv.h"
+#include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/print_metadata.h"
 
 
@@ -42,10 +44,16 @@ static const char* states_str[] =
 /**
  * Print a volume header structure into a human-readable format
  * 
- * @param volume_header The volume header to print
+ * @param level The level above which we're gonna print
+ * @param dis_metadata The metadata structure
  */
-void print_volume_header(DIS_LOGS level, volume_header_t *volume_header)
+void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 {
+	if(!dis_meta)
+		return;
+	
+	volume_header_t *volume_header = dis_meta->volume_header;
+	
 	char rec_id[37];
 	
 	format_guid(volume_header->guid, rec_id);
@@ -84,7 +92,7 @@ void print_volume_header(DIS_LOGS level, volume_header_t *volume_header)
  * @param state The state to translate
  * @return The state as a constant string
  */
-const char* get_state(state_t state)
+const char* get_state(dis_metadata_state_t state)
 {
 	if(state >= sizeof(states_str) / sizeof(char*))
 		return states_str[sizeof(states_str) / sizeof(char*) - 1];
@@ -96,10 +104,15 @@ const char* get_state(state_t state)
 /**
  * Print a BitLocker header structure into a human-readable format
  * 
- * @param information The BitLocker header to print
+ * @param level The level above which we're gonna print
+ * @param dis_metadata The metadata structure
  */
-void print_information(DIS_LOGS level, bitlocker_information_t *information)
+void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 {
+	if(!dis_meta)
+		return;
+	
+	bitlocker_information_t *information = dis_meta->information;
 	int metadata_size = information->version == V_SEVEN ? information->size << 4 : information->size;
 	
 	xprintf(level, "=====================[ BitLocker information structure ]=====================\n");
@@ -119,7 +132,7 @@ void print_information(DIS_LOGS level, bitlocker_information_t *information)
 	else
 		xprintf(level, "  NTFS MftMirror field:   %#" F_U64_T "\n", information->mftmirror_backup);
 	
-	print_dataset(level, &information->dataset);
+	print_dataset(level, dis_meta);
 	xprintf(level, "=============================================================================\n");
 }
 
@@ -127,10 +140,15 @@ void print_information(DIS_LOGS level, bitlocker_information_t *information)
 /**
  * Print a BitLocker dataset structure into human-readable format
  * 
- * @param dataset The dataset to print
+ * @param level The level above which we're gonna print
+ * @param dis_metadata The metadata structure
  */
-void print_dataset(DIS_LOGS level, bitlocker_dataset_t* dataset)
+void print_dataset(DIS_LOGS level, dis_metadata_t dis_meta)
 {
+	if(!dis_meta)
+		return;
+	
+	bitlocker_dataset_t* dataset = dis_meta->dataset;
 	time_t ts;
 	char* date = NULL;
 	char* cipher = cipherstr(dataset->algorithm);
@@ -160,10 +178,15 @@ void print_dataset(DIS_LOGS level, bitlocker_dataset_t* dataset)
 /**
  * Print a BitLocker EOW information structure into human-readable format
  * 
- * @param eow_infos The EOW information structure to print
+ * @param dis_metadata The metadata structure
  */
-void print_eow_infos(DIS_LOGS level, bitlocker_eow_infos_t *eow_infos)
+void print_eow_infos(DIS_LOGS level, dis_metadata_t dis_meta)
 {
+	if(!dis_meta)
+		return;
+	
+	bitlocker_eow_infos_t* eow_infos = dis_meta->eow_information;
+	
 	xprintf(level, "=======================[ BitLocker EOW informations ]========================\n");
 	xprintf(level, "  Signature: '%.8s'\n", eow_infos->signature);
 	xprintf(level, "  Structure size: 0x%1$04x (%1$hu)\n", eow_infos->header_size);
@@ -187,25 +210,20 @@ void print_eow_infos(DIS_LOGS level, bitlocker_eow_infos_t *eow_infos)
 /**
  * Print data of a given metadata
  * 
- * @param metadata The metadata from where data will be printed
+ * @param level The level above which we're gonna print
+ * @param dis_metadata The metadata structure
  */
-void print_data(DIS_LOGS level, void* metadata)
+void print_data(DIS_LOGS level, dis_metadata_t dis_meta)
 {
 	// Check parameters
-	if(!metadata)
+	if(!dis_meta)
 		return;
 	
-	bitlocker_dataset_t* dataset = NULL;
+	bitlocker_dataset_t* dataset = dis_meta->dataset;
 	void* data = NULL;
 	void* end_dataset = 0;
 	int loop = 0;
 	
-	/* Get the dataset in the given metadata */
-	if(!get_dataset(metadata, &dataset))
-	{
-		xprintf(L_ERROR, "Error, no valid dataset found.\n");
-		return;
-	}
 	
 	data = (char*)dataset + dataset->header_size;
 	end_dataset = (char*)dataset + dataset->size;

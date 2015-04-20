@@ -25,20 +25,18 @@
 
 #include "dislocker/common.h"
 #include "dislocker/metadata/metadata.h"
-#include "dislocker/metadata/datums.h"
 
+void print_volume_header(DIS_LOGS level, dis_metadata_t dis_metadata);
 
-void print_volume_header(DIS_LOGS level, volume_header_t *volume_header);
+void print_information(DIS_LOGS level, dis_metadata_t dis_metadata);
 
-void print_information(DIS_LOGS level, bitlocker_information_t *information);
+void print_eow_infos(DIS_LOGS level, dis_metadata_t dis_metadata);
 
-void print_eow_infos(DIS_LOGS level, bitlocker_eow_infos_t *eow_infos);
+void print_dataset(DIS_LOGS level, dis_metadata_t dis_metadata);
 
-void print_dataset(DIS_LOGS level, bitlocker_dataset_t* dataset);
+void print_data(DIS_LOGS level, dis_metadata_t dis_metadata);
 
-void print_data(DIS_LOGS level, void* metadata);
-
-const char* get_state(state_t state);
+const char* get_state(dis_metadata_state_t state);
 
 
 #endif // PRINT_METADATA_H

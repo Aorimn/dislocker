@@ -42,7 +42,7 @@ void* xmalloc(size_t size)
 	}
 	void* p = malloc(size);
 	
-	xprintf(L_DEBUG, "New memory allocation at %p (%#zx byte allocated)\n", p, size);
+	xprintf(L_DEBUG, "New memory allocation at %p (%#zx bytes allocated)\n", p, size);
 	
 	if(p == NULL)
 	{

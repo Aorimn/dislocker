@@ -26,6 +26,7 @@
 
 #include <getopt.h>
 
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -104,12 +105,17 @@ int main (int argc, char **argv)
 	xprintf(L_INFO, "BEK File Information: %s\n", filename);
 	
 	/* bek header */
-	print_dataset(L_INFO, bek_dataset);
+	dis_context_t dis_ctx = dis_new();
+	dis_metadata_t dis_metadata = dis_metadata_new(dis_ctx);
+	dis_metadata_set_dataset(dis_metadata, bek_dataset);
+	print_dataset(L_INFO, dis_metadata);
 	
 	/* external datum, which contains the decryption key */
-	print_one_datum(L_INFO, bek_dataset + sizeof(bitlocker_dataset_t));
+	print_one_datum(L_INFO, bek_dataset + 0x30);
 	
 	xfree(bek_dataset);
+	dis_metadata_destroy(dis_metadata);
+	dis_destroy(dis_ctx);
 	xstdio_end();
 	
 	return EXIT_SUCCESS;

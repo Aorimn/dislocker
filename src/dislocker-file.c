@@ -24,10 +24,17 @@
 /* This define is for the O_LARGEFILE definition */
 #define _GNU_SOURCE
 
+#include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "dislocker/xstd/xstdio.h"
+#include "dislocker/xstd/xstdlib.h"
+#include "dislocker/inouts/inouts.h"
+#include "dislocker/config.h"
+#include "dislocker/common.h"
 #include "dislocker/dislocker.h"
 
 #if defined(__DARWIN) || defined(__FREEBSD)
@@ -102,12 +109,11 @@ static int file_main(char* ntfs_file, dis_context_t dis_ctx)
 		return EXIT_FAILURE;
 	}
 	
-	dis_iodata_t io_data = dis_ctx->io_data;
-	size_t buf_size = (size_t)(NB_READ_SECTOR * io_data.sector_size);
+	size_t buf_size = (size_t)(NB_READ_SECTOR * dis_inouts_sector_size(dis_ctx));
 	uint8_t* buffer = xmalloc(buf_size);
 	
 	mode_t mode = S_IRUSR|S_IWUSR;
-	if(dis_is_read_only(&dis_ctx->cfg))
+	if(dis_is_read_only(dis_ctx))
 		mode = S_IRUSR;
 	
 	int fd_ntfs = xopen_file(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
@@ -115,14 +121,13 @@ static int file_main(char* ntfs_file, dis_context_t dis_ctx)
 	
 	off_t offset          = 0;
 	long long int percent = 0;
+	off_t decrypting_size = (off_t)dis_inouts_volume_size(dis_ctx);
 	
-	xprintf(L_INFO, "File size: %llu bytes\n", io_data.volume_size);
+	xprintf(L_INFO, "File size: %llu bytes\n", decrypting_size);
 	
 	/* Read all sectors and decrypt them if necessary */
 	xprintf(L_INFO, "\rDecrypting... 0%%");
 	fflush(stdout);
-	
-	off_t decrypting_size = (off_t)io_data.volume_size;
 	
 	while(offset < decrypting_size)
 	{
@@ -174,7 +179,7 @@ int main(int argc, char** argv)
 	
 	
 	/* Get command line options */
-	param_idx = dis_getopts(&dis_ctx->cfg, argc, argv);
+	param_idx = dis_getopts(dis_ctx, argc, argv);
 	
 	/* Check that we have the file where to put NTFS data */
 	if(param_idx >= argc || param_idx <= 0)

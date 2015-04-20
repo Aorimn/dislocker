@@ -26,6 +26,7 @@
 
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/vmk.h"
+#include "dislocker/metadata/metadata.priv.h"
 
 
 
@@ -519,23 +520,24 @@ void print_mac(DIS_LOGS level, uint8_t* mac)
 /**
  * Get the next specified datum
  * 
- * @param dataset The metadata's dataset
+ * @param dis_metadata The metadata structure
  * @param type The second uint16_t of any datum header struct
  * @param datum_type The third uint16_t of any datum header struct
- * @param datum_begin The beginning of the search
+ * @param datum_begin The beginning of the search, begins after this given datum
  * @param datum_result The found datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_next_datum(bitlocker_dataset_t* dataset, int16_t type, int16_t datum_type, void* datum_begin, void** datum_result)
+int get_next_datum(dis_metadata_t dis_meta, int16_t type, int16_t datum_type, void* datum_begin, void** datum_result)
 {
 	// Check parameters
-	if(!dataset || datum_type > NB_DATUM_TYPES)
+	if(!dis_meta || datum_type > NB_DATUM_TYPES)
 		return FALSE;
-	
 	
 	xprintf(L_DEBUG, "Entering get_next_datum...\n");
 	
+	bitlocker_dataset_t* dataset = dis_meta->dataset;
 	void* datum = NULL;
+	void* limit = (char*)dataset + dataset->size;
 	datum_header_safe_t header;
 	
 	*datum_result = NULL;
@@ -547,22 +549,29 @@ int get_next_datum(bitlocker_dataset_t* dataset, int16_t type, int16_t datum_typ
 	
 	while(1)
 	{
+		if(datum + 8 >= limit)
+		{
+			xprintf(L_DEBUG, "Hit limit, search failed.\n");
+			break;
+		}
+		
 		if(!get_header_safe(datum, &header))
 			break;
 		
 		if(datum_type < 0 && type < 0)
 		{
 			/*
-			 * If the datum type is not in range, assume the guy want each datum
+			 * If the datum type is not in range, assume the caller want each
+			 * datum
 			 */
 			*datum_result = datum;
 			break;
 		}
-		else if((type == header.type || type == -1) && 
-		        (datum_type == header.datum_type || datum_type == -1))
+		else if((type == header.type || type < 0) && 
+		        (datum_type == header.datum_type || datum_type < 0))
 		{
 			/*
-			 * If the type and the datum type searched correspond,
+			 * If the type and the datum type searched match,
 			 * then return this datum
 			 */
 			*datum_result = datum;
@@ -688,15 +697,15 @@ int datum_type_must_be(void* datum, datum_t datum_type)
  * @param vmk_datum The VMK datum of the clear key if found
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int has_clear_key(void* dataset, datum_vmk_t** vmk_datum)
+int dis_metadata_has_clear_key(dis_metadata_t dis_meta, void** vmk_datum)
 {
-	if(!dataset)
+	if(!dis_meta)
 		return FALSE;
 	
 	*vmk_datum = NULL;
 	
 	xprintf(L_DEBUG, "Entering has_clear_key. Returning result of get_vmk_datum_from_range with range between 0x00 and 0xff\n");
 	
-	return get_vmk_datum_from_range(dataset, 0x00, 0xff, (void**)vmk_datum);
+	return get_vmk_datum_from_range(dis_meta, 0x00, 0xff, vmk_datum);
 }
 

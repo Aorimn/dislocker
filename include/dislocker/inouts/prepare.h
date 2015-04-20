@@ -27,7 +27,6 @@
 #include <stdint.h>
 
 #include "dislocker/dislocker.priv.h"
-#include "dislocker/config.priv.h"
 #include "dislocker/encryption/encommon.h"
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/metadata.h"

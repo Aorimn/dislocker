@@ -26,16 +26,10 @@
 
 #include "dislocker/inouts/prepare.h"
 #include "dislocker/inouts/sectors.h"
+#include "dislocker/inouts/inouts.priv.h"
 
+#include "dislocker/dislocker.priv.h"
 #include "dislocker/return_values.h"
-
-
-
-/**
- * Getting the real volume size is proving to be quite difficult.
- */
-static uint64_t get_volume_size(dis_iodata_t* io_data);
-
 
 
 /**
@@ -105,17 +99,18 @@ int prepare_crypt(dis_context_t dis_ctx)
 {
 	dis_iodata_t* io_data;
 	
-	int nb_virt_region      = 0;
-	
 	if(!dis_ctx)
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
 	
 	io_data = &dis_ctx->io_data;
-	io_data->xinfo          = NULL;
-	io_data->sector_size    = io_data->volume_header->sector_size;
+	io_data->metadata       = dis_ctx->metadata;
 	io_data->part_off       = dis_ctx->cfg.offset;
+	io_data->sector_size    = dis_inouts_sector_size(dis_ctx);
 	io_data->decrypt_region = read_decrypt_sectors;
 	io_data->encrypt_region = encrypt_write_sectors;
+	io_data->encrypted_volume_size = dis_metadata_encrypted_volume_size(io_data->metadata);
+	io_data->backup_sectors_addr   = dis_metadata_ntfs_sectors_address(io_data->metadata);
+	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 	
 	if(pthread_mutex_init(&io_data->mutex_lseek_rw, NULL) != 0)
 	{
@@ -127,7 +122,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 	 * We need to grab the volume's size from the first sector, so we can
 	 * announce it on a getattr call
 	 */
-	io_data->volume_size = get_volume_size(io_data);
+	io_data->volume_size = dis_inouts_volume_size(dis_ctx);
 	if(io_data->volume_size == 0)
 	{
 		xprintf(L_ERROR, "Can't initialize the volume's size\n");
@@ -142,139 +137,10 @@ int prepare_crypt(dis_context_t dis_ctx)
 	
 	
 	/*
-	 * Initialize region to report as filled with zeroes, if asked from the NTFS
-	 * layer. This is to mimic BitLocker's behaviour.
+	 * Don't initialize the mftmirror_backup field for it's the same as the
+	 * backup_sectors_addr one.
 	 */
-	nb_virt_region = end_compute_regions(
-		io_data->virt_region,
-		io_data->volume_header,
-		io_data->information
-	);
-	
-	if(nb_virt_region < 0)
-	{
-		xprintf(
-			L_ERROR,
-			"Can't compute regions.\n"
-		);
-		return DIS_RET_ERROR_METADATA_FILE_SIZE_NOT_FOUND;
-	}
-	
-	io_data->nb_virt_region = (size_t) nb_virt_region;
-	
-	if(io_data->information->version == V_SEVEN)
-	{
-		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(&io_data->information->dataset, -1,
-		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
-		{
-			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
-			xprintf(
-				L_ERROR,
-				"Error looking for the VIRTUALIZATION datum type"
-				" %hd (%s). Internal failure, abort.\n",
-				DATUM_VIRTUALIZATION_INFO,
-				type_str
-			);
-			xfree(type_str);
-			datum = NULL;
-			return DIS_RET_ERROR_VIRTUALIZATION_INFO_DATUM_NOT_FOUND;
-		}
-		io_data->virtualized_size = (off_t)datum->nb_bytes;
-		
-		xprintf(
-			L_DEBUG,
-			"Virtualized info size: %#" F_OFF_T "\n",
-			io_data->virtualized_size
-		);
-		
-		
-		/* Extended info is new to Windows 8 */
-		// TODO add check on datum_types_prop's size against datum->header.datum_type
-		size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
-		size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
-		if(actual_size > win7_size)
-		{
-			io_data->xinfo = &datum->xinfo;
-			xprintf(L_DEBUG, "Got extended info\n");
-		}
-	}
-	
 	
 	return DIS_RET_SUCCESS;
-}
-
-
-/**
- * Retrieve the volume size from the first sector.
- * 
- * @param volume_header The partition MBR to look at. NTFS or FVE, np
- * @return The volume size or 0, which indicates the size couldn't be retrieved
- */
-static uint64_t get_volume_size_from_mbr(volume_header_t* volume_header)
-{
-	uint64_t volume_size = 0;
-	
-	if(volume_header->nb_sectors_16b)
-	{
-		volume_size = (uint64_t)volume_header->sector_size
-		                         * volume_header->nb_sectors_16b;
-	}
-	else if(volume_header->nb_sectors_32b)
-	{
-		volume_size = (uint64_t)volume_header->sector_size
-		                         * volume_header->nb_sectors_32b;
-	}
-	else if(volume_header->nb_sectors_64b)
-	{
-		volume_size = (uint64_t)volume_header->sector_size
-		                         * volume_header->nb_sectors_64b;
-	}
-	
-	return volume_size;
-}
-
-
-/**
- * Compute the real volume's size.
- * 
- * @param io_data The structure holding major information for accessing the
- * volume
- * @return The volume size or 0 if it can't be determined
- */
-static uint64_t get_volume_size(dis_iodata_t* io_data)
-{
-	uint64_t volume_size = 0;
-	
-	volume_size = get_volume_size_from_mbr(io_data->volume_header);
-	
-	if(!volume_size && io_data->information->version == V_SEVEN)
-	{
-		/*
-		 * For version V_SEVEN, volumes can be partially encrypted.
-		 * Therefore, try to get the real size from the NTFS data
-		 */
-		
-		uint8_t* input = xmalloc(io_data->volume_header->sector_size);
-		memset(input, 0, io_data->volume_header->sector_size);
-		
-		if(!read_decrypt_sectors(
-			io_data,
-			1,
-			io_data->volume_header->sector_size,
-			0,
-			input))
-		{
-			xprintf(L_ERROR,
-			       "Unable to read the NTFS header to get the volume's size\n");
-			return 0;
-		}
-		
-		volume_size = get_volume_size_from_mbr((volume_header_t*)input);
-		
-		xfree(input);
-	}
-	
-	return volume_size;
 }
 

@@ -51,7 +51,7 @@ SOURCES		=	dislocker.c common.c config.c \
 			encryption/decrypt.c encryption/encrypt.c \
 			encryption/diffuser.c encryption/crc32.c \
 			ntfs/clock.c ntfs/encoding.c \
-			inouts/prepare.c inouts/sectors.c
+			inouts/inouts.c inouts/prepare.c inouts/sectors.c
 OBJECTS		=	$(SOURCES:.c=.o)
 
 

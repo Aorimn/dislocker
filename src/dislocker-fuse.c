@@ -22,11 +22,13 @@
  */
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
+#include "dislocker/xstd/xstdio.h"
+#include "dislocker/xstd/xstdlib.h"
 #include "dislocker/return_values.h"
+#include "dislocker/config.h"
 #include "dislocker/dislocker.h"
 
 
@@ -43,7 +45,7 @@
 
 
 
-#include "dislocker/common.h"
+#include "dislocker/inouts/inouts.h"
 #include "dislocker/dislocker.h"
 #include "dislocker/metadata/metadata.h"
 
@@ -73,10 +75,10 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 	}
 	else if(strcmp(path, NTFS_FILENAME) == 0)
 	{
-		mode_t m = dis_is_read_only(&dis_ctx->cfg) ? 0444 : 0666;
+		mode_t m = dis_is_read_only(dis_ctx) ? 0444 : 0666;
 		stbuf->st_mode = S_IFREG | m;
 		stbuf->st_nlink = 1;
-		stbuf->st_size = (off_t)dis_ctx->io_data.volume_size;
+		stbuf->st_size = (off_t)dis_inouts_volume_size(dis_ctx);
 	}
 	else
 		res = -ENOENT;
@@ -113,17 +115,17 @@ static int fs_open(const char *path, struct fuse_file_info *fi)
 		return -ENOENT;
 	
 	
-	if(dis_is_read_only(&dis_ctx->cfg))
+	if(dis_is_read_only(dis_ctx))
 	{
-		if((fi->flags & 3) != O_RDONLY)
+		if((fi->flags & O_ACCMODE) != O_RDONLY)
 			return -EACCES;
 	}
 	else
 	{
 		/* Authorize read/write, readonly and writeonly operations */
-		if((fi->flags & 3) != O_RDWR   &&
-		   (fi->flags & 3) != O_RDONLY &&
-		   (fi->flags & 3) != O_WRONLY)
+		if((fi->flags & O_ACCMODE) != O_RDWR   &&
+		   (fi->flags & O_ACCMODE) != O_RDONLY &&
+		   (fi->flags & O_ACCMODE) != O_WRONLY)
 			return -EACCES;
 	}
 	
@@ -202,7 +204,7 @@ int main(int argc, char** argv)
 	
 	/* Get command line options */
 	dis_ctx = dis_new();
-	param_idx = dis_getopts(&dis_ctx->cfg, argc, argv);
+	param_idx = dis_getopts(dis_ctx, argc, argv);
 	
 	/* Check we got enough arguments for at least one more, the mount point */
 	if(param_idx >= argc || param_idx <= 0)

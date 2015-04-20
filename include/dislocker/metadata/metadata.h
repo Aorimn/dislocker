@@ -23,11 +23,11 @@
 #ifndef METADATA_H
 #define METADATA_H
 
+#include <stdint.h>
+#include "dislocker/dislocker.h"
 
-#include "dislocker/common.h"
-#include "dislocker/config.priv.h"
-#include "dislocker/metadata/guid.h"
-#include "dislocker/ntfs/clock.h"
+
+
 
 
 /** Known BitLocker versions */
@@ -39,261 +39,62 @@ typedef uint16_t version_t;
 
 
 
-#pragma pack (1)
-/** First sector of an NTFS or BitLocker volume */
-typedef struct _volume_header
-{
-	/* 512 bytes long */
-	uint8_t  jump[3];             //                                                -- offset 0
-	uint8_t  signature[8];        // = "-FVE-FS-" (without 0 at the string's end)   -- offset 3
-	                              // = "NTFS    " (idem) for NTFS volumes (ORLY?)
-	                              // = "MSWIN4.1" for BitLocker-To-Go encrypted volumes
-	
-	uint16_t sector_size;         // = 0x0200 = 512 bytes                           -- offset 0xb
-	uint8_t  sectors_per_cluster; //                                                -- offset 0xd
-	uint16_t reserved_clusters;   //                                                -- offset 0xe
-	uint8_t  fat_count;           //                                                -- offset 0x10
-	uint16_t root_entries;        //                                                -- offset 0x11
-	uint16_t nb_sectors_16b;      //                                                -- offset 0x13
-	uint8_t  media_descriptor;    //                                                -- offset 0x15
-	uint16_t sectors_per_fat;     //                                                -- offset 0x16
-	uint16_t sectors_per_track;   //                                                -- offset 0x18
-	uint16_t nb_of_heads;         //                                                -- offset 0x1a
-	uint32_t hidden_sectors;      //                                                -- offset 0x1c
-	uint32_t nb_sectors_32b;      //                                                -- offset 0x20
-	
-	union {                       //                                                -- offset 0x24
-		struct { // Classic BitLocker
-			uint8_t  unknown2[4];         // NTFS = 0x00800080 (little endian)
-			uint64_t nb_sectors_64b;      //                                        -- offset 0x28
-			uint64_t mft_start_cluster;   //                                        -- offset 0x30
-			union {                       // Metadata LCN or MFT Mirror             -- offset 0x38
-				uint64_t metadata_lcn;    //  depending on whether we're talking about a Vista volume
-				uint64_t mft_mirror;      //  or an NTFS one
-			};
-			uint8_t  unknown3[96];        //                                        -- offset 0x40
-			
-			guid_t   guid;                //                                        -- offset 0xa0
-			uint64_t information_off[3];  // NOT for Vista                          -- offset 0xb0
-			uint64_t eow_information_off[2]; // NOT for Vista NOR 7                 -- offset 0xc8
-			
-			uint8_t  unknown4[294];       //                                        -- offset 0xd8
-		};
-		struct { // BitLocker-To-Go
-			uint8_t  unknown5[35];
-			
-			uint8_t  fs_name[11];         //                                        -- offset 0x47
-			uint8_t  fs_signature[8];     //                                        -- offset 0x52
-			
-			uint8_t  unknown6[334];       //                                        -- offset 0x5a
-			
-			guid_t   bltg_guid;           //                                        -- offset 0x1a8
-			uint64_t bltg_header[3];      //                                        -- offset 0x1b8
-			
-			uint8_t  Unknown7[46];        //                                        -- offset 0x1d0
-		};
-	};
-	
-	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
-} volume_header_t; // Size = 512
-
-_Static_assert(
-	sizeof(struct _volume_header) == 512,
-	"Volume header structure's size isn't equal to 512"
-);
-
-
-
-/** Header of a data set, used in the bitlocker header below */
-typedef struct _bitlocker_dataset
-{
-	uint32_t size;         //                      -- offset 0
-	uint32_t unknown1;     // = 0x0001 FIXME       -- offset 4
-	uint32_t header_size;  // = 0x0030             -- offset 8
-	uint32_t copy_size;    // = dataset_size       -- offset 0xc
-	
-	guid_t guid;           // dataset GUID         -- offset 0x10
-	uint32_t next_counter; //                      -- offset 0x20
-	
-	uint16_t algorithm;    //                      -- offset 0x24
-	uint16_t trash;        //                      -- offset 0x26
-	ntfs_time_t timestamp; //                      -- offset 0x28
-} bitlocker_dataset_t; // Size = 0x30
-
-_Static_assert(
-	sizeof(struct _bitlocker_dataset) == 0x30,
-	"BitLocker dataset structure's size isn't equal to 0x30"
-);
-
-
-/** Different states BitLocker is in */
-enum state_types
-{
-	DECRYPTED                = 1,
-	SWITCHING_ENCRYPTION     = 2,
-	ENCRYPTED                = 4,
-	SWITCH_ENCRYPTION_PAUSED = 5
-};
-typedef uint16_t state_t;
-
+/**
+ * Volume's encryption state
+ */
+typedef uint16_t dis_metadata_state_t;
 
 /**
- * Header of a BitLocker metadata structure, named information
- * 
- * Datums (protectors) with keys in them follow this header
+ * Metadata structure to use to query the function below
  */
-typedef struct _bitlocker_information
-{
-	uint8_t signature[8]; // = "-FVE-FS-"                                                   -- offset 0
-	uint16_t size;        // Total size (has to be multiplied by 16 when the version is 2)  -- offset 8
-	version_t version;    // = 0x0002 for Windows 7 and 1 for Windows Vista                 -- offset 0xa
-	
-	/* Not sure about the next two fields */
-	state_t curr_state;  // Current encryption state                                        -- offset 0xc
-	state_t next_state;  // Next encryption state                                           -- offset 0xe
-	
-	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
-	/*
-	 * This size describe a virtualized region. This region is only checked when
-	 * this->curr_state == 2. It begins at the offset described by
-	 * this->encrypted_volume_size
-	 */
-	uint32_t unknown_size;  //                                                              -- offset 0x18
-	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
-	
-	uint64_t information_off[3];  //                                                        -- offset 0x20
-	
-	union {
-		uint64_t boot_sectors_backup; // Address where the boot sectors have been backed up -- offset 0x38
-		uint64_t mftmirror_backup;    // This is the address of the MftMirror for Vista     -- offset 0x38
-	};
-	
-	struct _bitlocker_dataset dataset; // See above                                         -- offset 0x40
-} bitlocker_information_t; // Size = 0x40 + 0x30
-
-_Static_assert(
-	sizeof(struct _bitlocker_information) == (0x40 + 0x30),
-	"BitLocker information structure's size isn't equal to 0x70"
-);
-
-
-
-/*
- * The following structure is followed by a datum of type 5 (DATUM_AES_CCM) or 1
- * (DATUM_KEY). When there's a DATUM_AES_CCM, this is actually the DATUM_KEY
- * encrypted using the VMK.
- * The key contained in the DATUM_KEY structure is the SHA-256 sum of the entire
- * BitLocker's metadata fields (bitlocker_information_t + every datum).
- * 
- * Therefore, the size field contains 8 plus the size of the datum.
- */
-typedef struct _bitlocker_validations
-{
-	uint16_t  size;
-	version_t version;
-	uint32_t  crc32;
-} bitlocker_validations_t; // Size = 8
-
-_Static_assert(
-	sizeof(struct _bitlocker_validations) == 8,
-	"BitLocker validations structure's size isn't equal to 8"
-);
-
-
-
-/**
- * The following structure is used when the volume GUID is
- * EOW_INFORMATION_OFFSET_GUID (see guid.c).
- * It's followed by some kind of payload I don't know about yet (but that
- * explains header_size vs infos_size)
- */
-typedef struct _bitlocker_eow_infos
-{
-	uint8_t  signature[8];    // = "FVE-EOW"                                    -- offset 0
-	uint16_t header_size;     // = 0x38                                         -- offset 8
-	uint16_t infos_size;      //                                                -- offset 0xa
-	uint32_t sector_size1;    //                                                -- offset 0xc
-	uint32_t sector_size2;    //                                                -- offset 0x10
-	uint32_t unknown_14;      // FIXME                                          -- offset 0x14
-	uint32_t convlog_size;    //                                                -- offset 0x18
-	uint32_t unknown_1c;      // FIXME                                          -- offset 0x1c
-	uint32_t nb_regions;      //                                                -- offset 0x20
-	uint32_t crc32;           //                                                -- offset 0x24
-	uint64_t disk_offsets[2]; //                                                -- offset 0x28
-} bitlocker_eow_infos_t; // Size = 0x38
-
-_Static_assert(
-	sizeof(struct _bitlocker_eow_infos) == 0x38,
-	"BitLocker EOW information structure's size isn't equal to 0x38"
-);
-
-
-
-/**
- * A region is used to describe BitLocker metadata on disk
- */
-typedef struct _regions
-{
-	/* Metadata offset */
-	uint64_t addr;
-	/* Metadata size on disk */
-	uint64_t size;
-} dis_regions_t;
-
-#pragma pack ()
+typedef struct _dis_metadata* dis_metadata_t;
 
 
 
 /*
  * Prototypes
  */
-int get_volume_header(
-	volume_header_t *volume_header,
-	int fd,
-	off_t partition_offset
+dis_metadata_t dis_metadata_new(dis_context_t dis_ctx);
+dis_metadata_t dis_metadata_get(dis_context_t dis_ctx);
+
+int dis_metadata_initialize(dis_metadata_t dis_metadata);
+
+int dis_metadata_destroy(dis_metadata_t dis_metadata);
+
+
+int check_state(dis_metadata_t dis_metadata);
+
+void dis_metadata_vista_vbr_fve2ntfs(dis_metadata_t dis_meta, void* vbr);
+void dis_metadata_vista_vbr_ntfs2fve(dis_metadata_t dis_meta, void* vbr);
+
+int dis_metadata_is_overwritten(
+	dis_metadata_t dis_metadata,
+	off_t offset,
+	size_t size
 );
 
-int check_volume_header(
-	volume_header_t *volume_header,
-	int volume_fd,
-	dis_config_t *cfg
+uint64_t dis_metadata_volume_size_from_vbr(dis_metadata_t dis_meta);
+
+void* dis_metadata_set_dataset(
+	dis_metadata_t dis_metadata,
+	void* new_dataset
 );
 
-int begin_compute_regions(
-	volume_header_t* vh,
-	int fd,
-	off_t disk_offset,
-	dis_regions_t* regions
+void* dis_metadata_set_volume_header(
+	dis_metadata_t dis_metadata,
+	void* new_volume_header
 );
 
-int end_compute_regions(
-	dis_regions_t* regions,
-	volume_header_t* volume_header,
-	bitlocker_information_t* information
-);
+uint16_t dis_metadata_sector_size(dis_metadata_t dis_meta);
 
-int get_metadata(off_t source, void **metadata, int fd);
+version_t dis_metadata_information_version(dis_metadata_t dis_meta);
 
-int get_dataset(void* metadata, bitlocker_dataset_t** dataset);
+uint64_t dis_metadata_encrypted_volume_size(dis_metadata_t dis_meta);
 
-int get_eow_information(off_t source, void** eow_infos, int fd);
+uint64_t dis_metadata_ntfs_sectors_address(dis_metadata_t dis_meta);
+uint64_t dis_metadata_mftmirror(dis_metadata_t dis_meta);
 
-int get_metadata_lazy_checked(
-	volume_header_t* volume_header,
-	int fd,
-	void** metadata,
-	dis_config_t *cfg,
-	dis_regions_t *regions
-);
-
-int get_eow_check_valid(
-	volume_header_t *volume_header,
-	int fd,
-	void **eow_infos,
-	dis_config_t* cfg
-);
-
-int check_state(bitlocker_information_t* information);
+uint32_t dis_metadata_backup_sectors_count(dis_metadata_t dis_meta);
 
 
 #endif // METADATA_H

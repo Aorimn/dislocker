@@ -30,14 +30,14 @@
 /**
  * Get the VMK datum using a clear key
  * 
- * @param dataset The dataset where a clear key is assumed to be
+ * @param dis_metadata The metadata structure
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
+int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset)
+	if(!dis_meta)
 		return FALSE;
 	
 	uint8_t* recovery_key = NULL;
@@ -49,7 +49,7 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
 	
 	
 	/* Search for a clear key */
-	if(!has_clear_key(dataset, (datum_vmk_t**)vmk_datum))
+	if(!dis_metadata_has_clear_key(dis_meta, vmk_datum))
 	{
 		xprintf(L_ERROR, "No clear key found. Use a different method.\n");
 		xfree(type_str);
@@ -173,22 +173,22 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 /**
  * Retrieve the VMK datum associated to a known GUID
  * 
- * @param dataset The dataset where to look for the datum
+ * @param dis_metadata The metadata structure
  * @param guid The GUID of the VMK datum to find
  * @param vmk_datum The found datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum)
+int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset || !guid)
+	if(!dis_meta || !guid)
 		return FALSE;
 	
 	*vmk_datum = NULL;
 	
 	while(1)
 	{
-		if(!get_next_datum(dataset, 2, DATUM_VMK, *vmk_datum, vmk_datum))
+		if(!get_next_datum(dis_meta, 2, DATUM_VMK, *vmk_datum, vmk_datum))
 		{
 			*vmk_datum = NULL;
 			return FALSE;
@@ -204,16 +204,16 @@ int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum)
  * Retrieve the VMK datum associated to priority range
  * The priority is determined with the last two bytes of a VMK datum's nonce
  * 
- * @param dataset The dataset where to look for the datum
+ * @param dis_metadata The metadata structure
  * @param min_range The minimal range to search for
  * @param max_range The maximal range to search for
  * @param vmk_datum The found datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_datum_from_range(void* dataset, uint16_t min_range, uint16_t max_range, void** vmk_datum)
+int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16_t max_range, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset)
+	if(!dis_meta)
 		return FALSE;
 	
 	uint16_t datum_range = 0;
@@ -222,7 +222,7 @@ int get_vmk_datum_from_range(void* dataset, uint16_t min_range, uint16_t max_ran
 	
 	while(1)
 	{
-		if(!get_next_datum(dataset, 2, DATUM_VMK, *vmk_datum, vmk_datum))
+		if(!get_next_datum(dis_meta, 2, DATUM_VMK, *vmk_datum, vmk_datum))
 		{
 			*vmk_datum = NULL;
 			return FALSE;

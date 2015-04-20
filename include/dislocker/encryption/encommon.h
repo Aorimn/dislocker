@@ -63,7 +63,7 @@ typedef struct _dis_crypt* dis_crypt_t;
 /*
  * Prototypes
  */
-dis_crypt_t dis_crypt_new(uint16_t sector_size, int use_diffuser);
+dis_crypt_t dis_crypt_new(uint16_t sector_size, cipher_t disk_cipher);
 
 int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey);
 

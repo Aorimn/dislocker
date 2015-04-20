@@ -32,16 +32,16 @@
  * 
  * @param sector_size The sector size is needed for various operations. It's the
  * size to be used for decrypting the disc as it's encrypted sector by sector.
- * @param use_diffuser Indicate the encryption is using the diffuser (TRUE or
- * FALSE).
+ * @param disk_cipher Indicate the encryption used on the disk for data.
  * @return The newly allocated dis_crypt_t "object".
  */
-dis_crypt_t dis_crypt_new(uint16_t sector_size, int use_diffuser)
+dis_crypt_t dis_crypt_new(uint16_t sector_size, cipher_t disk_cipher)
 {
 	dis_crypt_t crypt = xmalloc(sizeof(struct _dis_crypt));
 	memset(crypt, 0, sizeof(struct _dis_crypt));
 	crypt->sector_size = sector_size;
-	if(use_diffuser)
+	
+	if(disk_cipher == AES_128_DIFFUSER || disk_cipher == AES_256_DIFFUSER)
 		crypt->flags |= DIS_ENC_FLAG_USE_DIFFUSER;
 	
 	return crypt;

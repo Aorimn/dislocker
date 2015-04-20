@@ -106,8 +106,6 @@ int dis_initialize(dis_context_t dis_ctx)
 	
 	int ret = DIS_RET_SUCCESS;
 	
-	int use_diffuser = FALSE;
-	
 	
 	/* Initialize outputs */
 	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
@@ -307,13 +305,9 @@ int dis_initialize(dis_context_t dis_ctx)
 		/*
 		 * Init the crypto structure
 		 */
-		if(dataset->algorithm == AES_128_DIFFUSER ||
-		   dataset->algorithm == AES_256_DIFFUSER)
-			use_diffuser = TRUE;
-		
 		dis_ctx->io_data.crypt = dis_crypt_new(
-			dis_ctx->io_data.volume_header->sector_size,
-			use_diffuser
+			dis_metadata_sector_size(dis_ctx->metadata),
+			dis_ctx->metadata->dataset->algorithm
 		);
 		
 		/*

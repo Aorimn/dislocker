@@ -103,7 +103,6 @@ int xclose(int fd)
 	{
 		dis_errno = errno;
 		xprintf(L_ERROR, DIS_XCLOSE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-		exit(2);
 	}
 	
 	return res;

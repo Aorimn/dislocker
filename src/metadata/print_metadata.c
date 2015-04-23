@@ -92,7 +92,7 @@ void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
  * @param state The state to translate
  * @return The state as a constant string
  */
-const char* get_state(dis_metadata_state_t state)
+static const char* get_state_str(dis_metadata_state_t state)
 {
 	if(state >= sizeof(states_str) / sizeof(char*))
 		return states_str[sizeof(states_str) / sizeof(char*) - 1];
@@ -105,7 +105,7 @@ const char* get_state(dis_metadata_state_t state)
  * Print a BitLocker header structure into a human-readable format
  * 
  * @param level The level above which we're gonna print
- * @param dis_metadata The metadata structure
+ * @param dis_meta The metadata structure
  */
 void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 {
@@ -119,8 +119,8 @@ void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 	xprintf(level, "  Signature: '%.8s'\n", information->signature);
 	xprintf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", metadata_size);
 	xprintf(level, "  Version: %hu\n", information->version);
-	xprintf(level, "  Current state: %s (%hu)\n", get_state(information->curr_state), information->curr_state);
-	xprintf(level, "  Next state: %s (%hu)\n",    get_state(information->next_state), information->next_state);
+	xprintf(level, "  Current state: %s (%hu)\n", get_state_str(information->curr_state), information->curr_state);
+	xprintf(level, "  Next state: %s (%hu)\n",    get_state_str(information->next_state), information->next_state);
 	xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
 	xprintf(level, "  Size of virtualized region: %1$#x (%1$u)\n", information->unknown_size);
 	xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);

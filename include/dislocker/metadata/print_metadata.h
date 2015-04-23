@@ -36,7 +36,5 @@ void print_dataset(DIS_LOGS level, dis_metadata_t dis_metadata);
 
 void print_data(DIS_LOGS level, dis_metadata_t dis_metadata);
 
-const char* get_state(dis_metadata_state_t state);
-
 
 #endif // PRINT_METADATA_H

@@ -38,14 +38,8 @@ enum {
 typedef uint16_t version_t;
 
 
-
 /**
- * Volume's encryption state
- */
-typedef uint16_t dis_metadata_state_t;
-
-/**
- * Metadata structure to use to query the function below
+ * Metadata structure to use to query the functions below
  */
 typedef struct _dis_metadata* dis_metadata_t;
 

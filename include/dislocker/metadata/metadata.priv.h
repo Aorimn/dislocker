@@ -127,6 +127,7 @@ enum state_types
 	ENCRYPTED                = 4,
 	SWITCH_ENCRYPTION_PAUSED = 5
 };
+typedef uint16_t dis_metadata_state_t;
 
 
 /**

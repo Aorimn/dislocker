@@ -73,20 +73,20 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	if(cfg->bek_file)
 	{
 		/* Check if the bek file exists */
-		fd_bek = xopen(cfg->bek_file, O_RDONLY);
+		fd_bek = dis_open(cfg->bek_file, O_RDONLY);
 		if(fd_bek < 0)
 		{
-			xprintf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->bek_file);
+			dis_printf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->bek_file);
 			return FALSE;
 		}
 	}
 	else
 	{
-		xprintf(L_ERROR, "Using bekfile method (USB) but missing the bekfile name. Abort.\n");
+		dis_printf(L_ERROR, "Using bekfile method (USB) but missing the bekfile name. Abort.\n");
 		return FALSE;
 	}
 
-	xprintf(L_INFO, "Using the bekfile '%s' to decrypt the VMK.\n",
+	dis_printf(L_INFO, "Using the bekfile '%s' to decrypt the VMK.\n",
 	                cfg->bek_file);
 
 	/*
@@ -95,13 +95,13 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	 */
 	if(!get_bek_dataset(fd_bek, (void**)&bek_dataset))
 	{
-		xprintf(L_ERROR, "Unable to retrieve the dataset. Abort.\n");
-		xclose(fd_bek);
+		dis_printf(L_ERROR, "Unable to retrieve the dataset. Abort.\n");
+		dis_close(fd_bek);
 		return FALSE;
 	}
 
 	/* We have what we wanted, so close the file */
-	xclose(fd_bek);
+	dis_close(fd_bek);
 
 
 	/* Get the external datum */
@@ -112,7 +112,7 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	/* Check the result datum */
 	if(!*vmk_datum || !datum_type_must_be(*vmk_datum, DATUM_EXTERNAL_KEY))
 	{
-		xprintf(L_ERROR, "Error processing the bekfile: datum of type 9 not found. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error processing the bekfile: datum of type 9 not found. Internal failure, abort.\n");
 		*vmk_datum = NULL;
 		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
@@ -123,12 +123,12 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	memcpy(key_guid, datum_exte->guid, 16);
 
 	format_guid(key_guid, rec_id);
-	xprintf(L_INFO, "Bekfile GUID found: '%s', looking for the same in metadata...\n", rec_id);
+	dis_printf(L_INFO, "Bekfile GUID found: '%s', looking for the same in metadata...\n", rec_id);
 
 	/* Grab the datum nested in the last, we will need it to decrypt the VMK */
 	if(!get_nested_datumtype(*vmk_datum, DATUM_KEY, vmk_datum) || !*vmk_datum)
 	{
-		xprintf(L_ERROR, "Error processing the bekfile: no nested datum found. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error processing the bekfile: no nested datum found. Internal failure, abort.\n");
 		*vmk_datum = NULL;
 		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
@@ -136,7 +136,7 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 
 	if(!get_payload_safe(*vmk_datum, (void**)&recovery_key, &rk_size))
 	{
-		xprintf(L_ERROR, "Error getting the key to decrypt VMK from the bekfile. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error getting the key to decrypt VMK from the bekfile. Internal failure, abort.\n");
 		*vmk_datum = NULL;
 		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
@@ -154,18 +154,18 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	{
 		format_guid(key_guid, rec_id);
 
-		xprintf(L_ERROR,
+		dis_printf(L_ERROR,
 				"\n\tError, can't find a valid and matching VMK datum.\n"
 				"\tThe GUID researched was '%s', check if you have the right bek file for the right volume.\n"
 				"\tAbort.\n",
 			rec_id
 		);
 		*vmk_datum = NULL;
-		xfree(recovery_key);
+		dis_free(recovery_key);
 		return FALSE;
 	}
 
-	xprintf(L_INFO, "VMK datum of id '%s' found. Trying to reach the Key datum...\n", rec_id);
+	dis_printf(L_INFO, "VMK datum of id '%s' found. Trying to reach the Key datum...\n", rec_id);
 
 
 	/*
@@ -174,18 +174,18 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	 */
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, vmk_datum))
 	{
-		xprintf(L_ERROR, "Error looking for the nested datum in the VMK one. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error looking for the nested datum in the VMK one. Internal failure, abort.\n");
 		*vmk_datum = NULL;
-		xfree(recovery_key);
+		dis_free(recovery_key);
 		return FALSE;
 	}
 
 
-	xprintf(L_INFO, "Key datum found and payload extracted!\n");
+	dis_printf(L_INFO, "Key datum found and payload extracted!\n");
 
 	result = get_vmk((datum_aes_ccm_t*)*vmk_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
 
-	xfree(recovery_key);
+	dis_free(recovery_key);
 
 	return result;
 }
@@ -198,29 +198,29 @@ int get_bek_dataset(int fd, void** bek_dataset)
 {
 	if(!bek_dataset)
 	{
-		xprintf(L_ERROR, "Invalid parameter given to get_bek_dataset().\n");
+		dis_printf(L_ERROR, "Invalid parameter given to get_bek_dataset().\n");
 		return FALSE;
 	}
 
 	bitlocker_dataset_t dataset;
 
 	/* Read the dataset header */
-	ssize_t nb_read = xread(fd, &dataset, sizeof(bitlocker_dataset_t));
+	ssize_t nb_read = dis_read(fd, &dataset, sizeof(bitlocker_dataset_t));
 
 	// Check if we read all we wanted
 	if(nb_read != sizeof(bitlocker_dataset_t))
 	{
-		xprintf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset header).\n");
+		dis_printf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset header).\n");
 		return FALSE;
 	}
 
 	if(dataset.size <= sizeof(bitlocker_dataset_t))
 	{
-		xprintf(L_ERROR, "get_bek_dataset::Error, dataset size < dataset header size.\n");
+		dis_printf(L_ERROR, "get_bek_dataset::Error, dataset size < dataset header size.\n");
 		return FALSE;
 	}
 
-	*bek_dataset = xmalloc(dataset.size);
+	*bek_dataset = dis_malloc(dataset.size);
 
 	memset(*bek_dataset, 0, dataset.size);
 	memcpy(*bek_dataset, &dataset, sizeof(bitlocker_dataset_t));
@@ -228,13 +228,13 @@ int get_bek_dataset(int fd, void** bek_dataset)
 	size_t rest = dataset.size - sizeof(bitlocker_dataset_t);
 
 	/* Read the data included in the dataset */
-	nb_read = xread(fd, *bek_dataset + sizeof(bitlocker_dataset_t), rest);
+	nb_read = dis_read(fd, *bek_dataset + sizeof(bitlocker_dataset_t), rest);
 
 	// Check if we read all we wanted
 	if((size_t) nb_read != rest)
 	{
-		xprintf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset content).\n");
-		xfree(*bek_dataset);
+		dis_printf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset content).\n");
+		dis_free(*bek_dataset);
 		return FALSE;
 	}
 

@@ -73,21 +73,21 @@ int main(int argc, char **argv)
 
 	xstdio_init(L_DEBUG, NULL);
 
-	xprintf(L_INFO, "Recovery Password: %s\n", (char *)recovery_password);
+	dis_printf(L_INFO, "Recovery Password: %s\n", (char *)recovery_password);
 
 	recovery_key = xmalloc(32 * sizeof(uint8_t));
 
 	if(!intermediate_key(recovery_password, salt, recovery_key))
 	{
-		xfree(recovery_key);
+		dis_free(recovery_key);
 		return 1;
 	}
 
 	print_intermediate_key(recovery_key);
 
-	xfree(recovery_key);
+	dis_free(recovery_key);
 	if(recovery_password)
-		xfree(recovery_password);
+		dis_free(recovery_password);
 
 	xstdio_end();
 

@@ -123,7 +123,7 @@ int read_decrypt_sectors(
 	if(read_size <= 0)
 	{
 		free(input);
-		xprintf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
+		dis_printf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
 		                 "\n", size, off);
 		return FALSE;
 	}
@@ -360,7 +360,7 @@ static void* thread_decrypt(void* params)
 		       (uint64_t)offset >= io_data->encrypted_volume_size)
 		{
 			/* Do not decrypt when there's nothing to */
-			xprintf(L_DEBUG,
+			dis_printf(L_DEBUG,
 				"  > Copying sector from 0x%" F_OFF_T
 				" (%" F_SIZE_T " bytes)\n",
 				offset, sector_size
@@ -380,7 +380,7 @@ static void* thread_decrypt(void* params)
 				);
 			else
 			{
-				xprintf(L_DEBUG,
+				dis_printf(L_DEBUG,
 					"  > Copying sector from 0x%" F_OFF_T
 					" (%" F_SIZE_T " bytes)\n",
 					offset, sector_size
@@ -397,7 +397,7 @@ static void* thread_decrypt(void* params)
 				offset,
 				loop_output
 			))
-				xprintf(L_CRITICAL, "Decryption of sector %#" F_OFF_T
+				dis_printf(L_CRITICAL, "Decryption of sector %#" F_OFF_T
 				                    " failed!\n", offset);
 		}
 	}
@@ -478,7 +478,7 @@ static void* thread_encrypt(void* params)
 				offset,
 				loop_output
 			))
-				xprintf(L_CRITICAL, "Encryption of sector %#" F_OFF_T
+				dis_printf(L_CRITICAL, "Encryption of sector %#" F_OFF_T
 				                    " failed!\n", offset);
 		}
 	}
@@ -518,7 +518,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	off_t from = sector_address;
 	off_t to   = from + (off_t)io_data->backup_sectors_addr;
 
-	xprintf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
+	dis_printf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
 	                 "\n", from, to);
 
 	to += io_data->part_off;
@@ -533,7 +533,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	if(read_size <= 0)
 	{
 		free(input);
-		xprintf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
+		dis_printf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
 		                 "\n", io_data->sector_size, to);
 		return;
 	}

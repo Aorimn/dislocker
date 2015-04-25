@@ -37,7 +37,7 @@
  */
 dis_crypt_t dis_crypt_new(uint16_t sector_size, cipher_t disk_cipher)
 {
-	dis_crypt_t crypt = xmalloc(sizeof(struct _dis_crypt));
+	dis_crypt_t crypt = dis_malloc(sizeof(struct _dis_crypt));
 	memset(crypt, 0, sizeof(struct _dis_crypt));
 	crypt->sector_size = sector_size;
 
@@ -73,7 +73,7 @@ int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey)
 			return DIS_RET_SUCCESS;
 
 		default:
-			xprintf(L_WARNING, "Algo not supported: %#hx\n", algorithm);
+			dis_printf(L_WARNING, "Algo not supported: %#hx\n", algorithm);
 			break;
 	}
 
@@ -83,5 +83,5 @@ int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey)
 void dis_crypt_destroy(dis_crypt_t crypt)
 {
 	if(crypt)
-		xfree(crypt);
+		dis_free(crypt);
 }

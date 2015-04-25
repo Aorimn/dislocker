@@ -67,7 +67,7 @@ static int            tty_fd = -1;
  * @param v Application verbosity
  * @param file File where putting logs (stdout if NULL)
  */
-void xstdio_init(DIS_LOGS v, const char* file)
+void dis_stdio_init(DIS_LOGS v, const char* file)
 {
 	verbosity = v;
 
@@ -111,7 +111,7 @@ void xstdio_init(DIS_LOGS v, const char* file)
 			break;
 	}
 
-	xprintf(L_DEBUG, "Verbosity level to %s (%d) into '%s'\n",
+	dis_printf(L_DEBUG, "Verbosity level to %s (%d) into '%s'\n",
 	        msg_tab[verbosity], verbosity, file == NULL ? "stdout" : file);
 }
 
@@ -158,7 +158,7 @@ void close_input_fd()
 /**
  * Endify in/outputs
  */
-void xstdio_end()
+void dis_stdio_end()
 {
 	close_input_fd();
 
@@ -198,7 +198,7 @@ void chomp(char* string)
  * @param ... Cf printf(3)
  * @return The number of characters printed
  */
-int xprintf(DIS_LOGS level, const char* format, ...)
+int dis_printf(DIS_LOGS level, const char* format, ...)
 {
 	int ret = -1;
 
@@ -212,7 +212,7 @@ int xprintf(DIS_LOGS level, const char* format, ...)
 	va_list arg;
 	va_start(arg, format);
 
-	ret = xvprintf(level, format, arg);
+	ret = dis_vprintf(level, format, arg);
 
 	va_end(arg);
 
@@ -230,7 +230,7 @@ int xprintf(DIS_LOGS level, const char* format, ...)
  * @param format String to display (cf vprintf(3))
  * @param ap Cf vprintf(3)
  */
-int xvprintf(DIS_LOGS level, const char* format, va_list ap)
+int dis_vprintf(DIS_LOGS level, const char* format, va_list ap)
 {
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
@@ -255,15 +255,15 @@ int xvprintf(DIS_LOGS level, const char* format, va_list ap)
  *
  * @param append The string to append to the error message
  */
-void xperror(char* append)
+void dis_perror(char* append)
 {
 	size_t len = strlen(append) + strlen(ERROR_STR) + 2;
-	char *error_msg = xmalloc(len * sizeof(char));
+	char *error_msg = dis_malloc(len * sizeof(char));
 	snprintf(error_msg, len, "\n"ERROR_STR"%s", append);
 
 	perror(error_msg);
 
-	xfree(error_msg);
+	dis_free(error_msg);
 	free(append);
 
 	exit(PERROR_EXIT);

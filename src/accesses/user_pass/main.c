@@ -77,20 +77,20 @@ int main(int argc, char **argv)
 
 	if(user_password == NULL)
 	{
-		xprintf(L_CRITICAL, "No user password given, aborting.\n");
+		dis_printf(L_CRITICAL, "No user password given, aborting.\n");
 		goto error;
 	}
 
-	xprintf(L_INFO, "User Password: %s\n", (char *)user_password);
+	dis_printf(L_INFO, "User Password: %s\n", (char *)user_password);
 
 	if(!user_key(user_password, salt, user_hash))
 	{
-		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
+		dis_printf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
 		goto error;
 	}
 
 
-	xprintf(L_INFO, "User hash:\n");
+	dis_printf(L_INFO, "User hash:\n");
 	hexdump(L_INFO, user_hash, 32);
 
 

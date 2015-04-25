@@ -458,10 +458,10 @@ void dis_free_args(dis_context_t dis_ctx)
 		memclean(cfg->fvek_file, strlen(cfg->fvek_file) + sizeof(char));
 
 	if(cfg->volume_path)
-		xfree(cfg->volume_path);
+		dis_free(cfg->volume_path);
 
 	if(cfg->log_file)
-		xfree(cfg->log_file);
+		dis_free(cfg->log_file);
 }
 
 
@@ -475,54 +475,54 @@ void dis_print_args(dis_context_t dis_ctx)
 
 	dis_config_t* cfg = &dis_ctx->cfg;
 
-	xprintf(L_DEBUG, "--- Config...\n");
-	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
-	xprintf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
+	dis_printf(L_DEBUG, "--- Config...\n");
+	dis_printf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
+	dis_printf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
 
 	if(cfg->decryption_mean & DIS_USE_CLEAR_KEY)
 	{
-		xprintf(L_DEBUG, "   \tusing a clear key on the volume\n");
+		dis_printf(L_DEBUG, "   \tusing a clear key on the volume\n");
 	}
 	else if(cfg->decryption_mean &  DIS_USE_USER_PASSWORD)
 	{
-		xprintf(L_DEBUG, "   \tusing the user's password method\n");
-		xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->user_password);
+		dis_printf(L_DEBUG, "   \tusing the user's password method\n");
+		dis_printf(L_DEBUG, "   \t\t-> '%s'\n", cfg->user_password);
 	}
 	else if(cfg->decryption_mean & DIS_USE_RECOVERY_PASSWORD)
 	{
-		xprintf(L_DEBUG, "   \tusing the recovery password method\n");
-		xprintf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
+		dis_printf(L_DEBUG, "   \tusing the recovery password method\n");
+		dis_printf(L_DEBUG, "   \t\t-> '%s'\n", cfg->recovery_password);
 	}
 	else if(cfg->decryption_mean & DIS_USE_BEKFILE)
 	{
-		xprintf(L_DEBUG, "   \tusing the bek file at '%s'\n", cfg->bek_file);
+		dis_printf(L_DEBUG, "   \tusing the bek file at '%s'\n", cfg->bek_file);
 	}
 	else if(cfg->decryption_mean & DIS_USE_FVEKFILE)
 	{
-		xprintf(L_DEBUG, "   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
+		dis_printf(L_DEBUG, "   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
 	}
 	else
 	{
-		xprintf(L_DEBUG, "   \tnot using any decryption mean\n");
+		dis_printf(L_DEBUG, "   \tnot using any decryption mean\n");
 	}
 
 	if(cfg->force_block)
-		xprintf(
+		dis_printf(
 			L_DEBUG,
 			"   Forced to be using metadata block n°%d\n",
 			cfg->force_block
 		);
 	else
-		xprintf(L_DEBUG, "   Using the first valid metadata block\n");
+		dis_printf(L_DEBUG, "   Using the first valid metadata block\n");
 
 	if(cfg->flags & DIS_FLAG_READ_ONLY)
-		xprintf(
+		dis_printf(
 			L_DEBUG,
 			"   Not allowing any write on the BitLocker volume "
 			"(read only mode)\n"
 		);
 
-	xprintf(L_DEBUG, "... End config ---\n");
+	dis_printf(L_DEBUG, "... End config ---\n");
 }
 
 

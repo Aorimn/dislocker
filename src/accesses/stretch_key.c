@@ -60,14 +60,14 @@ int stretch_recovery_key(const uint8_t *recovery_key,
 {
 	if(!recovery_key || !salt || !result)
 	{
-		xprintf(L_ERROR, "Invalid parameter given to stretch_recovery_key().\n");
+		dis_printf(L_ERROR, "Invalid parameter given to stretch_recovery_key().\n");
 		return FALSE;
 	}
 
 	size_t size = sizeof(bitlocker_chain_hash_t);
 	bitlocker_chain_hash_t * ch = NULL;
 
-	ch = (bitlocker_chain_hash_t *) xmalloc(size);
+	ch = (bitlocker_chain_hash_t *) dis_malloc(size);
 
 	memset(ch, 0, size);
 
@@ -76,10 +76,10 @@ int stretch_recovery_key(const uint8_t *recovery_key,
 
 	memcpy(ch->salt, salt, SALT_LENGTH);
 
-	xprintf(L_INFO, "Stretching the recovery password, it could take some time...\n");
+	dis_printf(L_INFO, "Stretching the recovery password, it could take some time...\n");
 	if(!stretch_key(ch, result))
 		return FALSE;
-	xprintf(L_INFO, "Stretching of the recovery password is now ok!\n");
+	dis_printf(L_INFO, "Stretching of the recovery password is now ok!\n");
 
 	/* Wipe out with zeros and free it */
 	memclean(ch, size);
@@ -103,7 +103,7 @@ int stretch_user_key(const uint8_t *user_hash,
 {
 	if(!user_hash || !salt || !result)
 	{
-		xprintf(L_ERROR, "Invalid parameter given to stretch_user_key().\n");
+		dis_printf(L_ERROR, "Invalid parameter given to stretch_user_key().\n");
 		return FALSE;
 	}
 
@@ -115,10 +115,10 @@ int stretch_user_key(const uint8_t *user_hash,
 	memcpy(ch.password_hash, user_hash, SHA256_DIGEST_LENGTH);
 	memcpy(ch.salt,          salt,      SALT_LENGTH);
 
-	xprintf(L_INFO, "Stretching the user password, it could take some time...\n");
+	dis_printf(L_INFO, "Stretching the user password, it could take some time...\n");
 	if(!stretch_key(&ch, result))
 		return FALSE;
-	xprintf(L_INFO, "Stretching of the user password is now ok!\n");
+	dis_printf(L_INFO, "Stretching of the user password is now ok!\n");
 
 	/* Wipe out with zeros */
 	memset(&ch, 0, size);
@@ -139,7 +139,7 @@ static int stretch_key(bitlocker_chain_hash_t* ch, uint8_t *result)
 {
 	if(!ch || !result)
 	{
-		xprintf(L_ERROR, "Invalid parameter given to stretch_key().\n");
+		dis_printf(L_ERROR, "Invalid parameter given to stretch_key().\n");
 		return FALSE;
 	}
 

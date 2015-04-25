@@ -107,7 +107,7 @@ START_TEST (check_user_key)
 	user_password = (uint8_t*) ck_password;
 
 	/* From function's documentation, size should be 32 */
-	result_key = xmalloc(32 * sizeof(char));
+	result_key = dis_malloc(32 * sizeof(char));
 	memset(result_key, 0, 32 * sizeof(char));
 
 	/* Tested unit */
@@ -117,11 +117,11 @@ START_TEST (check_user_key)
 	ck_assert_int_eq(ret, TRUE);
 	if(memcmp(result_key, good_key, 32) != 0)
 	{
-		xfree(result_key);
+		dis_free(result_key);
 		ck_abort_msg("Found result key doesn't match what it should");
 	}
 
-	xfree(result_key);
+	dis_free(result_key);
 }
 END_TEST
 

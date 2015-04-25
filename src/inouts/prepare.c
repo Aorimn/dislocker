@@ -52,14 +52,14 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 
 	if(!get_payload_safe(fvek_datum, (void**)&fvek, &size_fvek))
 	{
-		xprintf(L_ERROR, "Can't get the FVEK datum payload. Abort.\n");
+		dis_printf(L_ERROR, "Can't get the FVEK datum payload. Abort.\n");
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
 	}
 
-	xprintf(L_DEBUG,
+	dis_printf(L_DEBUG,
 	        "FVEK -----------------------------------------------------\n");
 	hexdump(L_DEBUG, fvek, size_fvek);
-	xprintf(L_DEBUG,
+	dis_printf(L_DEBUG,
 	        "----------------------------------------------------------\n");
 
 	/*
@@ -80,7 +80,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 		palgo++;
 	}
 
-	xprintf(L_ERROR,
+	dis_printf(L_ERROR,
 	        "Dataset's and FVEK's algorithms not supported: %#hx and %#hx\n",
 	        dataset->algorithm, fvek_datum->algo);
 	memclean(fvek, size_fvek);
@@ -119,11 +119,11 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->volume_size = dis_inouts_volume_size(dis_ctx);
 	if(io_data->volume_size == 0)
 	{
-		xprintf(L_ERROR, "Can't initialize the volume's size\n");
+		dis_printf(L_ERROR, "Can't initialize the volume's size\n");
 		return DIS_RET_ERROR_VOLUME_SIZE_NOT_FOUND;
 	}
 
-	xprintf(
+	dis_printf(
 		L_INFO,
 		"Found volume's size: 0x%1$" F_U64_T " (%1$llu) bytes\n",
 		io_data->volume_size

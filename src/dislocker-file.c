@@ -55,18 +55,18 @@
  * @param mode The mode(s) a file will have if created
  * @return The file descriptor returned by the actual open
  */
-static int xopen_file(const char* file, int flags, mode_t mode)
+static int dis_open_file(const char* file, int flags, mode_t mode)
 {
 	int fd = -1;
 
-	xprintf(L_DEBUG, "Trying to open '%s'... ", file);
+	dis_printf(L_DEBUG, "Trying to open '%s'... ", file);
 
 	if((fd = open(file, flags, mode)) < 0)
 	{
 		char* err_string = NULL;
 		size_t arbitrary_value = 42;
 		char* before = "Failed to open file";
-		char* after = xmalloc(arbitrary_value);
+		char* after = dis_malloc(arbitrary_value);
 
 		snprintf(after, arbitrary_value, "%s", file);
 
@@ -79,15 +79,15 @@ static int xopen_file(const char* file, int flags, mode_t mode)
 
 		size_t len = strlen(before);
 
-		err_string = xmalloc(len + arbitrary_value + 4);
+		err_string = dis_malloc(len + arbitrary_value + 4);
 		snprintf(err_string, len + arbitrary_value + 4, "%s '%s'", before, after);
 
-		xfree(after);
+		dis_free(after);
 
-		xperror(err_string);
+		dis_perror(err_string);
 	}
 
-	xprintf(L_DEBUG, "Opened (fd #%d).\n", fd);
+	dis_printf(L_DEBUG, "Opened (fd #%d).\n", fd);
 
 	return fd;
 }
@@ -99,34 +99,34 @@ static int file_main(char* ntfs_file, dis_context_t dis_ctx)
 	// Check parameter
 	if(!ntfs_file)
 	{
-		xprintf(L_ERROR, "Error, empty string file. Abort.\n");
+		dis_printf(L_ERROR, "Error, empty string file. Abort.\n");
 		return EXIT_FAILURE;
 	}
 
 	if(!dis_ctx)
 	{
-		xprintf(L_ERROR, "Error, no context given. Abort.\n");
+		dis_printf(L_ERROR, "Error, no context given. Abort.\n");
 		return EXIT_FAILURE;
 	}
 
 	size_t buf_size = (size_t)(NB_READ_SECTOR * dis_inouts_sector_size(dis_ctx));
-	uint8_t* buffer = xmalloc(buf_size);
+	uint8_t* buffer = dis_malloc(buf_size);
 
 	mode_t mode = S_IRUSR|S_IWUSR;
 	if(dis_is_read_only(dis_ctx))
 		mode = S_IRUSR;
 
-	int fd_ntfs = xopen_file(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
+	int fd_ntfs = dis_open_file(ntfs_file, O_CREAT|O_RDWR|O_LARGEFILE, mode);
 
 
 	off_t offset          = 0;
 	long long int percent = 0;
 	off_t decrypting_size = (off_t)dis_inouts_volume_size(dis_ctx);
 
-	xprintf(L_INFO, "File size: %llu bytes\n", decrypting_size);
+	dis_printf(L_INFO, "File size: %llu bytes\n", decrypting_size);
 
 	/* Read all sectors and decrypt them if necessary */
-	xprintf(L_INFO, "\rDecrypting... 0%%");
+	dis_printf(L_INFO, "\rDecrypting... 0%%");
 	fflush(stdout);
 
 	while(offset < decrypting_size)
@@ -138,21 +138,21 @@ static int file_main(char* ntfs_file, dis_context_t dis_ctx)
 
 
 		/* Now copy the required amount of data to the user file */
-		xwrite(fd_ntfs, buffer, buf_size);
+		dis_write(fd_ntfs, buffer, buf_size);
 
 		/* Screen update */
 		if(percent != (offset*100)/decrypting_size)
 		{
 			percent = (offset*100)/decrypting_size;
-			xprintf(L_INFO, "\rDecrypting... %lld%%", percent);
+			dis_printf(L_INFO, "\rDecrypting... %lld%%", percent);
 			fflush(stdout);
 		}
 	}
 
-	xprintf(L_INFO, "\rDecrypting... Done.\n");
+	dis_printf(L_INFO, "\rDecrypting... Done.\n");
 
-	xfree(buffer);
-	xclose(fd_ntfs);
+	dis_free(buffer);
+	dis_close(fd_ntfs);
 
 	return EXIT_SUCCESS;
 }
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
 	{
-		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -203,12 +203,12 @@ int main(int argc, char** argv)
 	// Check if the file exists, we don't want to overwrite it
 	if(access(ntfs_file, F_OK) == 0)
 	{
-		xprintf(L_CRITICAL, "'%s' already exists, can't override. Abort.\n", ntfs_file);
+		dis_printf(L_CRITICAL, "'%s' already exists, can't override. Abort.\n", ntfs_file);
 		dis_destroy(dis_ctx);
 		return EXIT_FAILURE;
 	}
 
-	xprintf(L_INFO, "Putting NTFS data into '%s'...\n", ntfs_file);
+	dis_printf(L_INFO, "Putting NTFS data into '%s'...\n", ntfs_file);
 
 	// TODO before running the encryption, check if the NTFS file will fit into the free space
 

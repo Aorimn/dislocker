@@ -73,7 +73,7 @@ int dis_errno;
 dis_context_t dis_new()
 {
 	/* Allocate dislocker's context */
-	dis_context_t dis_ctx = xmalloc(sizeof(struct _dis_ctx));
+	dis_context_t dis_ctx = dis_malloc(sizeof(struct _dis_ctx));
 	memset(dis_ctx, 0, sizeof(struct _dis_ctx));
 
 #ifndef __DIS_CORE_DUMPS
@@ -84,7 +84,7 @@ dis_context_t dis_new()
 	if (setrlimit(RLIMIT_CORE, &limit) != 0)
 	{
 		fprintf(stderr, "Cannot disable core dumps.\n");
-		xfree(dis_ctx);
+		dis_free(dis_ctx);
 		return NULL;
 	}
 #endif
@@ -101,9 +101,9 @@ int dis_initialize(dis_context_t dis_ctx)
 
 
 	/* Initialize outputs */
-	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
+	dis_stdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
 
-	xprintf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
+	dis_printf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
 
 	if(dis_ctx->cfg.verbosity >= L_DEBUG)
 		dis_print_args(dis_ctx);
@@ -114,7 +114,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	 */
 	if(!dis_ctx->cfg.volume_path)
 	{
-		xprintf(L_CRITICAL, "No BitLocker volume path given. Abort.\n");
+		dis_printf(L_CRITICAL, "No BitLocker volume path given. Abort.\n");
 		dis_destroy(dis_ctx);
 		return DIS_RET_ERROR_VOLUME_NOT_GIVEN;
 	}
@@ -122,19 +122,19 @@ int dis_initialize(dis_context_t dis_ctx)
 
 
 	/* Open the volume as a (big) normal file */
-	xprintf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
-	dis_ctx->fve_fd = xopen(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
+	dis_printf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
+	dis_ctx->fve_fd = dis_open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
 	if(dis_ctx->fve_fd < 0)
 	{
 		/* Trying to open it in read-only if O_RDWR doesn't work */
-		dis_ctx->fve_fd = xopen(
+		dis_ctx->fve_fd = dis_open(
 			dis_ctx->cfg.volume_path,
 			O_RDONLY|O_LARGEFILE
 		);
 
 		if(dis_ctx->fve_fd < 0)
 		{
-			xprintf(
+			dis_printf(
 				L_CRITICAL,
 				"Failed to open %s: %s\n",
 				dis_ctx->cfg.volume_path, strerror(errno)
@@ -144,14 +144,14 @@ int dis_initialize(dis_context_t dis_ctx)
 		}
 
 		dis_ctx->cfg.flags |= DIS_FLAG_READ_ONLY;
-		xprintf(
+		dis_printf(
 			L_WARNING,
 			"Failed to open %s for writing. Falling back to read-only.\n",
 			dis_ctx->cfg.volume_path
 		);
 	}
 
-	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->fve_fd);
+	dis_printf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->fve_fd);
 
 	dis_ctx->io_data.volume_fd = dis_ctx->fve_fd;
 
@@ -165,7 +165,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	dis_ctx->metadata = dis_metadata_new(dis_ctx);
 	if(dis_ctx->metadata == NULL)
 	{
-		xprintf(L_CRITICAL, "Can't allocate metadata object. Abort.\n");
+		dis_printf(L_CRITICAL, "Can't allocate metadata object. Abort.\n");
 		dis_destroy(dis_ctx);
 		return DIS_RET_ERROR_ALLOC;
 	}
@@ -204,7 +204,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			dis_ctx->io_data.fvek,
 			dis_ctx->io_data.crypt) != DIS_RET_SUCCESS)
 		{
-			xprintf(L_CRITICAL, "Can't initialize keys. Abort.\n");
+			dis_printf(L_CRITICAL, "Can't initialize keys. Abort.\n");
 			dis_destroy(dis_ctx);
 			return DIS_RET_ERROR_CRYPTO_INIT;
 		}
@@ -216,7 +216,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	 * decryption afterward
 	 */
 	if((ret = prepare_crypt(dis_ctx)) != DIS_RET_SUCCESS)
-		xprintf(L_CRITICAL, "Can't prepare the crypt structure. Abort.\n");
+		dis_printf(L_CRITICAL, "Can't prepare the crypt structure. Abort.\n");
 
 
 	// TODO add the DIS_STATE_BEFORE_DECRYPTION_CHECKING event here, so add the check here too
@@ -261,27 +261,27 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	/* Check the initialization's state */
 	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
 	{
-		xprintf(L_ERROR, "Initialization not completed. Abort.\n");
+		dis_printf(L_ERROR, "Initialization not completed. Abort.\n");
 		return -EFAULT;
 	}
 
 	/* Check the state the BitLocker volume is in */
 	if(dis_ctx->io_data.volume_state == FALSE)
 	{
-		xprintf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
+		dis_printf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
 		return -EFAULT;
 	}
 
 	/* Check requested size */
 	if(size == 0)
 	{
-		xprintf(L_DEBUG, "Received a request with a null size\n");
+		dis_printf(L_DEBUG, "Received a request with a null size\n");
 		return 0;
 	}
 
 	if(size > INT_MAX)
 	{
-		xprintf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
+		dis_printf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
 			size
 		);
 		return -EOVERFLOW;
@@ -290,13 +290,13 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	/* Check requested offset */
 	if(offset < 0)
 	{
-		xprintf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
+		dis_printf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
 		return -EFAULT;
 	}
 
 	if(offset >= (off_t)dis_ctx->io_data.volume_size)
 	{
-		xprintf(
+		dis_printf(
 			L_ERROR,
 			"Offset (%#" F_OFF_T ") exceeds volume's size (%#" F_OFF_T ")\n",
 			offset,
@@ -338,29 +338,29 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	sector_count = ( size / sector_size ) + sector_to_add;
 	sector_start = offset / sector_size;
 
-	xprintf(L_DEBUG,
+	dis_printf(L_DEBUG,
 	        "--------------------{ Fuse reading }-----------------------\n");
-	xprintf(L_DEBUG, "  Offset and size needed: %#" F_OFF_T
+	dis_printf(L_DEBUG, "  Offset and size needed: %#" F_OFF_T
 	                 " and %#" F_SIZE_T "\n", offset, size);
-	xprintf(L_DEBUG, "  Start sector number: %#" F_OFF_T
+	dis_printf(L_DEBUG, "  Start sector number: %#" F_OFF_T
 	                 " || Number of sectors: %#" F_SIZE_T "\n",
 	                 sector_start, sector_count);
 
 
 	/*
-	 * NOTE: DO NOT use xmalloc() here, we don't want to mess everything up!
-	 * In general, do not use xfunctions() but xprintf() here.
+	 * NOTE: DO NOT use dis_malloc() here, we don't want to mess everything up!
+	 * In general, do not use xfunctions() but dis_printf() here.
 	 */
 
 	size_t to_allocate = size + sector_to_add*sector_size;
-	xprintf(L_DEBUG, "  Trying to allocate %#" F_SIZE_T " bytes\n",to_allocate);
+	dis_printf(L_DEBUG, "  Trying to allocate %#" F_SIZE_T " bytes\n",to_allocate);
 	buf = malloc(to_allocate);
 
 	/* If buffer could not be allocated, return an error */
 	if(!buf)
 	{
-		xprintf(L_ERROR, "Cannot allocate buffer for reading, abort.\n");
-		xprintf(L_DEBUG,
+		dis_printf(L_ERROR, "Cannot allocate buffer for reading, abort.\n");
+		dis_printf(L_DEBUG,
 		       "-----------------------------------------------------------\n");
 		if(errno < 0)
 			return errno;
@@ -377,8 +377,8 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		buf))
 	{
 		free(buf);
-		xprintf(L_ERROR, "Cannot decrypt sectors, abort.\n");
-		xprintf(L_DEBUG,
+		dis_printf(L_ERROR, "Cannot decrypt sectors, abort.\n");
+		dis_printf(L_DEBUG,
 		       "-----------------------------------------------------------\n");
 		return -EIO;
 	}
@@ -388,8 +388,8 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	free(buf);
 
-	xprintf(L_DEBUG, "  Outsize which will be returned: %d\n", (int)size);
-	xprintf(L_DEBUG,
+	dis_printf(L_DEBUG, "  Outsize which will be returned: %d\n", (int)size);
+	dis_printf(L_DEBUG,
 	        "-----------------------------------------------------------\n");
 
 	return (int)size;
@@ -415,33 +415,33 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	/* Check the initialization's state */
 	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
 	{
-		xprintf(L_ERROR, "Initialization not completed. Abort.\n");
+		dis_printf(L_ERROR, "Initialization not completed. Abort.\n");
 		return -EFAULT;
 	}
 
 	/* Check the state the BitLocker volume is in */
 	if(dis_ctx->io_data.volume_state == FALSE)
 	{
-		xprintf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
+		dis_printf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
 		return -EFAULT;
 	}
 
 	/* Perform basic checks */
 	if(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY)
 	{
-		xprintf(L_DEBUG, "Only decrypting (-r or --read-only option passed)\n");
+		dis_printf(L_DEBUG, "Only decrypting (-r or --read-only option passed)\n");
 		return -EACCES;
 	}
 
 	if(size == 0)
 	{
-		xprintf(L_DEBUG, "Received a request with a null size\n");
+		dis_printf(L_DEBUG, "Received a request with a null size\n");
 		return 0;
 	}
 
 	if(size > INT_MAX)
 	{
-		xprintf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
+		dis_printf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
 			size
 		);
 		return -EOVERFLOW;
@@ -449,13 +449,13 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 
 	if(offset < 0)
 	{
-		xprintf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
+		dis_printf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
 		return -EFAULT;
 	}
 
 	if(offset >= (off_t)dis_ctx->io_data.volume_size)
 	{
-		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
+		dis_printf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
 		                 F_OFF_T ")\n",
 		        offset, (off_t)dis_ctx->io_data.volume_size);
 		return -EFAULT;
@@ -465,7 +465,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	{
 		size_t nsize = (size_t)dis_ctx->io_data.volume_size
 		               - (size_t)offset;
-		xprintf(
+		dis_printf(
 			L_WARNING,
 			"Size modified as exceeding volume's end (offset=%#"
 			F_SIZE_T " + size=%#" F_SIZE_T " >= volume_size=%#"
@@ -491,7 +491,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	if(dis_ctx->metadata->information->version == V_SEVEN &&
 	   offset < dis_ctx->metadata->virtualized_size)
 	{
-		xprintf(L_DEBUG, "  Entering virtualized area\n");
+		dis_printf(L_DEBUG, "  Entering virtualized area\n");
 		if(offset + (off_t)size <= dis_ctx->metadata->virtualized_size)
 		{
 			/*
@@ -499,7 +499,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 			 * the offset
 			 */
 			offset = offset + (off_t)dis_ctx->metadata->information->boot_sectors_backup;
-			xprintf(L_DEBUG, "  `-> Just redirecting to %#"F_OFF_T"\n", offset);
+			dis_printf(L_DEBUG, "  `-> Just redirecting to %#"F_OFF_T"\n", offset);
 		}
 		else
 		{
@@ -511,7 +511,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 			 * - One for the rest by changing the offset to the end of the
 			 *   virtualized area and the size to the rest to be dec/encrypted
 			 */
-			xprintf(L_DEBUG, "  `-> Splitting the request in two, recursing\n");
+			dis_printf(L_DEBUG, "  `-> Splitting the request in two, recursing\n");
 
 			size_t nsize = (size_t)(dis_ctx->metadata->virtualized_size - offset);
 			ret = enlock(dis_ctx, buffer, offset, nsize);
@@ -560,18 +560,18 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	sector_count = ( size / sector_size ) + sector_to_add;
 	sector_start = offset / sector_size;
 
-	xprintf(L_DEBUG,
+	dis_printf(L_DEBUG,
 	        "--------------------{ Fuse writing }-----------------------\n");
-	xprintf(L_DEBUG, "  Offset and size requested: %#" F_OFF_T " and %#"
+	dis_printf(L_DEBUG, "  Offset and size requested: %#" F_OFF_T " and %#"
 	        F_SIZE_T "\n", offset, size);
-	xprintf(L_DEBUG, "  Start sector number: %#" F_OFF_T
+	dis_printf(L_DEBUG, "  Start sector number: %#" F_OFF_T
 	        " || Number of sectors: %#" F_SIZE_T "\n",
 	        sector_start, sector_count);
 
 
 	/*
-	 * NOTE: DO NOT use xmalloc() here, we don't want to mess everything up!
-	 * In general, do not use xfunctions() but xprintf() here.
+	 * NOTE: DO NOT use dis_malloc() here, we don't want to mess everything up!
+	 * In general, do not use xfunctions() but dis_printf() here.
 	 */
 
 	buf = malloc(size + sector_to_add * (size_t)sector_size);
@@ -579,8 +579,8 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	/* If buffer could not be allocated */
 	if(!buf)
 	{
-		xprintf(L_ERROR, "Cannot allocate buffer for writing, abort.\n");
-		xprintf(L_DEBUG,
+		dis_printf(L_ERROR, "Cannot allocate buffer for writing, abort.\n");
+		dis_printf(L_DEBUG,
 		       "-----------------------------------------------------------\n");
 		return -ENOMEM;
 	}
@@ -595,8 +595,8 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	))
 	{
 		free(buf);
-		xprintf(L_ERROR, "Cannot decrypt sectors, abort.\n");
-		xprintf(L_DEBUG,
+		dis_printf(L_ERROR, "Cannot decrypt sectors, abort.\n");
+		dis_printf(L_DEBUG,
 		       "-----------------------------------------------------------\n");
 		return -EIO;
 	}
@@ -616,8 +616,8 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	))
 	{
 		free(buf);
-		xprintf(L_ERROR, "Cannot encrypt sectors, abort.\n");
-		xprintf(L_DEBUG,
+		dis_printf(L_ERROR, "Cannot encrypt sectors, abort.\n");
+		dis_printf(L_DEBUG,
 		       "-----------------------------------------------------------\n");
 		return -EIO;
 	}
@@ -629,8 +629,8 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	/* Note that ret is zero when no recursion occurs */
 	int outsize = (int)size + ret;
 
-	xprintf(L_DEBUG, "  Outsize which will be returned: %d\n", outsize);
-	xprintf(L_DEBUG,
+	dis_printf(L_DEBUG, "  Outsize which will be returned: %d\n", outsize);
+	dis_printf(L_DEBUG,
 	        "-----------------------------------------------------------\n");
 
 	return outsize;
@@ -642,10 +642,10 @@ int dis_destroy(dis_context_t dis_ctx)
 {
 	/* Finish cleaning things */
 	if(dis_ctx->io_data.vmk)
-		xfree(dis_ctx->io_data.vmk);
+		dis_free(dis_ctx->io_data.vmk);
 
 	if(dis_ctx->io_data.fvek)
-		xfree(dis_ctx->io_data.fvek);
+		dis_free(dis_ctx->io_data.fvek);
 
 	dis_crypt_destroy(dis_ctx->io_data.crypt);
 
@@ -653,11 +653,11 @@ int dis_destroy(dis_context_t dis_ctx)
 
 	dis_free_args(dis_ctx);
 
-	xclose(dis_ctx->io_data.volume_fd);
+	dis_close(dis_ctx->io_data.volume_fd);
 
-	xstdio_end();
+	dis_stdio_end();
 
-	xfree(dis_ctx);
+	dis_free(dis_ctx);
 
 	return EXIT_SUCCESS;
 }

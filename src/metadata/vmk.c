@@ -51,44 +51,44 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 	/* Search for a clear key */
 	if(!dis_metadata_has_clear_key(dis_meta, vmk_datum))
 	{
-		xprintf(L_ERROR, "No clear key found. Use a different method.\n");
-		xfree(type_str);
+		dis_printf(L_ERROR, "No clear key found. Use a different method.\n");
+		dis_free(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
 	}
 
-	xprintf(L_DEBUG, "============[ There's a clear key here! ]============\n");
+	dis_printf(L_DEBUG, "============[ There's a clear key here! ]============\n");
 	print_one_datum(L_DEBUG, *vmk_datum);
-	xprintf(L_DEBUG, "==================[ Clear key end ]==================\n");
+	dis_printf(L_DEBUG, "==================[ Clear key end ]==================\n");
 
 	/* Get the clear key */
 	void* key_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_KEY, &key_datum) || !key_datum)
 	{
-		xprintf(L_ERROR, "Error looking for the nested datum type %hd (%s) in the VMK one. Internal failure, abort.\n", DATUM_KEY, type_str);
-		xfree(type_str);
+		dis_printf(L_ERROR, "Error looking for the nested datum type %hd (%s) in the VMK one. Internal failure, abort.\n", DATUM_KEY, type_str);
+		dis_free(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
 	}
 
 	if(!get_payload_safe(key_datum, (void**)&recovery_key, &rk_size))
 	{
-		xprintf(L_ERROR, "Error getting the key to decrypt VMK from the datum %s. Internal failure, abort.\n", type_str);
-		xfree(type_str);
+		dis_printf(L_ERROR, "Error getting the key to decrypt VMK from the datum %s. Internal failure, abort.\n", type_str);
+		dis_free(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
 	}
 
-	xfree(type_str);
+	dis_free(type_str);
 
 	/* Get the encrypted VMK which will be decrypted with the previously found clear key */
 	void* aesccm_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum))
 	{
 		type_str = datumtypestr(DATUM_AES_CCM);
-		xprintf(L_ERROR, "Error in finding the %s including the VMK. Internal failure, abort.\n", type_str);
-		xfree(type_str);
-		xfree(recovery_key);
+		dis_printf(L_ERROR, "Error in finding the %s including the VMK. Internal failure, abort.\n", type_str);
+		dis_free(type_str);
+		dis_free(recovery_key);
 		*vmk_datum = NULL;
 		return FALSE;
 	}
@@ -96,7 +96,7 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 	/* Run the decryption */
 	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
 
-	xfree(recovery_key);
+	dis_free(recovery_key);
 
 	return result;
 }
@@ -121,12 +121,12 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 	unsigned int vmk_size = 0;
 	unsigned int header_size = 0;
 
-	xprintf(L_DEBUG, "=====================[ ENCRYPTED VMK ]====================\n");
+	dis_printf(L_DEBUG, "=====================[ ENCRYPTED VMK ]====================\n");
 	print_one_datum(L_DEBUG, *vmk);
-	xprintf(L_DEBUG, "==========================================================\n");
-	xprintf(L_DEBUG, "=====================[ RECOVERY KEY ]=====================\n");
+	dis_printf(L_DEBUG, "==========================================================\n");
+	dis_printf(L_DEBUG, "=====================[ RECOVERY KEY ]=====================\n");
 	hexdump(L_DEBUG, recovery_key, key_size);
-	xprintf(L_DEBUG, "==========================================================\n");
+	dis_printf(L_DEBUG, "==========================================================\n");
 
 	header_size = datum_types_prop[vmk_datum->header.datum_type].size_header;
 	vmk_size = vmk_datum->header.datum_size - header_size;
@@ -142,27 +142,27 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 	{
 		if(*vmk)
 		{
-			xprintf(L_INFO, "VMK found (but not good it seems):\n");
+			dis_printf(L_INFO, "VMK found (but not good it seems):\n");
 			hexdump(L_INFO, (void*)*vmk, vmk_size);
-			xfree(*vmk);
+			dis_free(*vmk);
 			*vmk = NULL;
 		}
 
-		xprintf(L_ERROR, "Can't decrypt correctly the VMK. Abort.\n");
+		dis_printf(L_ERROR, "Can't decrypt correctly the VMK. Abort.\n");
 		return FALSE;
 	}
 
 
 	if(!*vmk)
 	{
-		xprintf(L_ERROR, "Can't decrypt VMK, abort.\n");
+		dis_printf(L_ERROR, "Can't decrypt VMK, abort.\n");
 		return FALSE;
 	}
 
 
-	xprintf(L_DEBUG, "==========================[ VMK ]=========================\n");
+	dis_printf(L_DEBUG, "==========================[ VMK ]=========================\n");
 	print_one_datum(L_DEBUG, *vmk);
-	xprintf(L_DEBUG, "==========================================================\n");
+	dis_printf(L_DEBUG, "==========================================================\n");
 
 
 	return TRUE;

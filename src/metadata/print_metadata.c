@@ -59,30 +59,30 @@ void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 	format_guid(volume_header->guid, rec_id);
 
 
-	xprintf(level, "=====[ Volume header informations ]=====\n");
-	xprintf(level, "  Signature: '%.8s'\n", volume_header->signature);
-	xprintf(level, "  Sector size: 0x%1$04x (%1$hu) bytes\n", volume_header->sector_size);
-	xprintf(level, "  Sector per cluster: 0x%1$02x (%1$hhu) bytes\n", volume_header->sectors_per_cluster);
-	xprintf(level, "  Reserved clusters: 0x%1$04x (%1$hu) bytes\n", volume_header->reserved_clusters);
-	xprintf(level, "  Fat count: 0x%1$02x (%1$hhu) bytes\n", volume_header->fat_count);
-	xprintf(level, "  Root entries: 0x%1$04x (%1$hu) bytes\n", volume_header->root_entries);
-	xprintf(level, "  Number of sectors (16 bits): 0x%1$04x (%1$hu) bytes\n", volume_header->nb_sectors_16b);
-	xprintf(level, "  Media descriptor: 0x%1$02x (%1$hhu) bytes\n", volume_header->media_descriptor);
-	xprintf(level, "  Sectors per fat: 0x%1$04x (%1$hu) bytes\n", volume_header->sectors_per_fat);
-	xprintf(level, "  Hidden sectors: 0x%1$08x (%1$u) bytes\n", volume_header->hidden_sectors);
-	xprintf(level, "  Number of sectors (32 bits): 0x%1$08x (%1$u) bytes\n", volume_header->nb_sectors_32b);
-	xprintf(level, "  Number of sectors (64 bits): 0x%1$016x (%1$llu) bytes\n", volume_header->nb_sectors_64b);
-	xprintf(level, "  MFT start cluster: 0x%1$016x (%1$lu) bytes\n", volume_header->mft_start_cluster);
-	xprintf(level, "  Metadata Lcn: 0x%1$016x (%1$lu) bytes\n", volume_header->metadata_lcn);
+	dis_printf(level, "=====[ Volume header informations ]=====\n");
+	dis_printf(level, "  Signature: '%.8s'\n", volume_header->signature);
+	dis_printf(level, "  Sector size: 0x%1$04x (%1$hu) bytes\n", volume_header->sector_size);
+	dis_printf(level, "  Sector per cluster: 0x%1$02x (%1$hhu) bytes\n", volume_header->sectors_per_cluster);
+	dis_printf(level, "  Reserved clusters: 0x%1$04x (%1$hu) bytes\n", volume_header->reserved_clusters);
+	dis_printf(level, "  Fat count: 0x%1$02x (%1$hhu) bytes\n", volume_header->fat_count);
+	dis_printf(level, "  Root entries: 0x%1$04x (%1$hu) bytes\n", volume_header->root_entries);
+	dis_printf(level, "  Number of sectors (16 bits): 0x%1$04x (%1$hu) bytes\n", volume_header->nb_sectors_16b);
+	dis_printf(level, "  Media descriptor: 0x%1$02x (%1$hhu) bytes\n", volume_header->media_descriptor);
+	dis_printf(level, "  Sectors per fat: 0x%1$04x (%1$hu) bytes\n", volume_header->sectors_per_fat);
+	dis_printf(level, "  Hidden sectors: 0x%1$08x (%1$u) bytes\n", volume_header->hidden_sectors);
+	dis_printf(level, "  Number of sectors (32 bits): 0x%1$08x (%1$u) bytes\n", volume_header->nb_sectors_32b);
+	dis_printf(level, "  Number of sectors (64 bits): 0x%1$016x (%1$llu) bytes\n", volume_header->nb_sectors_64b);
+	dis_printf(level, "  MFT start cluster: 0x%1$016x (%1$lu) bytes\n", volume_header->mft_start_cluster);
+	dis_printf(level, "  Metadata Lcn: 0x%1$016x (%1$lu) bytes\n", volume_header->metadata_lcn);
 
-	xprintf(level, "  Volume GUID: '%.37s'\n", rec_id);
+	dis_printf(level, "  Volume GUID: '%.37s'\n", rec_id);
 
-	xprintf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[0]);
-	xprintf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->information_off[1]);
-	xprintf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[2]);
+	dis_printf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[0]);
+	dis_printf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->information_off[1]);
+	dis_printf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[2]);
 
-	xprintf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
-	xprintf(level, "========================================\n");
+	dis_printf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
+	dis_printf(level, "========================================\n");
 }
 
 
@@ -115,25 +115,25 @@ void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 	bitlocker_information_t *information = dis_meta->information;
 	int metadata_size = information->version == V_SEVEN ? information->size << 4 : information->size;
 
-	xprintf(level, "=====================[ BitLocker information structure ]=====================\n");
-	xprintf(level, "  Signature: '%.8s'\n", information->signature);
-	xprintf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", metadata_size);
-	xprintf(level, "  Version: %hu\n", information->version);
-	xprintf(level, "  Current state: %s (%hu)\n", get_state_str(information->curr_state), information->curr_state);
-	xprintf(level, "  Next state: %s (%hu)\n",    get_state_str(information->next_state), information->next_state);
-	xprintf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
-	xprintf(level, "  Size of virtualized region: %1$#x (%1$u)\n", information->unknown_size);
-	xprintf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);
-	xprintf(level, "  First metadata header offset:  %#" F_U64_T "\n", information->information_off[0]);
-	xprintf(level, "  Second metadata header offset: %#" F_U64_T "\n", information->information_off[1]);
-	xprintf(level, "  Third metadata header offset:  %#" F_U64_T "\n", information->information_off[2]);
+	dis_printf(level, "=====================[ BitLocker information structure ]=====================\n");
+	dis_printf(level, "  Signature: '%.8s'\n", information->signature);
+	dis_printf(level, "  Total Size: 0x%1$04x (%1$u) bytes (including signature and data)\n", metadata_size);
+	dis_printf(level, "  Version: %hu\n", information->version);
+	dis_printf(level, "  Current state: %s (%hu)\n", get_state_str(information->curr_state), information->curr_state);
+	dis_printf(level, "  Next state: %s (%hu)\n",    get_state_str(information->next_state), information->next_state);
+	dis_printf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
+	dis_printf(level, "  Size of virtualized region: %1$#x (%1$u)\n", information->unknown_size);
+	dis_printf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);
+	dis_printf(level, "  First metadata header offset:  %#" F_U64_T "\n", information->information_off[0]);
+	dis_printf(level, "  Second metadata header offset: %#" F_U64_T "\n", information->information_off[1]);
+	dis_printf(level, "  Third metadata header offset:  %#" F_U64_T "\n", information->information_off[2]);
 	if(information->version == V_SEVEN)
-		xprintf(level, "  Boot sectors backup address:   %#" F_U64_T "\n", information->boot_sectors_backup);
+		dis_printf(level, "  Boot sectors backup address:   %#" F_U64_T "\n", information->boot_sectors_backup);
 	else
-		xprintf(level, "  NTFS MftMirror field:   %#" F_U64_T "\n", information->mftmirror_backup);
+		dis_printf(level, "  NTFS MftMirror field:   %#" F_U64_T "\n", information->mftmirror_backup);
 
 	print_dataset(level, dis_meta);
-	xprintf(level, "=============================================================================\n");
+	dis_printf(level, "=============================================================================\n");
 }
 
 
@@ -159,18 +159,18 @@ void print_dataset(DIS_LOGS level, dis_metadata_t dis_meta)
 	date = strdup(asctime(gmtime(&ts)));
 	chomp(date);
 
-	xprintf(level, "  ----------------------------{ Dataset header }----------------------------\n");
-	xprintf(level, "    Dataset size: 0x%1$08x (%1$d) bytes (including data)\n", dataset->size);
-	xprintf(level, "    Unknown data: 0x%08x (always 0x00000001)\n", dataset->unknown1);
-	xprintf(level, "    Dataset header size: 0x%08x (always 0x00000030)\n", dataset->header_size);
-	xprintf(level, "    Dataset copy size: 0x%1$08x (%1$d) bytes\n", dataset->copy_size);
-	xprintf(level, "    Dataset GUID: '%.39s'\n", formated_guid);
-	xprintf(level, "    Next counter: %u\n", dataset->next_counter);
-	xprintf(level, "    Encryption Type: %s (%#hx)\n", cipher, dataset->algorithm);
-	xprintf(level, "    Epoch Timestamp: %u sec, that to say %s\n", (unsigned int)ts, date);
-	xprintf(level, "  --------------------------------------------------------------------------\n");
+	dis_printf(level, "  ----------------------------{ Dataset header }----------------------------\n");
+	dis_printf(level, "    Dataset size: 0x%1$08x (%1$d) bytes (including data)\n", dataset->size);
+	dis_printf(level, "    Unknown data: 0x%08x (always 0x00000001)\n", dataset->unknown1);
+	dis_printf(level, "    Dataset header size: 0x%08x (always 0x00000030)\n", dataset->header_size);
+	dis_printf(level, "    Dataset copy size: 0x%1$08x (%1$d) bytes\n", dataset->copy_size);
+	dis_printf(level, "    Dataset GUID: '%.39s'\n", formated_guid);
+	dis_printf(level, "    Next counter: %u\n", dataset->next_counter);
+	dis_printf(level, "    Encryption Type: %s (%#hx)\n", cipher, dataset->algorithm);
+	dis_printf(level, "    Epoch Timestamp: %u sec, that to say %s\n", (unsigned int)ts, date);
+	dis_printf(level, "  --------------------------------------------------------------------------\n");
 
-	xfree(cipher);
+	dis_free(cipher);
 	free(date);
 }
 
@@ -187,23 +187,23 @@ void print_eow_infos(DIS_LOGS level, dis_metadata_t dis_meta)
 
 	bitlocker_eow_infos_t* eow_infos = dis_meta->eow_information;
 
-	xprintf(level, "=======================[ BitLocker EOW informations ]========================\n");
-	xprintf(level, "  Signature: '%.8s'\n", eow_infos->signature);
-	xprintf(level, "  Structure size: 0x%1$04x (%1$hu)\n", eow_infos->header_size);
-	xprintf(level, "  On-disk size: 0x%1$04x (%1$hu)\n", eow_infos->infos_size);
-	xprintf(level, "  Sector size (1): 0x%1$04x (%1$hu)\n", eow_infos->sector_size1);
-	xprintf(level, "  Sector size (2): 0x%1$04x (%1$hu)\n", eow_infos->sector_size2);
+	dis_printf(level, "=======================[ BitLocker EOW informations ]========================\n");
+	dis_printf(level, "  Signature: '%.8s'\n", eow_infos->signature);
+	dis_printf(level, "  Structure size: 0x%1$04x (%1$hu)\n", eow_infos->header_size);
+	dis_printf(level, "  On-disk size: 0x%1$04x (%1$hu)\n", eow_infos->infos_size);
+	dis_printf(level, "  Sector size (1): 0x%1$04x (%1$hu)\n", eow_infos->sector_size1);
+	dis_printf(level, "  Sector size (2): 0x%1$04x (%1$hu)\n", eow_infos->sector_size2);
 
-	xprintf(level, "  Unknown (0x14): 0x%1$08x (%1$u)\n", eow_infos->unknown_14);
+	dis_printf(level, "  Unknown (0x14): 0x%1$08x (%1$u)\n", eow_infos->unknown_14);
 
-	xprintf(level, "  Convlog size: 0x%1$08x (%1$u)\n", eow_infos->convlog_size);
+	dis_printf(level, "  Convlog size: 0x%1$08x (%1$u)\n", eow_infos->convlog_size);
 
-	xprintf(level, "  Unknown (0x1c): 0x%1$08x (%1$u)\n", eow_infos->unknown_1c);
+	dis_printf(level, "  Unknown (0x1c): 0x%1$08x (%1$u)\n", eow_infos->unknown_1c);
 
-	xprintf(level, "  Number of regions: %u\n", eow_infos->nb_regions);
-	xprintf(level, "  Crc32: %x\n", eow_infos->crc32);
-	xprintf(level, "  On-disk offsets: %#" F_U64_T "\n", eow_infos->disk_offsets);
-	xprintf(level, "=============================================================================\n");
+	dis_printf(level, "  Number of regions: %u\n", eow_infos->nb_regions);
+	dis_printf(level, "  Crc32: %x\n", eow_infos->crc32);
+	dis_printf(level, "  On-disk offsets: %#" F_U64_T "\n", eow_infos->disk_offsets);
+	dis_printf(level, "=============================================================================\n");
 }
 
 
@@ -242,10 +242,10 @@ void print_data(DIS_LOGS level, dis_metadata_t dis_meta)
 		if(data + header.datum_size > end_dataset)
 			break;
 
-		xprintf(level, "\n");
-		xprintf(level, "======[ Datum n°%d informations ]======\n", ++loop);
+		dis_printf(level, "\n");
+		dis_printf(level, "======[ Datum n°%d informations ]======\n", ++loop);
 		print_one_datum(level, data);
-		xprintf(level, "=========================================\n");
+		dis_printf(level, "=========================================\n");
 
 		data += header.datum_size;
 	}

@@ -46,11 +46,11 @@
 #define DIS_XOPEN_ARBITRARY_VALUE 42
 #define DIS_XOPEN_FAIL_STR "Failed to open file"
 #define DIS_XOPEN_FAIL_LEN sizeof(DIS_XOPEN_FAIL_STR)
-int xopen(const char* file, int flags)
+int dis_open(const char* file, int flags)
 {
 	int fd = -1;
 
-	xprintf(L_DEBUG, "Trying to open '%s'...\n", file);
+	dis_printf(L_DEBUG, "Trying to open '%s'...\n", file);
 
 	if((fd = open(file, flags)) < 0)
 	{
@@ -75,11 +75,11 @@ int xopen(const char* file, int flags)
 			file_truncated
 		);
 
-		xprintf(L_ERROR, "%s: %s\n", err_string, strerror(dis_errno));
+		dis_printf(L_ERROR, "%s: %s\n", err_string, strerror(dis_errno));
 		return -1;
 	}
 
-	xprintf(L_DEBUG, "Opened (fd #%d).\n", fd);
+	dis_printf(L_DEBUG, "Opened (fd #%d).\n", fd);
 
 	return fd;
 }
@@ -88,21 +88,21 @@ int xopen(const char* file, int flags)
 /**
  * close syscall wrapper
  *
- * @param fd The result of an xopen call
+ * @param fd The result of an dis_open call
  * @return The result of the close call
  */
 #define DIS_XCLOSE_FAIL_STR "Failed to close previously opened stream"
 #define DIS_XCLOSE_FAIL_LEN sizeof(DIS_XCLOSE_FAIL_STR)
-int xclose(int fd)
+int dis_close(int fd)
 {
 	int res = -1;
 
-	xprintf(L_DEBUG, "Trying to close fd #%d...\n", fd);
+	dis_printf(L_DEBUG, "Trying to close fd #%d...\n", fd);
 
 	if((res = close(fd)) < 0)
 	{
 		dis_errno = errno;
-		xprintf(L_ERROR, DIS_XCLOSE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		dis_printf(L_ERROR, DIS_XCLOSE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
 	}
 
 	return res;
@@ -119,20 +119,20 @@ int xclose(int fd)
  */
 #define DIS_XREAD_FAIL_STR "Failed to read in"
 #define DIS_XREAD_FAIL_LEN sizeof(DIS_XREAD_FAIL_STR)
-ssize_t xread(int fd, void* buf, size_t count)
+ssize_t dis_read(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
 
 #ifdef __ARCH_X86_64
-	xprintf(L_DEBUG, "Reading %lu bytes from #%d into %p\n", count, fd, buf);
+	dis_printf(L_DEBUG, "Reading %lu bytes from #%d into %p\n", count, fd, buf);
 #else
-	xprintf(L_DEBUG, "Reading %u bytes from #%d into %p\n", count, fd, buf);
+	dis_printf(L_DEBUG, "Reading %u bytes from #%d into %p\n", count, fd, buf);
 #endif /* __ARCH_X86_64 */
 
 	if((res = read(fd, buf, count)) < 0)
 	{
 		dis_errno = errno;
-		xprintf(L_ERROR, DIS_XREAD_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		dis_printf(L_ERROR, DIS_XREAD_FAIL_STR " #%d: %s\n", fd, strerror(errno));
 	}
 
 	return res;
@@ -149,20 +149,20 @@ ssize_t xread(int fd, void* buf, size_t count)
  */
 #define DIS_XWRITE_FAIL_STR "Failed to write in"
 #define DIS_XWRITE_FAIL_LEN sizeof(DIS_XWRITE_FAIL_STR)
-ssize_t xwrite(int fd, void* buf, size_t count)
+ssize_t dis_write(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
 
 #ifdef __ARCH_X86_64
-	xprintf(L_DEBUG, "Writing %lu bytes to #%d from %p\n", count, fd, buf);
+	dis_printf(L_DEBUG, "Writing %lu bytes to #%d from %p\n", count, fd, buf);
 #else
-	xprintf(L_DEBUG, "Writing %u bytes to #%d from %p\n", count, fd, buf);
+	dis_printf(L_DEBUG, "Writing %u bytes to #%d from %p\n", count, fd, buf);
 #endif /* __ARCH_X86_64 */
 
 	if((res = write(fd, buf, count)) < 0)
 	{
 		dis_errno = errno;
-		xprintf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		dis_printf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
 	}
 
 	return res;
@@ -179,16 +179,16 @@ ssize_t xwrite(int fd, void* buf, size_t count)
  */
 #define DIS_XSEEK_FAIL_STR "Failed to seek in"
 #define DIS_XSEEK_FAIL_LEN sizeof(DIS_XSEEK_FAIL_STR)
-off_t xlseek(int fd, off_t offset, int whence)
+off_t dis_lseek(int fd, off_t offset, int whence)
 {
 	off_t res = -1;
 
-	xprintf(L_DEBUG, "Positionnong #%d at offset %lld from %d\n", fd, offset, whence);
+	dis_printf(L_DEBUG, "Positionnong #%d at offset %lld from %d\n", fd, offset, whence);
 
 	if((res = lseek(fd, offset, whence)) < 0)
 	{
 		dis_errno = errno;
-		xprintf(L_ERROR, DIS_XSEEK_FAIL_STR " #%d: %s\n", fd, strerror(errno));
+		dis_printf(L_ERROR, DIS_XSEEK_FAIL_STR " #%d: %s\n", fd, strerror(errno));
 	}
 
 	return res;
@@ -216,7 +216,7 @@ void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 		for(j = i; j < max; j++)
 			snprintf(&s[11 + 3*(j-i)], 4, "%.2x%s", data[j], (j-i == offset/2-1 && j+1 != max) ? "-" : " ");
 
-		xprintf(level, "%s\n", s);
+		dis_printf(level, "%s\n", s);
 	}
 }
 
@@ -253,7 +253,7 @@ void xor_buffer(unsigned char* buf1, const unsigned char* buf2, unsigned char* o
 void memclean(void* ptr, size_t size)
 {
 	memset(ptr, 0, size);
-	xfree(ptr);
+	dis_free(ptr);
 }
 
 

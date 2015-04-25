@@ -147,7 +147,7 @@ static int fs_read(
 	 */
 	if(strcmp(path, NTFS_FILENAME) != 0)
 	{
-		xprintf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
+		dis_printf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
 		return -ENOENT;
 	}
 
@@ -168,7 +168,7 @@ static int fs_write(
 
 	if(strcmp(path, NTFS_FILENAME) != 0)
 	{
-		xprintf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
+		dis_printf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
 		return -ENOENT;
 	}
 
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
 	/* Check we got enough arguments for at least one more, the mount point */
 	if(param_idx >= argc || param_idx <= 0)
 	{
-		xprintf(L_CRITICAL, "Error, no mount point given. Abort.\n");
+		dis_printf(L_CRITICAL, "Error, no mount point given. Abort.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
 	{
-		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -228,13 +228,13 @@ int main(int argc, char** argv)
 	 */
 	/* Compute the new argc given to FUSE */
 	size_t new_argc = (size_t)(argc - param_idx + 1);
-	xprintf(L_DEBUG, "New value for argc: %d\n", new_argc);
+	dis_printf(L_DEBUG, "New value for argc: %d\n", new_argc);
 
-	char** new_argv = xmalloc(new_argc * sizeof(char*));
+	char** new_argv = dis_malloc(new_argc * sizeof(char*));
 
 	/* Get argv[0] */
 	size_t lg = strlen(argv[0]) + 1;
-	*new_argv = xmalloc(lg);
+	*new_argv = dis_malloc(lg);
 	memcpy(*new_argv, argv[0], lg);
 
 	/* Get all of the parameters from param_idx till the end */
@@ -242,14 +242,14 @@ int main(int argc, char** argv)
 	for(loop = 1; loop < new_argc; ++loop)
 	{
 		lg = strlen(argv[(size_t)param_idx + loop - 1]) + 1;
-		*(new_argv + loop) = xmalloc(lg);
+		*(new_argv + loop) = dis_malloc(lg);
 		memcpy(*(new_argv + loop), argv[(size_t)param_idx + loop - 1], lg);
 	}
 
 
-	xprintf(L_INFO, "Running FUSE with these arguments: \n");
+	dis_printf(L_INFO, "Running FUSE with these arguments: \n");
 	for(loop = 0; loop < new_argc; ++loop)
-		xprintf(L_INFO, "  `--> '%s'\n", *(new_argv + loop));
+		dis_printf(L_INFO, "  `--> '%s'\n", *(new_argv + loop));
 
 
 	/* Run FUSE */
@@ -257,8 +257,8 @@ int main(int argc, char** argv)
 
 	/* Free FUSE params */
 	for(loop = 0; loop < new_argc; ++loop)
-		xfree(new_argv[loop]);
-	xfree(new_argv);
+		dis_free(new_argv[loop]);
+	dis_free(new_argv);
 
 
 	/* Destroy dislocker structures */

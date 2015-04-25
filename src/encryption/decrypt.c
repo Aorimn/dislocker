@@ -81,7 +81,7 @@ int decrypt_key(
 	/*
 	 * Allocate output buffer
 	 */
-	*output = xmalloc(input_size);
+	*output = dis_malloc(input_size);
 	memset(*output, 0, input_size);
 
 	/*
@@ -101,14 +101,14 @@ int decrypt_key(
 	 * Decrypt the input buffer now
 	 * NOTE: The 0xc is the nonce length (hardcoded)
 	 */
-	xprintf(L_DEBUG, "}--------[ Data passed to aes_ccm_encrypt_decrypt ]--------{\n");
-	xprintf(L_DEBUG, "-- Nonce:\n");
+	dis_printf(L_DEBUG, "}--------[ Data passed to aes_ccm_encrypt_decrypt ]--------{\n");
+	dis_printf(L_DEBUG, "-- Nonce:\n");
 	hexdump(L_DEBUG, nonce, 0xc);
-	xprintf(L_DEBUG, "-- Input buffer:\n");
+	dis_printf(L_DEBUG, "-- Input buffer:\n");
 	hexdump(L_DEBUG, input, input_size);
-	xprintf(L_DEBUG, "-- MAC:\n");
+	dis_printf(L_DEBUG, "-- MAC:\n");
 	hexdump(L_DEBUG, mac_first, AUTHENTICATOR_LENGTH);
-	xprintf(L_DEBUG, "}----------------------------------------------------------{\n");
+	dis_printf(L_DEBUG, "}----------------------------------------------------------{\n");
 
 	aes_ccm_encrypt_decrypt(
 		&ctx,
@@ -145,18 +145,18 @@ int decrypt_key(
 	 * Check if the MACs correspond, if not,
 	 * we didn't decrypt correctly the input buffer
 	 */
-	xprintf(L_INFO, "Looking if MACs match...\n");
-	xprintf(L_DEBUG, "They are just below:\n");
+	dis_printf(L_INFO, "Looking if MACs match...\n");
+	dis_printf(L_DEBUG, "They are just below:\n");
 	hexdump(L_DEBUG, mac_first, AUTHENTICATOR_LENGTH);
 	hexdump(L_DEBUG, mac_second, AUTHENTICATOR_LENGTH);
 
 	if(memcmp(mac_first, mac_second, AUTHENTICATOR_LENGTH) != 0)
 	{
-		xprintf(L_ERROR, "The MACs don't match.\n");
+		dis_printf(L_ERROR, "The MACs don't match.\n");
 		return FALSE;
 	}
 
-	xprintf(L_INFO, "Ok, they match!\n");
+	dis_printf(L_INFO, "Ok, they match!\n");
 
 	memset(mac_first,  0, AUTHENTICATOR_LENGTH);
 	memset(mac_second, 0, AUTHENTICATOR_LENGTH);
@@ -189,7 +189,7 @@ static int aes_ccm_encrypt_decrypt(
 	if(!ctx || !input || !mac || !output)
 		return FALSE;
 
-	xprintf(L_INFO, "Entering aes_ccm_encrypt_decrypt...\n");
+	dis_printf(L_INFO, "Entering aes_ccm_encrypt_decrypt...\n");
 
 	unsigned char iv[16];
 	unsigned int loop = 0;
@@ -220,14 +220,14 @@ static int aes_ccm_encrypt_decrypt(
 
 	AES_ECB_ENC(ctx, AES_ENCRYPT, iv, tmp_buf);
 
-	xprintf(L_DEBUG, "\tTmp buffer:\n");
+	dis_printf(L_DEBUG, "\tTmp buffer:\n");
 	hexdump(L_DEBUG, tmp_buf, 16);
-	xprintf(L_DEBUG, "\tInput:\n");
+	dis_printf(L_DEBUG, "\tInput:\n");
 	hexdump(L_DEBUG, mac, mac_length);
 
 	xor_buffer(mac, tmp_buf, NULL, mac_length);
 
-	xprintf(L_DEBUG, "\tOutput:\n");
+	dis_printf(L_DEBUG, "\tOutput:\n");
 	hexdump(L_DEBUG, mac, mac_length);
 
 
@@ -239,7 +239,7 @@ static int aes_ccm_encrypt_decrypt(
 	{
 		loop = input_length >> 4;
 
-		xprintf(L_DEBUG, "Input length: %d, loop: %d\n", input_length, loop);
+		dis_printf(L_DEBUG, "Input length: %d, loop: %d\n", input_length, loop);
 
 		do
 		{
@@ -268,7 +268,7 @@ static int aes_ccm_encrypt_decrypt(
 		} while(--loop);
 	}
 
-	xprintf(L_DEBUG, "Input length remain: %d\n", input_length);
+	dis_printf(L_DEBUG, "Input length remain: %d\n", input_length);
 
 	/*
 	 * Last block
@@ -284,7 +284,7 @@ static int aes_ccm_encrypt_decrypt(
 	memset(iv, 0, sizeof(iv));
 	memset(tmp_buf, 0, sizeof(tmp_buf));
 
-	xprintf(L_INFO, "Ending aes_ccm_encrypt_decrypt successfully!\n");
+	dis_printf(L_INFO, "Ending aes_ccm_encrypt_decrypt successfully!\n");
 
 	return TRUE;
 }
@@ -311,7 +311,7 @@ static int aes_ccm_compute_unencrypted_tag(
 	if(!ctx || !buffer || !mac || nonce_length > 0xe)
 		return FALSE;
 
-	xprintf(L_INFO, "Entering aes_ccm_compute_unencrypted_tag...\n");
+	dis_printf(L_INFO, "Entering aes_ccm_compute_unencrypted_tag...\n");
 
 	unsigned char iv[AUTHENTICATOR_LENGTH];
 	unsigned int loop = 0;
@@ -343,9 +343,9 @@ static int aes_ccm_compute_unencrypted_tag(
 
 		do
 		{
-			xprintf(L_DEBUG, "\tBuffer:\n");
+			dis_printf(L_DEBUG, "\tBuffer:\n");
 			hexdump(L_DEBUG, buffer, 16);
-			xprintf(L_DEBUG, "\tInternal IV:\n");
+			dis_printf(L_DEBUG, "\tInternal IV:\n");
 			hexdump(L_DEBUG, iv, 16);
 
 			xor_buffer(iv, buffer, NULL, AUTHENTICATOR_LENGTH);
@@ -372,7 +372,7 @@ static int aes_ccm_compute_unencrypted_tag(
 
 	memset(iv, 0, AUTHENTICATOR_LENGTH);
 
-	xprintf(L_INFO, "Ending aes_ccm_compute_unencrypted_tag successfully!\n");
+	dis_printf(L_INFO, "Ending aes_ccm_compute_unencrypted_tag successfully!\n");
 
 	return TRUE;
 }

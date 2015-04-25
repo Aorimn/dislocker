@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) < 0)
 	{
-		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -123,11 +123,11 @@ int main(int argc, char **argv)
 
 	// Printing volume header
 	print_volume_header(L_INFO, dis_metadata);
-	xprintf(L_INFO, "\n");
+	dis_printf(L_INFO, "\n");
 
 	// Printing BitLocker information metadata
 	print_information(L_INFO, dis_metadata);
-	xprintf(L_INFO, "\n");
+	dis_printf(L_INFO, "\n");
 
 	// Now we're looking at the data themselves
 	print_data(L_INFO, dis_metadata);
@@ -136,12 +136,12 @@ int main(int argc, char **argv)
 	// Search for a clear key
 	if(dis_metadata_has_clear_key(dis_metadata, &vmk_clear_key_datum))
 	{
-		xprintf(L_INFO, "=======[ There's a clear key here ]========\n");
+		dis_printf(L_INFO, "=======[ There's a clear key here ]========\n");
 		print_one_datum(L_INFO, vmk_clear_key_datum);
-		xprintf(L_INFO, "=============[ Clear key end ]=============\n");
+		dis_printf(L_INFO, "=============[ Clear key end ]=============\n");
 	}
 	else
-		xprintf(L_INFO, "No clear key found.\n");
+		dis_printf(L_INFO, "No clear key found.\n");
 
 
 	dis_destroy(dis_ctx);

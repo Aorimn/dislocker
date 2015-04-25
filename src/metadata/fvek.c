@@ -57,21 +57,21 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 	/* First get the AES-CCM datum where the FVEK is */
 	if(!get_next_datum(dis_meta, 3, 5, 0, fvek_datum))
 	{
-		xprintf(L_CRITICAL, "Error in finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
+		dis_printf(L_CRITICAL, "Error in finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
 		return FALSE;
 	}
 
 	/* Check if the VMK datum is of type KEY (1) */
 	if(!datum_type_must_be(vmk_datum, DATUM_KEY))
 	{
-		xprintf(L_CRITICAL, "Error, the provided VMK datum's type is incorrect. Abort.\n");
+		dis_printf(L_CRITICAL, "Error, the provided VMK datum's type is incorrect. Abort.\n");
 		return FALSE;
 	}
 
 	/* Then extract the real key in the VMK key structure */
 	if(!get_payload_safe(vmk_datum, &vmk_key, &vmk_key_size))
 	{
-		xprintf(L_CRITICAL, "Error getting the key included into the VMK key structure. Internal failure, abort.\n");
+		dis_printf(L_CRITICAL, "Error getting the key included into the VMK key structure. Internal failure, abort.\n");
 		return FALSE;
 	}
 
@@ -91,20 +91,20 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 	{
 		if(*fvek_datum)
 		{
-			xprintf(L_ERROR, "FVEK found (but not good it seems):\n");
+			dis_printf(L_ERROR, "FVEK found (but not good it seems):\n");
 			hexdump(L_ERROR, *fvek_datum, fvek_size);
 		}
 
-		xprintf(L_CRITICAL, "Can't decrypt correctly the FVEK. Abort.\n");
-		xfree(*fvek_datum);
+		dis_printf(L_CRITICAL, "Can't decrypt correctly the FVEK. Abort.\n");
+		dis_free(*fvek_datum);
 		return FALSE;
 	}
 
-	xfree(vmk_key);
+	dis_free(vmk_key);
 
-	xprintf(L_DEBUG, "=========================[ FVEK ]=========================\n");
+	dis_printf(L_DEBUG, "=========================[ FVEK ]=========================\n");
 	print_one_datum(L_DEBUG, *fvek_datum);
-	xprintf(L_DEBUG, "==========================================================\n");
+	dis_printf(L_DEBUG, "==========================================================\n");
 
 	return TRUE;
 }
@@ -144,44 +144,44 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	off_t expected_size = sizeof(enc_method) + sizeof(fvek_keys);
 
 
-	file_fd = xopen(cfg->fvek_file, O_RDONLY);
+	file_fd = dis_open(cfg->fvek_file, O_RDONLY);
 	if(file_fd == -1)
 	{
-		xprintf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->fvek_file);
+		dis_printf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->fvek_file);
 		return FALSE;
 	}
 
 	/* Check the file's size */
-	actual_size = xlseek(file_fd, 0, SEEK_END);
+	actual_size = dis_lseek(file_fd, 0, SEEK_END);
 
 	if(actual_size != expected_size)
 	{
-		xprintf(L_ERROR, "Wrong FVEK file size, expected %d but has %d\n",
+		dis_printf(L_ERROR, "Wrong FVEK file size, expected %d but has %d\n",
 				expected_size, actual_size);
 		return FALSE;
 	}
 
 	/* Read everything */
-	xlseek(file_fd, 0, SEEK_SET);
-	rs = xread(file_fd, enc_method.multi, sizeof(enc_method));
+	dis_lseek(file_fd, 0, SEEK_SET);
+	rs = dis_read(file_fd, enc_method.multi, sizeof(enc_method));
 	if(rs != sizeof(enc_method))
 	{
-		xprintf(
+		dis_printf(
 			L_ERROR,
 			"Cannot read whole encryption method in the FVEK file\n"
 		);
 		return FALSE;
 	}
-	rs = xread(file_fd, fvek_keys,  sizeof(fvek_keys));
+	rs = dis_read(file_fd, fvek_keys,  sizeof(fvek_keys));
 	if(rs != sizeof(fvek_keys))
 	{
-		xprintf(L_ERROR, "Cannot read whole FVEK keys in the FVEK file\n");
+		dis_printf(L_ERROR, "Cannot read whole FVEK keys in the FVEK file\n");
 		return FALSE;
 	}
 
 
 	/* Create the FVEK datum */
-	*fvek_datum = xmalloc(sizeof(datum_key_t) + sizeof(fvek_keys));
+	*fvek_datum = dis_malloc(sizeof(datum_key_t) + sizeof(fvek_keys));
 
 	/* ... create the header */
 	datum_key = *fvek_datum;

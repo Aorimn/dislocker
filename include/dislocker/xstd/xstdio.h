@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -62,17 +62,17 @@ typedef enum {
 /*
  * Prototypes of functions from xstdio.c
  */
-void xstdio_init(int verbosity, const char* logfile);
-void xstdio_end();
+void dis_stdio_init(int verbosity, const char* logfile);
+void dis_stdio_end();
 int  get_input_fd();
 void close_input_fd();
 
 void chomp(char* string);
 
-int xprintf(DIS_LOGS level, const char* format, ...);
-int xvprintf(DIS_LOGS level, const char* format, va_list ap);
+int dis_printf(DIS_LOGS level, const char* format, ...);
+int dis_vprintf(DIS_LOGS level, const char* format, va_list ap);
 
-void xperror(char* append);
+void dis_perror(char* append);
 
 
 

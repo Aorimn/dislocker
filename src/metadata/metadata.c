@@ -80,10 +80,10 @@ dis_metadata_t dis_metadata_new(dis_context_t dis_ctx)
 	if(!dis_ctx)
 		return NULL;
 
-	dis_metadata_t dis_meta = xmalloc(sizeof(struct _dis_metadata));
+	dis_metadata_t dis_meta = dis_malloc(sizeof(struct _dis_metadata));
 	memset(dis_meta, 0, sizeof(struct _dis_metadata));
 
-	dis_meta->volume_header = xmalloc(sizeof(volume_header_t));
+	dis_meta->volume_header = dis_malloc(sizeof(volume_header_t));
 
 	memset(dis_meta->volume_header, 0, sizeof(volume_header_t));
 
@@ -122,7 +122,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		dis_ctx->fve_fd,
 		dis_ctx->cfg.offset))
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"Error during reading the volume: not enough byte read.\n"
 		);
@@ -138,7 +138,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	/* Checking the volume header */
 	if(!check_volume_header(dis_meta, dis_ctx->fve_fd, &dis_ctx->cfg))
 	{
-		xprintf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
+		dis_printf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
 		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
 	}
 
@@ -152,7 +152,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		dis_ctx->cfg.offset,
 		dis_meta->virt_region))
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"Can't compute regions from volume header. Abort.\n"
 		);
@@ -168,7 +168,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		&dis_ctx->cfg,
 		dis_meta->virt_region))
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"A problem occured during the retrieving of metadata. Abort.\n"
 		);
@@ -177,7 +177,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 
 	if(dis_ctx->cfg.force_block == 0 || !metadata)
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"Can't find a valid set of metadata on the disk. Abort.\n"
 		);
@@ -191,7 +191,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	/* Checking BitLocker version */
 	if(information->version > V_SEVEN)
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"Program designed only for BitLocker version 2 and less, "
 			"the version here is %hd. Abort.\n",
@@ -200,14 +200,14 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
 	}
 
-	xprintf(L_INFO, "BitLocker metadata found and parsed.\n");
+	dis_printf(L_INFO, "BitLocker metadata found and parsed.\n");
 
 	dis_meta->information = information;
 
 	/* Now that we have the information, get the dataset within it */
 	if(get_dataset(metadata, &dataset) != TRUE)
 	{
-		xprintf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
+		dis_printf(L_CRITICAL, "Unable to find a valid dataset. Abort.\n");
 		return DIS_RET_ERROR_DATASET_CHECK;
 	}
 
@@ -235,7 +235,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 			 * return of this function.
 			 */
 			if(ret < 0)
-				xprintf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+				dis_printf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
 			return ret;
 		}
 	}
@@ -246,7 +246,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	 */
 	if((ret = end_compute_regions(dis_meta)) != DIS_RET_SUCCESS)
 	{
-		xprintf(L_CRITICAL, "Unable to compute regions. Abort.\n");
+		dis_printf(L_CRITICAL, "Unable to compute regions. Abort.\n");
 		return ret;
 	}
 
@@ -260,12 +260,12 @@ int dis_metadata_destroy(dis_metadata_t dis_meta)
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
 
 	if(dis_meta->volume_header)
-		xfree(dis_meta->volume_header);
+		dis_free(dis_meta->volume_header);
 
 	if(dis_meta->information)
-		xfree(dis_meta->information);
+		dis_free(dis_meta->information);
 
-	xfree(dis_meta);
+	dis_free(dis_meta);
 
 	return DIS_RET_SUCCESS;
 }
@@ -286,18 +286,18 @@ static int get_volume_header(volume_header_t *volume_header, int fd, off_t offse
 		return FALSE;
 
 	// Go to the beginning
-	xlseek(fd, offset, SEEK_SET);
+	dis_lseek(fd, offset, SEEK_SET);
 
-	xprintf(L_INFO, "Reading volume header...\n");
+	dis_printf(L_INFO, "Reading volume header...\n");
 
 	// Read and place data into the volume_header_t structure
-	ssize_t nb_read = xread(fd, volume_header, sizeof(volume_header_t));
+	ssize_t nb_read = dis_read(fd, volume_header, sizeof(volume_header_t));
 
 	// Check if we read all we wanted
 	if(nb_read != sizeof(volume_header_t))
 		return FALSE;
 
-	xprintf(L_INFO, "Volume header read\n");
+	dis_printf(L_INFO, "Volume header read\n");
 
 	return TRUE;
 }
@@ -344,7 +344,7 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_confi
 	/* Checking sector size */
 	if(volume_header->sector_size == 0)
 	{
-		xprintf(L_ERROR, "The sector size found is null.\n");
+		dis_printf(L_ERROR, "The sector size found is null.\n");
 		return FALSE;
 	}
 
@@ -361,7 +361,7 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_confi
 	}
 	else
 	{
-		xprintf(
+		dis_printf(
 		        L_ERROR,
 		        "The signature of the volume (%.8s) doesn't match the "
 		        "BitLocker's ones (" BITLOCKER_SIGNATURE " or "
@@ -385,11 +385,11 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_confi
 
 	if(check_match_guid(volume_guid, INFORMATION_OFFSET_GUID))
 	{
-		xprintf(L_INFO, "Volume GUID (INFORMATION OFFSET) supported\n");
+		dis_printf(L_INFO, "Volume GUID (INFORMATION OFFSET) supported\n");
 	}
 	else if(check_match_guid(volume_guid, EOW_INFORMATION_OFFSET_GUID))
 	{
-		xprintf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
+		dis_printf(L_INFO, "Volume has EOW_INFORMATION_OFFSET_GUID.\n");
 
 		// First: get the EOW informations no matter what
 		off_t source = (off_t) volume_header->eow_information_off[0];
@@ -402,37 +402,37 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_confi
 			// Second: print them
 			print_eow_infos(L_DEBUG, dis_meta);
 
-			xfree(eow_infos);
+			dis_free(eow_infos);
 			dis_meta->eow_information = NULL;
 
 			// Third: check if this struct passes checks
 			if(get_eow_check_valid(volume_header, volume_fd, &eow_infos, cfg))
 			{
-				xprintf(L_INFO,
+				dis_printf(L_INFO,
 				        "EOW information at offset % " F_OFF_T
 				        " passed the tests\n", source);
-				xfree(eow_infos);
+				dis_free(eow_infos);
 			}
 			else
 			{
-				xprintf(L_ERROR,
+				dis_printf(L_ERROR,
 				        "EOW information at offset % " F_OFF_T
 				        " failed to pass the tests\n", source);
 			}
 		}
 		else
 		{
-			xprintf(L_ERROR,
+			dis_printf(L_ERROR,
 			        "Getting EOW information at offset % " F_OFF_T
 			        " failed\n", source);
 		}
 
-		xprintf(L_ERROR, "EOW volume GUID not supported.\n");
+		dis_printf(L_ERROR, "EOW volume GUID not supported.\n");
 		return FALSE;
 	}
 	else
 	{
-		xprintf(L_ERROR, "Unknown volume GUID not supported.\n");
+		dis_printf(L_ERROR, "Unknown volume GUID not supported.\n");
 		return FALSE;
 	}
 
@@ -477,13 +477,13 @@ static int begin_compute_regions(volume_header_t* vh,
 		}
 
 		/* And when encrypted with W$ Vista: */
-		xprintf(L_DEBUG,
+		dis_printf(L_DEBUG,
 			"MetadataLcn = %llu | SectorsPerCluster = %llu | SectorSize = %llu\n",
 			vh->metadata_lcn, vh->sectors_per_cluster, vh->sector_size
 		);
 
 		uint64_t new_offset = vh->metadata_lcn * vh->sectors_per_cluster * vh->sector_size;
-		xprintf(L_INFO, "Changing first metadata offset from %#llx to %#llx\n", vh->information_off[0], new_offset);
+		dis_printf(L_INFO, "Changing first metadata offset from %#llx to %#llx\n", vh->information_off[0], new_offset);
 		regions[0].addr = new_offset;
 
 		/* Now that we have the first offset, go get the others */
@@ -494,7 +494,7 @@ static int begin_compute_regions(volume_header_t* vh,
 		regions[1].addr = information->information_off[1];
 		regions[2].addr = information->information_off[2];
 
-		xfree(information);
+		dis_free(information);
 	}
 	else if(memcmp(BITLOCKER_TO_GO_SIGNATURE, vh->signature,
 	               BITLOCKER_TO_GO_SIGNATURE_SIZE) == 0)
@@ -505,7 +505,7 @@ static int begin_compute_regions(volume_header_t* vh,
 	}
 	else
 	{
-		xprintf(L_ERROR, "Wtf!? Unknown volume GUID not supported.");
+		dis_printf(L_ERROR, "Wtf!? Unknown volume GUID not supported.");
 		return FALSE;
 	}
 
@@ -551,7 +551,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 	}
 
 
-	xprintf(
+	dis_printf(
 		L_DEBUG,
 		"Metadata files size: %#" F_U64_T "\n",
 		metafiles_size
@@ -583,14 +583,14 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
 			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
-			xprintf(
+			dis_printf(
 				L_ERROR,
 				"Error looking for the VIRTUALIZATION datum type"
 				" %hd (%s). Internal failure, abort.\n",
 				DATUM_VIRTUALIZATION_INFO,
 				type_str
 			);
-			xfree(type_str);
+			dis_free(type_str);
 			datum = NULL;
 			return DIS_RET_ERROR_VIRTUALIZATION_INFO_DATUM_NOT_FOUND;
 		}
@@ -609,7 +609,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 
 		dis_meta->virtualized_size = (off_t)datum->nb_bytes;
 
-		xprintf(
+		dis_printf(
 			L_DEBUG,
 			"Virtualized info size: %#" F_OFF_T "\n",
 			dis_meta->virtualized_size
@@ -622,13 +622,13 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		if(actual_size > win7_size)
 		{
 			dis_meta->xinfo = &datum->xinfo;
-			xprintf(L_DEBUG, "Got extended info\n");
+			dis_printf(L_DEBUG, "Got extended info\n");
 		}
 	}
 	else
 	{
 		/* Explicitly mark a BitLocker version as unsupported */
-		xprintf(L_ERROR, "Unsupported BitLocker version (%hu)\n", information->version);
+		dis_printf(L_ERROR, "Unsupported BitLocker version (%hu)\n", information->version);
 		return DIS_RET_ERROR_METADATA_VERSION_UNSUPPORTED;
 	}
 
@@ -654,9 +654,9 @@ static int get_metadata(off_t source, void **metadata, int fd)
 		return FALSE;
 
 	// Go to the beginning of the BitLocker header
-	xlseek(fd, source, SEEK_SET);
+	dis_lseek(fd, source, SEEK_SET);
 
-	xprintf(L_INFO, "Reading bitlocker header at %#" F_OFF_T "...\n", source);
+	dis_printf(L_INFO, "Reading bitlocker header at %#" F_OFF_T "...\n", source);
 
 	bitlocker_information_t information;
 
@@ -664,12 +664,12 @@ static int get_metadata(off_t source, void **metadata, int fd)
 	 * Read and place data into the bitlocker_information_t structure,
 	 * this is the metadata's header
 	 */
-	ssize_t nb_read = xread(fd, &information, sizeof(bitlocker_information_t));
+	ssize_t nb_read = dis_read(fd, &information, sizeof(bitlocker_information_t));
 
 	// Check if we read all we wanted
 	if(nb_read != sizeof(bitlocker_information_t))
 	{
-		xprintf(L_ERROR, "get_metadata::Error, not all bytes read: %d, %d"
+		dis_printf(L_ERROR, "get_metadata::Error, not all bytes read: %d, %d"
 				" expected (1).\n", nb_read, sizeof(bitlocker_information_t));
 		return FALSE;
 	}
@@ -684,32 +684,32 @@ static int get_metadata(off_t source, void **metadata, int fd)
 
 	if(size <= sizeof(bitlocker_information_t))
 	{
-		xprintf(L_ERROR, "get_metadata::Error, metadata size is lesser than the"
+		dis_printf(L_ERROR, "get_metadata::Error, metadata size is lesser than the"
 				" size of the metadata header\n");
 		return FALSE;
 	}
 
 	size_t rest_size = size - sizeof(bitlocker_information_t);
 
-	*metadata = xmalloc(size);
+	*metadata = dis_malloc(size);
 
 	// Copy the header at the begining of the metadata
 	memcpy(*metadata, &information, sizeof(bitlocker_information_t));
 
-	xprintf(L_INFO, "Reading data...\n");
+	dis_printf(L_INFO, "Reading data...\n");
 
 	// Read the rest, the real data
-	nb_read = xread(fd, *metadata + sizeof(bitlocker_information_t), rest_size);
+	nb_read = dis_read(fd, *metadata + sizeof(bitlocker_information_t), rest_size);
 
 	// Check if we read all we wanted
 	if((size_t) nb_read != rest_size)
 	{
-		xprintf(L_ERROR, "get_metadata::Error, not all bytes read: %d, %d"
+		dis_printf(L_ERROR, "get_metadata::Error, not all bytes read: %d, %d"
 				" expected (2).\n", nb_read, rest_size);
 		return FALSE;
 	}
 
-	xprintf(L_INFO, "End get_metadata.\n");
+	dis_printf(L_INFO, "End get_metadata.\n");
 
 	return TRUE;
 }
@@ -739,7 +739,7 @@ static int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 		|| (*dataset)->copy_size - (*dataset)->header_size < 8
 	)
 	{
-		xprintf(L_DEBUG, "size=%#x, copy_size=%#x, header_size=%#x\n");
+		dis_printf(L_DEBUG, "size=%#x, copy_size=%#x, header_size=%#x\n");
 		return FALSE;
 	}
 
@@ -762,9 +762,9 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 		return FALSE;
 
 	/* Go to the beginning of the EOW Information header */
-	xlseek(fd, source, SEEK_SET);
+	dis_lseek(fd, source, SEEK_SET);
 
-	xprintf(L_DEBUG, "Reading EOW Information header at %#" F_OFF_T "...\n",
+	dis_printf(L_DEBUG, "Reading EOW Information header at %#" F_OFF_T "...\n",
 	        source);
 
 	bitlocker_eow_infos_t eow_infos_hdr;
@@ -773,12 +773,12 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 	 * Read and place data into the bitlocker_eow_infos_t structure,
 	 * this is the EOW information header
 	 */
-	ssize_t nb_read = xread(fd, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
+	ssize_t nb_read = dis_read(fd, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
 
 	// Check if we read all we wanted
 	if(nb_read != sizeof(bitlocker_eow_infos_t))
 	{
-		xprintf(L_ERROR, "get_eow_information::Error, not all bytes read: %d,"
+		dis_printf(L_ERROR, "get_eow_information::Error, not all bytes read: %d,"
 		        " %d expected (1).\n", nb_read, sizeof(bitlocker_eow_infos_t));
 		return FALSE;
 	}
@@ -787,32 +787,32 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 
 	if(size <= sizeof(bitlocker_eow_infos_t))
 	{
-		xprintf(L_ERROR, "get_eow_information::Error, EOW information size is"
+		dis_printf(L_ERROR, "get_eow_information::Error, EOW information size is"
 		        " lesser than the size of the header\n");
 		return FALSE;
 	}
 
 	size_t rest_size = size - sizeof(bitlocker_information_t);
 
-	*eow_infos = xmalloc(size);
+	*eow_infos = dis_malloc(size);
 
 	// Copy the header at the begining of the EOW information
 	memcpy(*eow_infos, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
 
-	xprintf(L_INFO, "Reading EOW information's payload...\n");
+	dis_printf(L_INFO, "Reading EOW information's payload...\n");
 
 	// Read the rest, the payload
-	nb_read = xread(fd, *eow_infos + sizeof(bitlocker_eow_infos_t), rest_size);
+	nb_read = dis_read(fd, *eow_infos + sizeof(bitlocker_eow_infos_t), rest_size);
 
 	// Check if we read all we wanted
 	if((size_t) nb_read != rest_size)
 	{
-		xprintf(L_ERROR, "get_eow_information::Error, not all bytes read: %d, "
+		dis_printf(L_ERROR, "get_eow_information::Error, not all bytes read: %d, "
 		        "%d expected (2).\n", nb_read, rest_size);
 		return FALSE;
 	}
 
-	xprintf(L_INFO, "End get_eow_information.\n");
+	dis_printf(L_INFO, "End get_eow_information.\n");
 
 
 	return TRUE;
@@ -839,7 +839,7 @@ static int get_metadata_lazy_checked(
 	if(!volume_header || fd < 0 || !metadata || !cfg)
 		return FALSE;
 
-	xprintf(L_DEBUG, "Entering get_metadata_lazy_checked\n");
+	dis_printf(L_DEBUG, "Entering get_metadata_lazy_checked\n");
 
 	bitlocker_information_t* information = NULL;
 	unsigned int  metadata_size = 0;
@@ -851,15 +851,15 @@ static int get_metadata_lazy_checked(
 	/* If the user wants a specific metadata block */
 	if(cfg->force_block != 0)
 	{
-		xprintf(L_INFO, "Obtaining block n°%d, forced by user...\n", cfg->force_block);
+		dis_printf(L_INFO, "Obtaining block n°%d, forced by user...\n", cfg->force_block);
 		// Get the metadata
 		if(!get_metadata((off_t)regions[cfg->force_block-1].addr + cfg->offset, metadata, fd))
 		{
-			xprintf(L_ERROR, "Can't get metadata (n°%d, forced by user)\n", cfg->force_block);
+			dis_printf(L_ERROR, "Can't get metadata (n°%d, forced by user)\n", cfg->force_block);
 			return FALSE;
 		}
 
-		xprintf(L_INFO, "Block n°%d obtained\n", cfg->force_block);
+		dis_printf(L_INFO, "Block n°%d obtained\n", cfg->force_block);
 
 		return TRUE;
 	}
@@ -869,7 +869,7 @@ static int get_metadata_lazy_checked(
 		/* Get the metadata */
 		if(!get_metadata((off_t)regions[current].addr + cfg->offset, metadata, fd))
 		{
-			xprintf(L_ERROR, "Can't get metadata (n°%d)\n", current+1);
+			dis_printf(L_ERROR, "Can't get metadata (n°%d)\n", current+1);
 			return FALSE;
 		}
 
@@ -885,19 +885,19 @@ static int get_metadata_lazy_checked(
 
 		validations_offset = (off_t)regions[current].addr + metadata_size;
 
-		xprintf(L_INFO, "Reading validations data at offset %#llx.\n", validations_offset);
+		dis_printf(L_INFO, "Reading validations data at offset %#llx.\n", validations_offset);
 
 
 		/* Go to the beginning of the BitLocker validation header */
-		xlseek(fd, validations_offset + cfg->offset, SEEK_SET);
+		dis_lseek(fd, validations_offset + cfg->offset, SEEK_SET);
 
 		/* Get the validations metadata */
 		memset(&validations, 0, sizeof(bitlocker_validations_t));
 
-		ssize_t nb_read = xread(fd, &validations, sizeof(bitlocker_validations_t));
+		ssize_t nb_read = dis_read(fd, &validations, sizeof(bitlocker_validations_t));
 		if(nb_read != sizeof(bitlocker_validations_t))
 		{
-			xprintf(L_ERROR, "Error, can't read all validations data.\n");
+			dis_printf(L_ERROR, "Error, can't read all validations data.\n");
 			return FALSE;
 		}
 
@@ -909,18 +909,18 @@ static int get_metadata_lazy_checked(
 		 * this provides a better checksum (sha256 hash)
 		 *  => This needs the VMK (decrypted)
 		 */
-		xprintf(L_INFO, "Looking if %#x == %#x for metadata validation\n",
+		dis_printf(L_INFO, "Looking if %#x == %#x for metadata validation\n",
 		        metadata_crc32, validations.crc32);
 
 		++current;
 		if(metadata_crc32 == validations.crc32)
 		{
 			cfg->force_block = current;
-			xprintf(L_INFO, "We have a winner (n°%d)!\n", cfg->force_block);
+			dis_printf(L_INFO, "We have a winner (n°%d)!\n", cfg->force_block);
 			break;
 		}
 		else
-			xfree(*metadata);
+			dis_free(*metadata);
 	}
 
 	return TRUE;
@@ -943,7 +943,7 @@ static int get_eow_check_valid(
 	if(!volume_header || fd < 0 || !eow_infos || !cfg)
 		return FALSE;
 
-	xprintf(L_DEBUG, "Entering get_eow_check_valid\n");
+	dis_printf(L_DEBUG, "Entering get_eow_check_valid\n");
 
 	bitlocker_eow_infos_t *eow_infos_hdr = NULL;
 	unsigned char current = 0;
@@ -962,7 +962,7 @@ static int get_eow_check_valid(
 		/* Get the EOW information */
 		if(!get_eow_information(curr_offset, eow_infos, fd))
 		{
-			xprintf(L_ERROR, "Can't get EOW information (n°%d)\n", current);
+			dis_printf(L_ERROR, "Can't get EOW information (n°%d)\n", current);
 			return FALSE;
 		}
 
@@ -974,7 +974,7 @@ static int get_eow_check_valid(
 		/* Check sizes */
 		if(eow_infos_hdr->infos_size <= eow_infos_hdr->header_size)
 		{
-			xfree(*eow_infos);
+			dis_free(*eow_infos);
 			continue;
 		}
 
@@ -983,7 +983,7 @@ static int get_eow_check_valid(
 		if((payload_size & 7)
 			|| eow_infos_hdr->nb_regions != (uint32_t)(payload_size >> 3))
 		{
-			xfree(*eow_infos);
+			dis_free(*eow_infos);
 			continue;
 		}
 
@@ -991,17 +991,17 @@ static int get_eow_check_valid(
 		eow_infos_size = eow_infos_hdr->infos_size;
 		computed_crc32 = crc32((unsigned char*)*eow_infos, eow_infos_size);
 
-		xprintf(L_DEBUG, "Looking if %#x == %#x for EOW information validation\n",
+		dis_printf(L_DEBUG, "Looking if %#x == %#x for EOW information validation\n",
 		        computed_crc32, eow_infos_hdr->crc32);
 
 		if(computed_crc32 == eow_infos_hdr->crc32)
 		{
-			xprintf(L_DEBUG, "We have a winner (n°%d)!\n", current);
+			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", current);
 			break;
 		}
 		else
 		{
-			xfree(*eow_infos);
+			dis_free(*eow_infos);
 		}
 	}
 
@@ -1035,7 +1035,7 @@ int check_state(dis_metadata_t dis_metadata)
 	else
 	{
 		next_state = unknown;
-		xprintf(L_WARNING,
+		dis_printf(L_WARNING,
 			"The next state of the volume is currently unknown of " PROGNAME
 			", but it would be awesome if you could spare some time to report "
 			"this state (%d) to the author and how did you do to have this. "
@@ -1047,7 +1047,7 @@ int check_state(dis_metadata_t dis_metadata)
 	switch(information->curr_state)
 	{
 		case SWITCHING_ENCRYPTION:
-			xprintf(L_ERROR,
+			dis_printf(L_ERROR,
 				"The volume is currently being %srypted, which is an unstable "
 				"state. If you know what you're doing, pass `-s' to the command"
 				" line, but be aware it may result in data corruption.\n",
@@ -1055,7 +1055,7 @@ int check_state(dis_metadata_t dis_metadata)
 			);
 			return FALSE;
 		case SWITCH_ENCRYPTION_PAUSED:
-			xprintf(L_WARNING,
+			dis_printf(L_WARNING,
 				"The volume is currently in a secure state, "
 				"but don't resume the %sryption while using " PROGNAME " for "
 				"the volume would become instable, resulting in data "
@@ -1064,7 +1064,7 @@ int check_state(dis_metadata_t dis_metadata)
 			);
 			break;
 		case DECRYPTED:
-			xprintf(L_WARNING,
+			dis_printf(L_WARNING,
 				"The disk is about to get encrypted. Don't use " PROGNAME " if "
 				"you're willing to do so, this may corrupt your data.\n"
 			);
@@ -1081,7 +1081,7 @@ void dis_metadata_vista_vbr_fve2ntfs(dis_metadata_t dis_meta, void* vbr)
 
 	volume_header_t* volume_header = (volume_header_t*) vbr;
 
-	xprintf(
+	dis_printf(
 		L_DEBUG,
 		"  Fixing sector (Vista): replacing signature "
 		"and MFTMirror field by: %#llx\n",
@@ -1119,7 +1119,7 @@ void dis_metadata_vista_vbr_ntfs2fve(dis_metadata_t dis_meta, void* vbr)
 			volume_header->sector_size
 		);
 
-	xprintf(
+	dis_printf(
 		L_DEBUG,
 		"  Fixing sector (Vista): replacing signature "
 		"and MFTMirror field by: %#llx\n",
@@ -1149,7 +1149,7 @@ int dis_metadata_is_overwritten(
 		if(offset >= metadata_offset &&
 		   offset < metadata_offset + metadata_size)
 		{
-			xprintf(L_INFO, "In metadata file (1:%#"
+			dis_printf(L_INFO, "In metadata file (1:%#"
 			        F_OFF_T ")\n", offset);
 			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
 		}
@@ -1157,7 +1157,7 @@ int dis_metadata_is_overwritten(
 		if(offset < metadata_offset &&
 		   offset + (off_t)size > metadata_offset)
 		{
-			xprintf(L_INFO, "In metadata file (2:%#"
+			dis_printf(L_INFO, "In metadata file (2:%#"
 			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
 			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
 		}

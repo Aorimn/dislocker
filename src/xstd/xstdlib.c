@@ -33,20 +33,20 @@
  * @param size The size of the memory to allocate
  * @return A pointer to the memory
  */
-void* xmalloc(size_t size)
+void* dis_malloc(size_t size)
 {
 	if(size == 0)
 	{
-		xprintf(L_CRITICAL, "malloc(0) is not accepted, aborting\n");
+		dis_printf(L_CRITICAL, "malloc(0) is not accepted, aborting\n");
 		exit(2);
 	}
 	void* p = malloc(size);
 
-	xprintf(L_DEBUG, "New memory allocation at %p (%#zx bytes allocated)\n", p, size);
+	dis_printf(L_DEBUG, "New memory allocation at %p (%#zx bytes allocated)\n", p, size);
 
 	if(p == NULL)
 	{
-		xprintf(L_CRITICAL, "Cannot allocate more memory, aborting\n");
+		dis_printf(L_CRITICAL, "Cannot allocate more memory, aborting\n");
 		exit(2);
 	}
 
@@ -59,9 +59,9 @@ void* xmalloc(size_t size)
  *
  * @param pointer The pointer to the memory to free
  */
-void xfree(void *pointer)
+void dis_free(void *pointer)
 {
-	xprintf(L_DEBUG, "Freeing pointer at address %p\n", pointer);
+	dis_printf(L_DEBUG, "Freeing pointer at address %p\n", pointer);
 
 	free(pointer);
 }

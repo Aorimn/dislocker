@@ -138,7 +138,7 @@ char* cipherstr(cipher_t enc)
 	}
 
 	len = strlen(value) + 1;
-	data = (char*) xmalloc(len * sizeof(char));
+	data = (char*) dis_malloc(len * sizeof(char));
 	memset(data, 0, len);
 	memcpy(data, value, len);
 
@@ -162,7 +162,7 @@ char* datumtypestr(datum_t datum_type)
 
 
 	size_t len = strlen(datum_types_str[datum_type]) + 1;
-	char* data = (char*) xmalloc(len * sizeof(char));
+	char* data = (char*) dis_malloc(len * sizeof(char));
 	memset(data, 0, len);
 	memcpy(data, datum_types_str[datum_type], len);
 
@@ -186,7 +186,7 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 	/* Too easy, boring */
 	memcpy(header, data, sizeof(datum_header_safe_t));
 
-	xprintf(L_DEBUG, "Header safe: %#x, %#x, %#x, %#x\n", header->datum_size,
+	dis_printf(L_DEBUG, "Header safe: %#x, %#x, %#x, %#x\n", header->datum_size,
 			header->type, header->datum_type, header->error_status);
 
 	/* Now check if the header is good */
@@ -224,7 +224,7 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
 
 	*size_payload = (size_t)(header.datum_size - size_header);
 
-	*payload = xmalloc(*size_payload);
+	*payload = dis_malloc(*size_payload);
 
 	memset(*payload, 0, *size_payload);
 	memcpy(*payload, data + size_header, *size_payload);
@@ -258,17 +258,17 @@ void print_one_datum(DIS_LOGS level, void* datum)
  */
 void print_header(DIS_LOGS level, datum_header_safe_t* header)
 {
-	xprintf(level, "Total datum size: 0x%1$04hx (%1$hd) bytes\n", header->datum_size);
+	dis_printf(level, "Total datum size: 0x%1$04hx (%1$hd) bytes\n", header->datum_size);
 
-	xprintf(level, "Type: %hu\n", header->type);
+	dis_printf(level, "Type: %hu\n", header->type);
 	if(header->type < NB_TYPES)
-		xprintf(level, "   `--> %s\n", types_str[header->type]);
+		dis_printf(level, "   `--> %s\n", types_str[header->type]);
 
-	xprintf(level, "Datum type: %hu\n", header->datum_type);
+	dis_printf(level, "Datum type: %hu\n", header->datum_type);
 
 	if(header->datum_type < NB_DATUM_TYPES)
 	{
-		xprintf(level, "   `--> %s -- Total size header: %hu -- Nested datum: %s\n",
+		dis_printf(level, "   `--> %s -- Total size header: %hu -- Nested datum: %s\n",
 				datum_types_str[header->datum_type],
 				datum_types_prop[header->datum_type].size_header,
 				(datum_types_prop[header->datum_type].has_nested_datum ?
@@ -276,7 +276,7 @@ void print_header(DIS_LOGS level, datum_header_safe_t* header)
 		);
 	}
 
-	xprintf(level, "Status: %#x\n", header->error_status);
+	dis_printf(level, "Status: %#x\n", header->error_status);
 }
 
 
@@ -290,7 +290,7 @@ void print_datum_generic(DIS_LOGS level, void* vdatum)
 {
 	datum_generic_type_t* datum = (datum_generic_type_t*) vdatum;
 
-	xprintf(level, "Generic datum:\n");
+	dis_printf(level, "Generic datum:\n");
 	hexdump(level, (void*)((char*)datum + sizeof(datum_generic_type_t)),
 			datum->header.datum_size - sizeof(datum_generic_type_t));
 }
@@ -304,7 +304,7 @@ void print_datum_generic(DIS_LOGS level, void* vdatum)
  */
 void print_datum_erased(DIS_LOGS level, void* vdatum)
 {
-	xprintf(level, "This datum is of ERASED type and should thus be nullified");
+	dis_printf(level, "This datum is of ERASED type and should thus be nullified");
 	hexdump(level, vdatum, sizeof(datum_erased_t));
 }
 
@@ -313,13 +313,13 @@ void print_datum_key(DIS_LOGS level, void* vdatum)
 	datum_key_t* datum = (datum_key_t*) vdatum;
 	char* cipher_str_type = cipherstr((cipher_t)datum->algo);
 
-	xprintf(level, "Unkown: \n");
+	dis_printf(level, "Unkown: \n");
 	hexdump(level, (void*)&datum->padd, 2);
-	xprintf(level, "Algo: %s (%#x)\n", cipher_str_type, datum->algo);
-	xprintf(level, "Key:\n");
+	dis_printf(level, "Algo: %s (%#x)\n", cipher_str_type, datum->algo);
+	dis_printf(level, "Key:\n");
 	hexdump(level, (void*)((char*)datum + sizeof(datum_key_t)), datum->header.datum_size - sizeof(datum_key_t));
 
-	xfree(cipher_str_type);
+	dis_free(cipher_str_type);
 }
 
 void print_datum_unicode(DIS_LOGS level, void* vdatum)
@@ -327,57 +327,57 @@ void print_datum_unicode(DIS_LOGS level, void* vdatum)
 	datum_unicode_t* datum = (datum_unicode_t*) vdatum;
 
 	size_t utf16_length = (datum->header.datum_size - sizeof(datum_unicode_t));
-	wchar_t* wchar_s = xmalloc(((datum->header.datum_size - sizeof(datum_unicode_t)) / 2) * sizeof(wchar_t));
+	wchar_t* wchar_s = dis_malloc(((datum->header.datum_size - sizeof(datum_unicode_t)) / 2) * sizeof(wchar_t));
 
 	/*
 	 * This datum's payload is an UTF-16 string finished by \0
 	 * We convert it in wchar_t so we can print it
 	 */
 	utf16towchars((uint16_t*)((char*)datum + sizeof(datum_unicode_t)), utf16_length, wchar_s);
-	xprintf(level, "UTF-16 string: '%ls'\n", wchar_s);
+	dis_printf(level, "UTF-16 string: '%ls'\n", wchar_s);
 
-	xfree(wchar_s);
+	dis_free(wchar_s);
 }
 
 void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 {
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) vdatum;
 
-	xprintf(level, "Unkown: \n");
+	dis_printf(level, "Unkown: \n");
 	hexdump(level, (void*)&datum->padd, 2);
-	xprintf(level, "Algo: %#x\n", datum->algo);
-	xprintf(level, "Salt: \n");
+	dis_printf(level, "Algo: %#x\n", datum->algo);
+	dis_printf(level, "Salt: \n");
 	print_mac(level, datum->salt);
 
 	/* This datum's payload seems to be another datum, so print it */
-	xprintf(level, "   ------ Nested datum ------\n");
+	dis_printf(level, "   ------ Nested datum ------\n");
 	print_one_datum(level, (char*)datum + sizeof(datum_stretch_key_t));
-	xprintf(level, "   ---------------------------\n");
+	dis_printf(level, "   ---------------------------\n");
 }
 
 void print_datum_use_key(DIS_LOGS level, void* vdatum)
 {
 	datum_use_key_t* datum = (datum_use_key_t*) vdatum;
 
-	xprintf(level, "Algo: %#hx\n", datum->algo);
-	xprintf(level, "Unkown: \n");
+	dis_printf(level, "Algo: %#hx\n", datum->algo);
+	dis_printf(level, "Unkown: \n");
 	hexdump(level, (void*)&datum->padd, 2);
 
 	/* This datum's payload seems to be another datum, so print it */
-	xprintf(level, "   ------ Nested datum ------\n");
+	dis_printf(level, "   ------ Nested datum ------\n");
 	print_one_datum(level, (char*)datum + sizeof(datum_use_key_t));
-	xprintf(level, "   ---------------------------\n");
+	dis_printf(level, "   ---------------------------\n");
 }
 
 void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
 {
 	datum_aes_ccm_t* datum = (datum_aes_ccm_t*) vdatum;
 
-	xprintf(level, "Nonce: \n");
+	dis_printf(level, "Nonce: \n");
 	print_nonce(level, datum->nonce);
-	xprintf(level, "MAC: \n");
+	dis_printf(level, "MAC: \n");
 	print_mac(level, datum->mac);
-	xprintf(level, "Payload:\n");
+	dis_printf(level, "Payload:\n");
 	hexdump(level, (void*)((char*)datum + sizeof(datum_aes_ccm_t)),
 			datum->header.datum_size - sizeof(datum_aes_ccm_t));
 }
@@ -386,8 +386,8 @@ void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 {
 	datum_tpm_enc_t* datum = (datum_tpm_enc_t*) vdatum;
 
-	xprintf(level, "Unknown: %#x\n", datum->unknown);
-	xprintf(level, "Payload:\n");
+	dis_printf(level, "Unknown: %#x\n", datum->unknown);
+	dis_printf(level, "Payload:\n");
 	hexdump(level, (void*)((char*)datum + sizeof(datum_tpm_enc_t)),
 			datum->header.datum_size - sizeof(datum_tpm_enc_t));
 }
@@ -400,17 +400,17 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 
 	format_guid(datum->guid, extkey_id);
 
-	xprintf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
-	xprintf(level, "Nonce: \n");
+	dis_printf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
+	dis_printf(level, "Nonce: \n");
 	print_nonce(level, datum->nonce);
 
 	computed_size = sizeof(datum_vmk_t);
 
 	/* This datum's payload seems to be another datum, so print it */
-	xprintf(level, "   ------ Nested datum(s) ------\n");
+	dis_printf(level, "   ------ Nested datum(s) ------\n");
 	while(computed_size < datum->header.datum_size)
 	{
-		xprintf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 		print_one_datum(level, (char*)datum + computed_size);
 
 		datum_header_safe_t header;
@@ -419,9 +419,9 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 		get_header_safe((char*)datum + computed_size, &header);
 
 		computed_size += header.datum_size;
-		xprintf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	}
-	xprintf(level, "   ------------------------------\n");
+	dis_printf(level, "   ------------------------------\n");
 }
 
 void print_datum_external(DIS_LOGS level, void* vdatum)
@@ -438,16 +438,16 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 	date = strdup(asctime(gmtime(&ts)));
 	chomp(date);
 
-	xprintf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
-	xprintf(level, "Epoch Timestamp: %u sec, soit %s\n", (unsigned int)ts, date);
+	dis_printf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
+	dis_printf(level, "Epoch Timestamp: %u sec, soit %s\n", (unsigned int)ts, date);
 
 	computed_size = sizeof(datum_external_t);
 
 	/* This datum's payload seems to be another datum, so print it */
-	xprintf(level, "   ------ Nested datum ------\n");
+	dis_printf(level, "   ------ Nested datum ------\n");
 	while(computed_size < datum->header.datum_size)
 	{
-		xprintf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 		print_one_datum(level, (char*)datum + computed_size);
 
 		datum_header_safe_t header;
@@ -456,9 +456,9 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 		get_header_safe((char*)datum + computed_size, &header);
 
 		computed_size += header.datum_size;
-		xprintf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	}
-	xprintf(level, "   ---------------------------\n");
+	dis_printf(level, "   ---------------------------\n");
 
 	free(date);
 }
@@ -467,8 +467,8 @@ void print_datum_virtualization(DIS_LOGS level, void* vdatum)
 {
 	datum_virtualization_t* datum = (datum_virtualization_t*) vdatum;
 
-	xprintf(level, "NTFS boot sectors address:  %#llx\n", datum->ntfs_boot_sectors);
-	xprintf(level, "Number of backuped bytes: %1$#llx (%1$llu)\n", datum->nb_bytes);
+	dis_printf(level, "NTFS boot sectors address:  %#llx\n", datum->ntfs_boot_sectors);
+	dis_printf(level, "Number of backuped bytes: %1$#llx (%1$llu)\n", datum->nb_bytes);
 
 	/* For Windows 8 encrypted volumes */
 	size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
@@ -495,7 +495,7 @@ void print_nonce(DIS_LOGS level, uint8_t* nonce)
 	for(i = 0; i < 12; ++i)
 		snprintf(&s[i*3], 4, "%02hhx ", nonce[i]);
 
-	xprintf(level, "%s\n", s);
+	dis_printf(level, "%s\n", s);
 }
 
 
@@ -513,7 +513,7 @@ void print_mac(DIS_LOGS level, uint8_t* mac)
 	for(i = 0; i < 16; ++i)
 		snprintf(&s[i*3], 4, "%02hhx ", mac[i]);
 
-	xprintf(level, "%s\n", s);
+	dis_printf(level, "%s\n", s);
 }
 
 
@@ -533,7 +533,7 @@ int get_next_datum(dis_metadata_t dis_meta, int16_t type, int16_t datum_type, vo
 	if(!dis_meta || datum_type > NB_DATUM_TYPES)
 		return FALSE;
 
-	xprintf(L_DEBUG, "Entering get_next_datum...\n");
+	dis_printf(L_DEBUG, "Entering get_next_datum...\n");
 
 	bitlocker_dataset_t* dataset = dis_meta->dataset;
 	void* datum = NULL;
@@ -551,7 +551,7 @@ int get_next_datum(dis_metadata_t dis_meta, int16_t type, int16_t datum_type, vo
 	{
 		if(datum + 8 >= limit)
 		{
-			xprintf(L_DEBUG, "Hit limit, search failed.\n");
+			dis_printf(L_DEBUG, "Hit limit, search failed.\n");
 			break;
 		}
 
@@ -583,7 +583,7 @@ int get_next_datum(dis_metadata_t dis_meta, int16_t type, int16_t datum_type, vo
 		memset(&header, 0, sizeof(datum_header_safe_t));
 	}
 
-	xprintf(L_DEBUG, "Going out of get_next_datum\n");
+	dis_printf(L_DEBUG, "Going out of get_next_datum\n");
 
 	if(!*datum_result)
 		return FALSE;
@@ -704,7 +704,7 @@ int dis_metadata_has_clear_key(dis_metadata_t dis_meta, void** vmk_datum)
 
 	*vmk_datum = NULL;
 
-	xprintf(L_DEBUG, "Entering has_clear_key. Returning result of get_vmk_datum_from_range with range between 0x00 and 0xff\n");
+	dis_printf(L_DEBUG, "Entering has_clear_key. Returning result of get_vmk_datum_from_range with range between 0x00 and 0xff\n");
 
 	return get_vmk_datum_from_range(dis_meta, 0x00, 0xff, vmk_datum);
 }

@@ -55,7 +55,7 @@ int dis_get_access(dis_context_t dis_ctx)
 			}
 			else
 			{
-				xprintf(L_INFO, "Used clear key decryption method\n");
+				dis_printf(L_INFO, "Used clear key decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_CLEAR_KEY;
 				break;
 			}
@@ -68,7 +68,7 @@ int dis_get_access(dis_context_t dis_ctx)
 			}
 			else
 			{
-				xprintf(L_INFO, "Used user password decryption method\n");
+				dis_printf(L_INFO, "Used user password decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_USER_PASSWORD;
 				break;
 			}
@@ -81,7 +81,7 @@ int dis_get_access(dis_context_t dis_ctx)
 			}
 			else
 			{
-				xprintf(L_INFO, "Used recovery password decryption method\n");
+				dis_printf(L_INFO, "Used recovery password decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_RECOVERY_PASSWORD;
 				break;
 			}
@@ -94,7 +94,7 @@ int dis_get_access(dis_context_t dis_ctx)
 			}
 			else
 			{
-				xprintf(L_INFO, "Used bek file decryption method\n");
+				dis_printf(L_INFO, "Used bek file decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_BEKFILE;
 				break;
 			}
@@ -107,21 +107,21 @@ int dis_get_access(dis_context_t dis_ctx)
 			}
 			else
 			{
-				xprintf(L_INFO, "Used FVEK file decryption method\n");
+				dis_printf(L_INFO, "Used FVEK file decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_FVEKFILE;
 				break;
 			}
 		}
 		else
 		{
-			xprintf(L_CRITICAL, "Wtf!? Abort.\n");
+			dis_printf(L_CRITICAL, "Wtf!? Abort.\n");
 			return EXIT_FAILURE;
 		}
 	}
 
 	if(!dis_ctx->cfg.decryption_mean)
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"None of the provided decryption mean is "
 			"decrypting the keys. Abort.\n"
@@ -161,7 +161,7 @@ int dis_get_access(dis_context_t dis_ctx)
 	if(fvek_typed_datum->algo < AES_128_DIFFUSER ||
 	   fvek_typed_datum->algo > AES_256_NO_DIFFUSER)
 	{
-		xprintf(
+		dis_printf(
 			L_CRITICAL,
 			"Can't recognize the encryption algorithm used: %#hx. Abort\n",
 			fvek_typed_datum->algo

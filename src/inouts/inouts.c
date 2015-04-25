@@ -71,12 +71,12 @@ static uint64_t get_volume_size(dis_context_t dis_ctx)
 		 * Therefore, try to get the real size from the NTFS data
 		 */
 
-		uint8_t* input = xmalloc(sector_size);
+		uint8_t* input = dis_malloc(sector_size);
 		memset(input, 0, sector_size);
 
 		if(!read_decrypt_sectors(&dis_ctx->io_data, 1, sector_size, 0, input))
 		{
-			xprintf(L_ERROR,
+			dis_printf(L_ERROR,
 			       "Unable to read the NTFS header to get the volume's size\n");
 			return 0;
 		}
@@ -85,7 +85,7 @@ static uint64_t get_volume_size(dis_context_t dis_ctx)
 		volume_size = dis_metadata_volume_size_from_vbr(dis_ctx->metadata);
 		dis_metadata_set_volume_header(dis_ctx->metadata, old_vbr);
 
-		xfree(input);
+		dis_free(input);
 	}
 
 	return volume_size;

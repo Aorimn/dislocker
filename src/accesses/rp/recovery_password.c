@@ -60,12 +60,12 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	if(!cfg->recovery_password)
 		if(!prompt_rp(&cfg->recovery_password))
 		{
-			xprintf(L_ERROR, "Cannot get valid recovery password. Abort.\n");
+			dis_printf(L_ERROR, "Cannot get valid recovery password. Abort.\n");
 			return FALSE;
 		}
 
 
-	xprintf(L_DEBUG, "Using the recovery password: '%s'.\n",
+	dis_printf(L_DEBUG, "Using the recovery password: '%s'.\n",
 	                (char *)cfg->recovery_password);
 
 
@@ -76,7 +76,7 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	 */
 	if(!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, (void**)vmk_datum))
 	{
-		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
+		dis_printf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
 		*vmk_datum = NULL;
 		return FALSE;
 	}
@@ -90,9 +90,9 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	if(!get_nested_datumtype(*vmk_datum, DATUM_STRETCH_KEY, &stretch_datum) || !stretch_datum)
 	{
 		char* type_str = datumtypestr(DATUM_STRETCH_KEY);
-		xprintf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
+		dis_printf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
 		                 "Internal failure, abort.\n", DATUM_STRETCH_KEY, type_str);
-		xfree(type_str);
+		dis_free(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
 	}
@@ -106,7 +106,7 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	void* aesccm_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum) || !aesccm_datum)
 	{
-		xprintf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
 		*vmk_datum = NULL;
 		return FALSE;
 	}
@@ -116,13 +116,13 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	 * We have all the things we need to compute the intermediate key from
 	 * the recovery password, so do it!
 	 */
-	recovery_key = xmalloc(32 * sizeof(uint8_t));
+	recovery_key = dis_malloc(32 * sizeof(uint8_t));
 
 	if(!intermediate_key(cfg->recovery_password, salt, recovery_key))
 	{
-		xprintf(L_ERROR, "Error computing the recovery password to the recovery key. Abort.\n");
+		dis_printf(L_ERROR, "Error computing the recovery password to the recovery key. Abort.\n");
 		*vmk_datum = NULL;
-		xfree(recovery_key);
+		dis_free(recovery_key);
 		return FALSE;
 	}
 
@@ -133,7 +133,7 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	/* As the computed key length is always the same, use a direct value */
 	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, 32, (datum_key_t**)vmk_datum);
 
-	xfree(recovery_key);
+	dis_free(recovery_key);
 
 	return result;
 }
@@ -159,14 +159,14 @@ int valid_block(uint8_t* digits, int block_nb, uint16_t* short_password)
 	long int block = strtol((char *)digits, (char **) NULL, 10);
 	if(errno == ERANGE)
 	{
-		xprintf(L_ERROR, "Error converting '%s' into a number: errno=ERANGE", digits);
+		dis_printf(L_ERROR, "Error converting '%s' into a number: errno=ERANGE", digits);
 		return FALSE;
 	}
 
 	/* 1st check --  Checking if the bloc is divisible by eleven */
 	if((block % 11) != 0)
 	{
-		xprintf(L_ERROR, "Error handling the recovery password: Bloc n°%d (%d) invalid. "
+		dis_printf(L_ERROR, "Error handling the recovery password: Bloc n°%d (%d) invalid. "
 		"It has to be divisible by 11.\n", block_nb, block);
 		return FALSE;
 	}
@@ -174,7 +174,7 @@ int valid_block(uint8_t* digits, int block_nb, uint16_t* short_password)
 	/* 2nd check -- Checking if the bloc is less than 2**16 * 11 */
 	if(block >= 720896)
 	{
-		xprintf(L_ERROR,  "Error handling the recovery password: Bloc n°%d (%d) invalid. "
+		dis_printf(L_ERROR,  "Error handling the recovery password: Bloc n°%d (%d) invalid. "
 		"It has to be less than 2**16 * 11 (720896).\n", block_nb, block);
 		return FALSE;
 	}
@@ -189,7 +189,7 @@ int valid_block(uint8_t* digits, int block_nb, uint16_t* short_password)
 
 	if(check_digit != (digits[5] - 48))
 	{
-		xprintf(L_ERROR, "Error handling the recovery password: Bloc n°%d (%d) has invalid checksum.\n", block_nb, block);
+		dis_printf(L_ERROR, "Error handling the recovery password: Bloc n°%d (%d) has invalid checksum.\n", block_nb, block);
 		return FALSE;
 	}
 
@@ -226,7 +226,7 @@ int is_valid_key(const uint8_t *recovery_password, uint16_t *short_password)
 	/* Begin by checking the length of the password */
 	if(strlen((char*)recovery_password) != 48+7)
 	{
-		xprintf(L_ERROR, "Error handling the recovery password: Wrong length (has to be %d)\n", 48+7);
+		dis_printf(L_ERROR, "Error handling the recovery password: Wrong length (has to be %d)\n", 48+7);
 		return FALSE;
 	}
 
@@ -270,19 +270,19 @@ int intermediate_key(const uint8_t *recovery_password,
 	// Check the parameters
 	if(recovery_password == NULL)
 	{
-		xprintf(L_ERROR, "Error: No recovery password given, aborting calculation of the intermediate key.\n");
+		dis_printf(L_ERROR, "Error: No recovery password given, aborting calculation of the intermediate key.\n");
 		return FALSE;
 	}
 
 	if(result_key == NULL)
 	{
-		xprintf(L_ERROR, "Error: No space to store the intermediate recovery key, aborting operation.\n");
+		dis_printf(L_ERROR, "Error: No space to store the intermediate recovery key, aborting operation.\n");
 		return FALSE;
 	}
 
 
 	uint16_t passwd[NB_RP_BLOCS];
-	uint8_t *iresult = xmalloc(INTERMEDIATE_KEY_LENGTH * sizeof(uint8_t));
+	uint8_t *iresult = dis_malloc(INTERMEDIATE_KEY_LENGTH * sizeof(uint8_t));
 	uint8_t *iresult_save = iresult;
 	int loop = 0;
 
@@ -313,7 +313,7 @@ int intermediate_key(const uint8_t *recovery_password,
 	for (loop = 0; loop < NB_RP_BLOCS*2; ++loop)
 		snprintf(&s[loop*5], 6, "0x%02hhx ", iresult[loop]);
 
-	xprintf(L_DEBUG, "Distilled password: '%s\b'\n", s);
+	dis_printf(L_DEBUG, "Distilled password: '%s\b'\n", s);
 
 	stretch_recovery_key(iresult, salt, result_key);
 
@@ -505,7 +505,7 @@ void print_intermediate_key(uint8_t *result_key)
 	for(loop = 0; loop < 32; ++loop)
 		snprintf(&s[loop*3], 4, "%02hhx ", result_key[loop]);
 
-	xprintf(L_INFO, "Intermediate recovery key:\n\t%s\n", s);
+	dis_printf(L_INFO, "Intermediate recovery key:\n\t%s\n", s);
 }
 
 

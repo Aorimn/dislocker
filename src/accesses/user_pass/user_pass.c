@@ -53,11 +53,11 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 	if(!cfg->user_password)
 		if(!prompt_up(&cfg->user_password))
 		{
-			xprintf(L_ERROR, "Cannot get valid user password. Abort.\n");
+			dis_printf(L_ERROR, "Cannot get valid user password. Abort.\n");
 			return FALSE;
 		}
 
-	xprintf(L_DEBUG, "Using the user password: '%s'.\n",
+	dis_printf(L_DEBUG, "Using the user password: '%s'.\n",
 	                (char *)cfg->user_password);
 
 
@@ -70,7 +70,7 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 	 */
 	if(!get_vmk_datum_from_range(dis_meta, 0x2000, 0x2000, (void**)vmk_datum))
 	{
-		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
+		dis_printf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
@@ -86,9 +86,9 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 	if(!get_nested_datumtype(*vmk_datum, DATUM_STRETCH_KEY, &stretch_datum) || !stretch_datum)
 	{
 		char* type_str = datumtypestr(DATUM_STRETCH_KEY);
-		xprintf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
+		dis_printf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
 		                 "Internal failure, abort.\n", DATUM_STRETCH_KEY, type_str);
-		xfree(type_str);
+		dis_free(type_str);
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
@@ -104,7 +104,7 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 	void* aesccm_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum) || !aesccm_datum)
 	{
-		xprintf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
@@ -118,7 +118,7 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 	 */
 	if(!user_key(cfg->user_password, salt, user_hash))
 	{
-		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
+		dis_printf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
@@ -169,7 +169,7 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 
 	/* Read the password. */
 	nread = getline(lineptr, &n, stream);
-	xprintf(L_DEBUG, "New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n", (void*)*lineptr, n);
+	dis_printf(L_DEBUG, "New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n", (void*)*lineptr, n);
 
 #ifndef __CK_DOING_TESTS
 	/* Restore terminal. */
@@ -194,7 +194,7 @@ int user_key(const uint8_t *user_password,
 {
 	if(!user_password || !salt || !result_key)
 	{
-		xprintf(L_ERROR, "Invalid parameter given to user_key().\n");
+		dis_printf(L_ERROR, "Invalid parameter given to user_key().\n");
 		return FALSE;
 	}
 
@@ -207,16 +207,16 @@ int user_key(const uint8_t *user_password,
 	 * We first get the SHA256(SHA256(to_UTF16(user_password)))
 	 */
 	utf16_length   = (strlen((char*)user_password)+1) * sizeof(uint16_t);
-	utf16_password = xmalloc(utf16_length);
+	utf16_password = dis_malloc(utf16_length);
 
 	if(!asciitoutf16(user_password, utf16_password))
 	{
-		xprintf(L_ERROR, "Can't convert user password to UTF-16, aborting.\n");
+		dis_printf(L_ERROR, "Can't convert user password to UTF-16, aborting.\n");
 		memclean(utf16_password, utf16_length);
 		return FALSE;
 	}
 
-	xprintf(L_DEBUG, "UTF-16 user password:\n");
+	dis_printf(L_DEBUG, "UTF-16 user password:\n");
 	hexdump(L_DEBUG, (uint8_t*)utf16_password, utf16_length);
 
 	/* We're not taking the '\0\0' end of the UTF-16 string */
@@ -228,7 +228,7 @@ int user_key(const uint8_t *user_password,
 	 */
 	if(!stretch_user_key(user_hash, (uint8_t *)salt, result_key))
 	{
-		xprintf(L_ERROR, "Can't stretch the user password, aborting.\n");
+		dis_printf(L_ERROR, "Can't stretch the user password, aborting.\n");
 		memclean(utf16_password, utf16_length);
 		return FALSE;
 	}
@@ -264,9 +264,9 @@ int prompt_up(uint8_t** up)
 	if(nb_read <= 0)
 	{
 		if(*up)
-			xfree(*up);
+			dis_free(*up);
 		*up = NULL;
-		xprintf(L_ERROR, "Can't get a user password using getline()\n");
+		dis_printf(L_ERROR, "Can't get a user password using getline()\n");
 		return FALSE;
 	}
 

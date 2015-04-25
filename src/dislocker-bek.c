@@ -78,31 +78,31 @@ int main (int argc, char **argv)
 		}
 	}
 
-	xstdio_init(L_INFO, NULL);
+	dis_stdio_init(L_INFO, NULL);
 
 	if(filename == NULL)
 	{
-		xprintf(L_CRITICAL, "Filename must be provided\n");
+		dis_printf(L_CRITICAL, "Filename must be provided\n");
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	if(( fd = xopen(filename, O_RDONLY) ) < 0)
+	if(( fd = dis_open(filename, O_RDONLY) ) < 0)
 	{
-		xprintf(L_CRITICAL, "Failed to open file %s\n", filename);
+		dis_printf(L_CRITICAL, "Failed to open file %s\n", filename);
 		return EXIT_FAILURE;
 	}
 
 	if(!get_bek_dataset(fd, &bek_dataset))
 	{
-		xprintf(L_CRITICAL, "Unable to get the dataset from the BEK file\n");
+		dis_printf(L_CRITICAL, "Unable to get the dataset from the BEK file\n");
 		return EXIT_FAILURE;
 	}
 
-	xclose(fd);
+	dis_close(fd);
 
 	/* display infos */
-	xprintf(L_INFO, "BEK File Information: %s\n", filename);
+	dis_printf(L_INFO, "BEK File Information: %s\n", filename);
 
 	/* bek header */
 	dis_context_t dis_ctx = dis_new();
@@ -113,10 +113,10 @@ int main (int argc, char **argv)
 	/* external datum, which contains the decryption key */
 	print_one_datum(L_INFO, bek_dataset + 0x30);
 
-	xfree(bek_dataset);
+	dis_free(bek_dataset);
 	dis_metadata_destroy(dis_metadata);
 	dis_destroy(dis_ctx);
-	xstdio_end();
+	dis_stdio_end();
 
 	return EXIT_SUCCESS;
 }

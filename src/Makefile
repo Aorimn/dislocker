@@ -118,12 +118,11 @@ endif
 
 # Look for a Ruby version for library's bindings
 BINDINGS	:=	ruby ruby-2.0 ruby-1.9
-get_version	=	$(shell pkg-config --modversion $(1)|cut -d. -f1,2)
 check_if_exists	=	$(if $(strip $(shell pkg-config $(1) >/dev/null 2>&1 && echo ok)), $(1))
 
 OK_BINDINGS	:=	$(foreach binding,$(BINDINGS),$(call check_if_exists,$(binding)))
 OK_BINDING	:=	$(if $(OK_BINDINGS),$(word 1,$(OK_BINDINGS)))
-RUBY_VERSION	:=	$(if $(OK_BINDING),$(call get_version,$(OK_BINDING)))
+RUBY_VERSION	:=	$(if $(OK_BINDING),$(shell pkg-config --modversion $(OK_BINDING) 2>/dev/null|cut -d. -f1,2))
 
 SUFFIXES	+=	$(if $(RUBY_VERSION),find)
 DEFINES		+=	$(if $(RUBY_VERSION),-D_HAVE_RUBY=$(RUBY_VERSION))

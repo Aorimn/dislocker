@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 		usage(argv);
 		return 1;
 	}
-	
+
 	int optchar = 0;
 	uint8_t *recovery_password = NULL;
 	uint8_t *recovery_key = NULL;
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		(uint8_t)'\x3b', (uint8_t)'\x36', (uint8_t)'\xd9', (uint8_t)'\x30', (uint8_t)'\x72', (uint8_t)'\xa2', (uint8_t)'\x2e', (uint8_t)'\x03',
 		(uint8_t)'\xf2', (uint8_t)'\xed', (uint8_t)'\xfe', (uint8_t)'\x6f', (uint8_t)'\xcd', (uint8_t)'\x14', (uint8_t)'\xb4', (uint8_t)'\x58'
 	};
-	
+
 	while((optchar = getopt(argc, argv, "p:h")) != -1)
 	{
 		switch(optchar)
@@ -70,26 +70,26 @@ int main(int argc, char **argv)
 				exit(1);
 		}
 	}
-	
+
 	xstdio_init(L_DEBUG, NULL);
-	
+
 	xprintf(L_INFO, "Recovery Password: %s\n", (char *)recovery_password);
-	
+
 	recovery_key = xmalloc(32 * sizeof(uint8_t));
-	
+
 	if(!intermediate_key(recovery_password, salt, recovery_key))
 	{
 		xfree(recovery_key);
 		return 1;
 	}
-	
+
 	print_intermediate_key(recovery_key);
-	
+
 	xfree(recovery_key);
 	if(recovery_password)
 		xfree(recovery_password);
-	
+
 	xstdio_end();
-	
+
 	return 0;
 }

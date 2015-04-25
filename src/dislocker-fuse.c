@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -63,10 +63,10 @@ dis_context_t dis_ctx;
 static int fs_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
-	
+
 	if(!path || !stbuf)
 		return -EINVAL;
-	
+
 	memset(stbuf, 0, sizeof(struct stat));
 	if(strcmp(path, "/") == 0)
 	{
@@ -82,7 +82,7 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 	}
 	else
 		res = -ENOENT;
-	
+
 	return res;
 }
 
@@ -92,13 +92,13 @@ static int fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	/* Both variables aren't used here */
 	(void) offset;
 	(void) fi;
-	
+
 	if(!path || !buf || !filler)
 		return -EINVAL;
-	
+
 	if(strcmp(path, "/") != 0)
 		return -ENOENT;
-	
+
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 	filler(buf, NTFS_FILENAME + 1, NULL, 0);
@@ -110,11 +110,11 @@ static int fs_open(const char *path, struct fuse_file_info *fi)
 {
 	if(!path || !fi)
 		return -EINVAL;
-	
+
 	if(strcmp(path, NTFS_FILENAME) != 0)
 		return -ENOENT;
-	
-	
+
+
 	if(dis_is_read_only(dis_ctx))
 	{
 		if((fi->flags & O_ACCMODE) != O_RDONLY)
@@ -128,7 +128,7 @@ static int fs_open(const char *path, struct fuse_file_info *fi)
 		   (fi->flags & O_ACCMODE) != O_WRONLY)
 			return -EACCES;
 	}
-	
+
 	return 0;
 }
 
@@ -141,7 +141,7 @@ static int fs_read(
 {
 	if(!path || !buf)
 		return -EINVAL;
-	
+
 	/*
 	 * Perform basic checks
 	 */
@@ -150,7 +150,7 @@ static int fs_read(
 		xprintf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
 		return -ENOENT;
 	}
-	
+
 	return dislock(dis_ctx, (uint8_t*) buf, offset, size);
 }
 
@@ -164,14 +164,14 @@ static int fs_write(
 	// Check parameters
 	if(!path || !buf)
 		return -EINVAL;
-	
-	
+
+
 	if(strcmp(path, NTFS_FILENAME) != 0)
 	{
 		xprintf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
 		return -ENOENT;
 	}
-	
+
 	return enlock(dis_ctx, (uint8_t*) buf, offset, size);
 }
 
@@ -197,31 +197,31 @@ int main(int argc, char** argv)
 		dis_usage();
 		exit(EXIT_FAILURE);
 	}
-	
+
 	int param_idx = 0;
 	int ret       = EXIT_SUCCESS;
-	
-	
+
+
 	/* Get command line options */
 	dis_ctx = dis_new();
 	param_idx = dis_getopts(dis_ctx, argc, argv);
-	
+
 	/* Check we got enough arguments for at least one more, the mount point */
 	if(param_idx >= argc || param_idx <= 0)
 	{
 		xprintf(L_CRITICAL, "Error, no mount point given. Abort.\n");
 		return EXIT_FAILURE;
 	}
-	
-	
+
+
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
 	{
 		xprintf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
 	}
-	
-	
+
+
 	/*
 	 * Create the parameters table needed for FUSE and run it
 	 * This is as we're running argv[0] followed by ARGS (see usage())
@@ -229,14 +229,14 @@ int main(int argc, char** argv)
 	/* Compute the new argc given to FUSE */
 	size_t new_argc = (size_t)(argc - param_idx + 1);
 	xprintf(L_DEBUG, "New value for argc: %d\n", new_argc);
-	
+
 	char** new_argv = xmalloc(new_argc * sizeof(char*));
-	
+
 	/* Get argv[0] */
 	size_t lg = strlen(argv[0]) + 1;
 	*new_argv = xmalloc(lg);
 	memcpy(*new_argv, argv[0], lg);
-	
+
 	/* Get all of the parameters from param_idx till the end */
 	size_t loop = 0;
 	for(loop = 1; loop < new_argc; ++loop)
@@ -245,24 +245,24 @@ int main(int argc, char** argv)
 		*(new_argv + loop) = xmalloc(lg);
 		memcpy(*(new_argv + loop), argv[(size_t)param_idx + loop - 1], lg);
 	}
-	
-	
+
+
 	xprintf(L_INFO, "Running FUSE with these arguments: \n");
 	for(loop = 0; loop < new_argc; ++loop)
 		xprintf(L_INFO, "  `--> '%s'\n", *(new_argv + loop));
-	
-	
+
+
 	/* Run FUSE */
 	ret = fuse_main((int)new_argc, new_argv, &fs_oper, NULL);
-	
+
 	/* Free FUSE params */
 	for(loop = 0; loop < new_argc; ++loop)
 		xfree(new_argv[loop]);
 	xfree(new_argv);
-	
-	
+
+
 	/* Destroy dislocker structures */
 	dis_destroy(dis_ctx);
-	
+
 	return ret;
 }

@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -51,11 +51,11 @@ int main (int argc, char **argv)
 	char *filename = NULL;
 	int c  = 0;
 	int fd = 0;
-	
+
 	void* bek_dataset;
-	
+
 	opterr = 0;
-	
+
 	while((c = getopt (argc, argv, "hf:")) != -1)
 	{
 		switch(c)
@@ -77,47 +77,47 @@ int main (int argc, char **argv)
 				return EXIT_FAILURE;
 		}
 	}
-	
+
 	xstdio_init(L_INFO, NULL);
-	
-	if(filename == NULL) 
+
+	if(filename == NULL)
 	{
 		xprintf(L_CRITICAL, "Filename must be provided\n");
 		usage(argv[0]);
 		return EXIT_FAILURE;
 	}
-	
+
 	if(( fd = xopen(filename, O_RDONLY) ) < 0)
 	{
 		xprintf(L_CRITICAL, "Failed to open file %s\n", filename);
 		return EXIT_FAILURE;
 	}
-	
+
 	if(!get_bek_dataset(fd, &bek_dataset))
 	{
 		xprintf(L_CRITICAL, "Unable to get the dataset from the BEK file\n");
 		return EXIT_FAILURE;
 	}
-	
+
 	xclose(fd);
-	
+
 	/* display infos */
 	xprintf(L_INFO, "BEK File Information: %s\n", filename);
-	
+
 	/* bek header */
 	dis_context_t dis_ctx = dis_new();
 	dis_metadata_t dis_metadata = dis_metadata_new(dis_ctx);
 	dis_metadata_set_dataset(dis_metadata, bek_dataset);
 	print_dataset(L_INFO, dis_metadata);
-	
+
 	/* external datum, which contains the decryption key */
 	print_one_datum(L_INFO, bek_dataset + 0x30);
-	
+
 	xfree(bek_dataset);
 	dis_metadata_destroy(dis_metadata);
 	dis_destroy(dis_ctx);
 	xstdio_end();
-	
+
 	return EXIT_SUCCESS;
 }
 

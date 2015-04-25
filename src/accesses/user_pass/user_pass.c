@@ -34,7 +34,7 @@
 
 /**
  * Get the VMK datum using a user password
- * 
+ *
  * @param dataset The dataset of BitLocker's metadata on the volume
  * @param cfg The configuration structure
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
@@ -45,10 +45,10 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 	// Check parameters
 	if(!dis_meta || !cfg)
 		return FALSE;
-	
+
 	uint8_t user_hash[32] = {0,};
 	uint8_t salt[16]      = {0,};
-	
+
 	/* If the user password wasn't provide, ask for it */
 	if(!cfg->user_password)
 		if(!prompt_up(&cfg->user_password))
@@ -56,11 +56,11 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 			xprintf(L_ERROR, "Cannot get valid user password. Abort.\n");
 			return FALSE;
 		}
-		
+
 	xprintf(L_DEBUG, "Using the user password: '%s'.\n",
 	                (char *)cfg->user_password);
-	
-	
+
+
 	/*
 	 * We need a salt contained in the VMK datum associated to the recovery
 	 * password, so go get this salt and the VMK datum first
@@ -76,8 +76,8 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We have the datum containing other data, so get in there and take the
 	 * nested one with type 3 (stretch key)
@@ -94,12 +94,12 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/* The salt is in here, don't forget to keep it somewhere! */
 	memcpy(salt, ((datum_stretch_key_t*)stretch_datum)->salt, 16);
-	
-	
+
+
 	/* Get data which can be decrypted with this password */
 	void* aesccm_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum) || !aesccm_datum)
@@ -110,8 +110,8 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We have all the things we need to compute the intermediate key from
 	 * the user password, so do it!
@@ -124,11 +124,11 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vm
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
+
 	/* We don't need the user password anymore */
 	memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 	cfg->user_password = NULL;
-	
+
 	/* As the computed key length is always the same, use a direct value */
 	return get_vmk((datum_aes_ccm_t*)aesccm_datum, user_hash, 32, (datum_key_t**)vmk_datum);;
 }

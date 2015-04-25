@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -75,7 +75,7 @@ dis_context_t dis_new()
 	/* Allocate dislocker's context */
 	dis_context_t dis_ctx = xmalloc(sizeof(struct _dis_ctx));
 	memset(dis_ctx, 0, sizeof(struct _dis_ctx));
-	
+
 #ifndef __DIS_CORE_DUMPS
 	/* As we manage passwords and secrets, do not authorize core dumps */
 	struct rlimit limit;
@@ -88,9 +88,9 @@ dis_context_t dis_new()
 		return NULL;
 	}
 #endif
-	
+
 	dis_ctx->fve_fd = -1;
-	
+
 	return dis_ctx;
 }
 
@@ -98,17 +98,17 @@ dis_context_t dis_new()
 int dis_initialize(dis_context_t dis_ctx)
 {
 	int ret = DIS_RET_SUCCESS;
-	
-	
+
+
 	/* Initialize outputs */
 	xstdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
-	
+
 	xprintf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
-	
+
 	if(dis_ctx->cfg.verbosity >= L_DEBUG)
 		dis_print_args(dis_ctx);
-	
-	
+
+
 	/*
 	 * Check parameters given
 	 */
@@ -118,9 +118,9 @@ int dis_initialize(dis_context_t dis_ctx)
 		dis_destroy(dis_ctx);
 		return DIS_RET_ERROR_VOLUME_NOT_GIVEN;
 	}
-	
-	
-	
+
+
+
 	/* Open the volume as a (big) normal file */
 	xprintf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
 	dis_ctx->fve_fd = xopen(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
@@ -131,7 +131,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			dis_ctx->cfg.volume_path,
 			O_RDONLY|O_LARGEFILE
 		);
-		
+
 		if(dis_ctx->fve_fd < 0)
 		{
 			xprintf(
@@ -142,7 +142,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			dis_destroy(dis_ctx);
 			return DIS_RET_ERROR_FILE_OPEN;
 		}
-		
+
 		dis_ctx->cfg.flags |= DIS_FLAG_READ_ONLY;
 		xprintf(
 			L_WARNING,
@@ -150,18 +150,18 @@ int dis_initialize(dis_context_t dis_ctx)
 			dis_ctx->cfg.volume_path
 		);
 	}
-	
+
 	xprintf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->fve_fd);
-	
+
 	dis_ctx->io_data.volume_fd = dis_ctx->fve_fd;
-	
+
 	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_OPEN_VOLUME);
-	
-	
+
+
 	/* To print UTF-32 strings */
 	setlocale(LC_ALL, "");
-	
-	
+
+
 	dis_ctx->metadata = dis_metadata_new(dis_ctx);
 	if(dis_ctx->metadata == NULL)
 	{
@@ -169,7 +169,7 @@ int dis_initialize(dis_context_t dis_ctx)
 		dis_destroy(dis_ctx);
 		return DIS_RET_ERROR_ALLOC;
 	}
-	
+
 	ret = dis_metadata_initialize(dis_ctx->metadata);
 	if(ret != DIS_RET_SUCCESS)
 	{
@@ -181,8 +181,8 @@ int dis_initialize(dis_context_t dis_ctx)
 			dis_destroy(dis_ctx);
 		return ret;
 	}
-	
-	
+
+
 	/*
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
@@ -195,7 +195,7 @@ int dis_initialize(dis_context_t dis_ctx)
 			dis_metadata_sector_size(dis_ctx->metadata),
 			dis_ctx->metadata->dataset->algorithm
 		);
-		
+
 		/*
 		 * Init the decrypt keys' contexts
 		 */
@@ -209,35 +209,35 @@ int dis_initialize(dis_context_t dis_ctx)
 			return DIS_RET_ERROR_CRYPTO_INIT;
 		}
 	}
-	
-	
+
+
 	/*
 	 * Fill the dis_iodata_t structure which will be used for encryption &
 	 * decryption afterward
 	 */
 	if((ret = prepare_crypt(dis_ctx)) != DIS_RET_SUCCESS)
 		xprintf(L_CRITICAL, "Can't prepare the crypt structure. Abort.\n");
-	
-	
+
+
 	// TODO add the DIS_STATE_BEFORE_DECRYPTION_CHECKING event here, so add the check here too
-	
-	
+
+
 	/* Don't do the check for each and every enc/decryption operation */
 	dis_ctx->io_data.volume_state = TRUE;
-	
+
 	int look_state = dis_ctx->cfg.flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE;
 	if(look_state == 0 &&
 		!check_state(dis_ctx->metadata))
 	{
 		dis_ctx->io_data.volume_state = FALSE;
 	}
-	
+
 	/* Clean everything before returning if there's an error */
 	if(ret != DIS_RET_SUCCESS)
 		dis_destroy(dis_ctx);
 	else
 		dis_ctx->curr_state = DIS_STATE_COMPLETE_EVERYTHING;
-	
+
 	return ret;
 }
 
@@ -247,38 +247,38 @@ int dis_initialize(dis_context_t dis_ctx)
 int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 {
 	uint8_t* buf = NULL;
-	
+
 	size_t sector_count;
 	off_t  sector_start;
 	size_t sector_to_add = 0;
 	uint16_t sector_size;
-	
-	
+
+
 	if(!dis_ctx || !buffer)
 		return -EINVAL;
-	
-	
+
+
 	/* Check the initialization's state */
 	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
 	{
 		xprintf(L_ERROR, "Initialization not completed. Abort.\n");
 		return -EFAULT;
 	}
-	
+
 	/* Check the state the BitLocker volume is in */
 	if(dis_ctx->io_data.volume_state == FALSE)
 	{
 		xprintf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
 		return -EFAULT;
 	}
-	
+
 	/* Check requested size */
 	if(size == 0)
 	{
 		xprintf(L_DEBUG, "Received a request with a null size\n");
 		return 0;
 	}
-	
+
 	if(size > INT_MAX)
 	{
 		xprintf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
@@ -286,14 +286,14 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		);
 		return -EOVERFLOW;
 	}
-	
+
 	/* Check requested offset */
 	if(offset < 0)
 	{
 		xprintf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
 		return -EFAULT;
 	}
-	
+
 	if(offset >= (off_t)dis_ctx->io_data.volume_size)
 	{
 		xprintf(
@@ -304,40 +304,40 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		);
 		return -EFAULT;
 	}
-	
-	
-	/* 
+
+
+	/*
 	 * The offset may not be at a sector limit, so we need to decrypt the entire
 	 * sector where it starts. Idem for the end.
-	 * 
-	 * 
+	 *
+	 *
 	 * Example:
 	 * Sector number:              1   2   3   4   5   6   7...
 	 * Data, continuous sectors: |___|___|___|___|___|___|__...
 	 * The data the user want:         |__________|
-	 * 
+	 *
 	 * The user don't want all of the data from sectors 2 and 5, but as the data
 	 * are encrypted sector by sector, we have to decrypt them even though we
 	 * won't give him the beginning of the sector 2 and the end of the sector 5.
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	 * Logic to do this is below :
 	 *  - count the number of full sectors
 	 *  - decode all sectors
 	 *  - select and copy the data to user and deallocate all buffers
 	 */
-	
+
 	/* Do not add sectors if we're at the edge of one already */
 	sector_size = dis_ctx->io_data.sector_size;
 	if((offset % sector_size) != 0)
 		sector_to_add += 1;
 	if(((offset + (off_t)size) % sector_size) != 0)
 		sector_to_add += 1;
-	
+
 	sector_count = ( size / sector_size ) + sector_to_add;
 	sector_start = offset / sector_size;
-	
+
 	xprintf(L_DEBUG,
 	        "--------------------{ Fuse reading }-----------------------\n");
 	xprintf(L_DEBUG, "  Offset and size needed: %#" F_OFF_T
@@ -345,17 +345,17 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	xprintf(L_DEBUG, "  Start sector number: %#" F_OFF_T
 	                 " || Number of sectors: %#" F_SIZE_T "\n",
 	                 sector_start, sector_count);
-	
-	
+
+
 	/*
 	 * NOTE: DO NOT use xmalloc() here, we don't want to mess everything up!
 	 * In general, do not use xfunctions() but xprintf() here.
 	 */
-	
+
 	size_t to_allocate = size + sector_to_add*sector_size;
 	xprintf(L_DEBUG, "  Trying to allocate %#" F_SIZE_T " bytes\n",to_allocate);
 	buf = malloc(to_allocate);
-	
+
 	/* If buffer could not be allocated, return an error */
 	if(!buf)
 	{
@@ -367,8 +367,8 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		else
 			return -ENOMEM;
 	}
-	
-	
+
+
 	if(!dis_ctx->io_data.decrypt_region(
 		&dis_ctx->io_data,
 		sector_count,
@@ -382,16 +382,16 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		       "-----------------------------------------------------------\n");
 		return -EIO;
 	}
-	
+
 	/* Now copy the required amount of data to the user buffer */
 	memcpy(buffer, buf + (offset % sector_size), size);
-	
+
 	free(buf);
-	
+
 	xprintf(L_DEBUG, "  Outsize which will be returned: %d\n", (int)size);
 	xprintf(L_DEBUG,
 	        "-----------------------------------------------------------\n");
-	
+
 	return (int)size;
 }
 
@@ -402,43 +402,43 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 {
 	uint8_t* buf = NULL;
 	int      ret = 0;
-	
+
 	uint16_t sector_size;
 	size_t sector_count;
 	off_t  sector_start;
 	size_t sector_to_add = 0;
-	
-	
+
+
 	if(!dis_ctx || !buffer)
 		return -EINVAL;
-	
+
 	/* Check the initialization's state */
 	if(dis_ctx->curr_state != DIS_STATE_COMPLETE_EVERYTHING)
 	{
 		xprintf(L_ERROR, "Initialization not completed. Abort.\n");
 		return -EFAULT;
 	}
-	
+
 	/* Check the state the BitLocker volume is in */
 	if(dis_ctx->io_data.volume_state == FALSE)
 	{
 		xprintf(L_ERROR, "Invalid volume state, can't run safely. Abort.\n");
 		return -EFAULT;
 	}
-	
+
 	/* Perform basic checks */
 	if(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY)
 	{
 		xprintf(L_DEBUG, "Only decrypting (-r or --read-only option passed)\n");
 		return -EACCES;
 	}
-	
+
 	if(size == 0)
 	{
 		xprintf(L_DEBUG, "Received a request with a null size\n");
 		return 0;
 	}
-	
+
 	if(size > INT_MAX)
 	{
 		xprintf(L_ERROR, "Received size which will overflow: %#" F_SIZE_T "\n",
@@ -446,13 +446,13 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		);
 		return -EOVERFLOW;
 	}
-	
+
 	if(offset < 0)
 	{
 		xprintf(L_ERROR, "Offset under 0: %#" F_OFF_T "\n", offset);
 		return -EFAULT;
 	}
-	
+
 	if(offset >= (off_t)dis_ctx->io_data.volume_size)
 	{
 		xprintf(L_ERROR, "Offset (%#" F_OFF_T ") exceeds volume's size (%#"
@@ -460,7 +460,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		        offset, (off_t)dis_ctx->io_data.volume_size);
 		return -EFAULT;
 	}
-	
+
 	if((size_t)offset + size >= (size_t)dis_ctx->io_data.volume_size)
 	{
 		size_t nsize = (size_t)dis_ctx->io_data.volume_size
@@ -474,16 +474,16 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		);
 		size = nsize;
 	}
-	
-	
+
+
 	/*
 	 * Don't authorize to write on metadata, NTFS firsts sectors and on another
 	 * area we shouldn't write to (don't know its signification yet).
 	 */
 	if(dis_metadata_is_overwritten(dis_ctx->metadata, offset, size) != DIS_RET_SUCCESS)
 		return -EFAULT;
-	
-	
+
+
 	/*
 	 * For BitLocker 7's volume, redirect writes to firsts sectors to the backed
 	 * up ones
@@ -512,54 +512,54 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 			 *   virtualized area and the size to the rest to be dec/encrypted
 			 */
 			xprintf(L_DEBUG, "  `-> Splitting the request in two, recursing\n");
-			
+
 			size_t nsize = (size_t)(dis_ctx->metadata->virtualized_size - offset);
 			ret = enlock(dis_ctx, buffer, offset, nsize);
 			if(ret < 0)
 				return ret;
-			
+
 			offset  = dis_ctx->metadata->virtualized_size;
 			size   -= nsize;
 			buffer += nsize;
 		}
 	}
-	
-	
-	/* 
+
+
+	/*
 	 * As in the read function, the offset may not be at a sector limit, so we
 	 * need to decrypt the entire sector where it starts till the entire sector
 	 * where it ends, then push the changes into the sectors at correct offset
 	 * and finally encrypt all of these sectors and write them back to the disk.
-	 * 
-	 * 
+	 *
+	 *
 	 * Example:
 	 * Sector number:                    1   2   3   4   5   6   7...
 	 * Data, continuous sectors:       |___|___|___|___|___|___|__...
 	 * Where the user want to write:         |__________|
-	 * 
+	 *
 	 * The user don't want to write everywhere, just from the middle of sector 2
 	 * till a part of sector 5. But we're writing sectors by sectors to be able
 	 * to encrypt using AES. So we'll need entire sectors 2 to 5 included.
-	 * 
-	 * 
-	 * 
+	 *
+	 *
+	 *
 	 * Logic to do this is below :
 	 *  - read and decrypt all sectors completely (2 to 5 in the example above)
 	 *  - replace some data by the user's one
 	 *  - encrypt and write the read sectors
 	 */
-	
+
 	/* Do not add sectors if we're at the edge of one already */
 	sector_size = dis_ctx->io_data.sector_size;
 	if((offset % sector_size) != 0)
 		sector_to_add += 1;
 	if(((offset + (off_t)size) % sector_size) != 0)
 		sector_to_add += 1;
-	
-	
+
+
 	sector_count = ( size / sector_size ) + sector_to_add;
 	sector_start = offset / sector_size;
-	
+
 	xprintf(L_DEBUG,
 	        "--------------------{ Fuse writing }-----------------------\n");
 	xprintf(L_DEBUG, "  Offset and size requested: %#" F_OFF_T " and %#"
@@ -567,15 +567,15 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	xprintf(L_DEBUG, "  Start sector number: %#" F_OFF_T
 	        " || Number of sectors: %#" F_SIZE_T "\n",
 	        sector_start, sector_count);
-	
-	
+
+
 	/*
 	 * NOTE: DO NOT use xmalloc() here, we don't want to mess everything up!
 	 * In general, do not use xfunctions() but xprintf() here.
 	 */
-	
+
 	buf = malloc(size + sector_to_add * (size_t)sector_size);
-	
+
 	/* If buffer could not be allocated */
 	if(!buf)
 	{
@@ -584,8 +584,8 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		       "-----------------------------------------------------------\n");
 		return -ENOMEM;
 	}
-	
-	
+
+
 	if(!dis_ctx->io_data.decrypt_region(
 		&dis_ctx->io_data,
 		sector_count,
@@ -600,12 +600,12 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		       "-----------------------------------------------------------\n");
 		return -EIO;
 	}
-	
-	
+
+
 	/* Now copy the user's buffer to the received data */
 	memcpy(buf + (offset % sector_size), buffer, size);
-	
-	
+
+
 	/* Finally, encrypt the buffer and write it to the disk */
 	if(!dis_ctx->io_data.encrypt_region(
 		&dis_ctx->io_data,
@@ -621,18 +621,18 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		       "-----------------------------------------------------------\n");
 		return -EIO;
 	}
-	
-	
+
+
 	free(buf);
-	
-	
+
+
 	/* Note that ret is zero when no recursion occurs */
 	int outsize = (int)size + ret;
-	
+
 	xprintf(L_DEBUG, "  Outsize which will be returned: %d\n", outsize);
 	xprintf(L_DEBUG,
 	        "-----------------------------------------------------------\n");
-	
+
 	return outsize;
 }
 
@@ -643,22 +643,22 @@ int dis_destroy(dis_context_t dis_ctx)
 	/* Finish cleaning things */
 	if(dis_ctx->io_data.vmk)
 		xfree(dis_ctx->io_data.vmk);
-	
+
 	if(dis_ctx->io_data.fvek)
 		xfree(dis_ctx->io_data.fvek);
-	
+
 	dis_crypt_destroy(dis_ctx->io_data.crypt);
-	
+
 	dis_metadata_destroy(dis_ctx->metadata);
-	
+
 	dis_free_args(dis_ctx);
-	
+
 	xclose(dis_ctx->io_data.volume_fd);
-	
+
 	xstdio_end();
-	
+
 	xfree(dis_ctx);
-	
+
 	return EXIT_SUCCESS;
 }
 
@@ -674,9 +674,9 @@ int dis_destroy(dis_context_t dis_ctx)
 static VALUE rb_init_dislocker(VALUE self, VALUE rb_vdis_ctx)
 {
 	rb_iv_set(self, "@context", rb_vdis_ctx);
-	
+
 	// TODO dis_initialize(dis_context_t* dis_ctx);
-	
+
 	return Qtrue;
 }
 
@@ -712,12 +712,12 @@ void Init_libdislocker()
 {
 	VALUE rb_mDislocker = rb_define_module("Dislocker");
 	Init_metadata(rb_mDislocker);
-	
+
 	rb_define_method(rb_mDislocker, "initialize", rb_init_dislocker, 1);
 	rb_define_method(rb_mDislocker, "dislock", rb_dislock, 3);
 	rb_define_method(rb_mDislocker, "enlock", rb_enlock, 3);
 	rb_define_method(rb_mDislocker, "destroy", rb_destroy_dislocker, 0);
-	
+
 	VALUE rb_mDisSignatures = rb_define_module_under(rb_mDislocker, "Signatures");
 	VALUE signatures = rb_ary_new3(
 		2,

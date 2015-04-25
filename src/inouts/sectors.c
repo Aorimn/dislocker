@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -48,16 +48,16 @@
 typedef struct _thread_arg
 {
 	size_t   nb_loop;
-	
+
 	uint16_t sector_size;
 	off_t    sector_start;
-	
+
 	uint8_t* input;
 	uint8_t* output;
-	
+
 	unsigned int modulo;
 	unsigned int modulo_result;
-	
+
 	dis_iodata_t* io_data;
 } thread_arg_t;
 
@@ -88,7 +88,7 @@ static void fix_write_sector_vista(
 /**
  * Read and decrypt one or more sectors
  * @warning The sector_start has to be correctly aligned
- * 
+ *
  * @param io_data The data structure containing volume's information
  * @param nb_read_sector The number of sectors to read
  * @param sector_size The size of one sector
@@ -107,19 +107,19 @@ int read_decrypt_sectors(
 	// Check parameters
 	if(!io_data || !output)
 		return FALSE;
-	
-	
+
+
 	size_t   nb_loop = 0;
 	size_t   size    = nb_read_sector * sector_size;
 	uint8_t* input   = malloc(size);
 	off_t    off     = sector_start + io_data->part_off;
-	
+
 	memset(input , 0, size);
 	memset(output, 0, size);
-	
+
 	/* Read the sectors we need */
 	ssize_t read_size = pread(io_data->volume_fd, input, size, off);
-	
+
 	if(read_size <= 0)
 	{
 		free(input);
@@ -127,15 +127,15 @@ int read_decrypt_sectors(
 		                 "\n", size, off);
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We are assuming that we always have a "sector size" multiple disk length
 	 * Can this assumption be wrong? I don't think so :)
 	 */
 	nb_loop = (size_t)read_size / sector_size;
-	
-	
+
+
 	/* Run threads if compiled with */
 #if NB_THREAD > 0
 	{
@@ -143,7 +143,7 @@ int read_decrypt_sectors(
 		pthread_t thread[NB_THREAD];
 		thread_arg_t args[NB_THREAD];
 		unsigned int loop = 0;
-		
+
 		for(loop = 0; loop < NB_THREAD; ++loop)
 		{
 			args[loop].nb_loop       = nb_loop;
@@ -151,16 +151,16 @@ int read_decrypt_sectors(
 			args[loop].sector_start  = sector_start;
 			args[loop].input         = input;
 			args[loop].output        = output;
-			
+
 			args[loop].modulo        = NB_THREAD;
 			args[loop].modulo_result = loop;
-			
+
 			args[loop].io_data       = io_data;
-			
+
 			pthread_create( &thread[loop], NULL,
 			                thread_decrypt, (void*) &args[loop] );
 		}
-		
+
 		/* Wait for threads to end */
 		for(loop = 0; loop < NB_THREAD; ++loop)
 			pthread_join(thread[loop], NULL);
@@ -173,19 +173,19 @@ int read_decrypt_sectors(
 		arg.sector_start  = sector_start;
 		arg.input         = input;
 		arg.output        = output;
-		
+
 		arg.modulo        = 0;
 		arg.modulo_result = 42;
-		
+
 		arg.io_data       = io_data;
-		
+
 		thread_decrypt(&arg);
 	}
 #endif
-	
-	
+
+
 	free(input);
-	
+
 	return TRUE;
 }
 
@@ -193,7 +193,7 @@ int read_decrypt_sectors(
 /**
  * Encrypt and write one or more sectors
  * @warning The sector_start has to be correctly aligned
- * 
+ *
  * @param io_data The data structure containing volume's information
  * @param nb_write_sector The number of sectors to write
  * @param sector_size The size of one sector
@@ -212,11 +212,11 @@ int encrypt_write_sectors(
 	// Check parameter
 	if(!io_data || !input)
 		return FALSE;
-	
+
 	uint8_t* output = malloc(nb_write_sector * sector_size);
-	
+
 	memset(output , 0, nb_write_sector * sector_size);
-	
+
 	/* Run threads if compiled with */
 #if NB_THREAD > 0
 	{
@@ -224,7 +224,7 @@ int encrypt_write_sectors(
 		pthread_t thread[NB_THREAD];
 		thread_arg_t args[NB_THREAD];
 		unsigned int loop = 0;
-		
+
 		for(loop = 0; loop < NB_THREAD; ++loop)
 		{
 			args[loop].nb_loop       = nb_write_sector;
@@ -232,16 +232,16 @@ int encrypt_write_sectors(
 			args[loop].sector_start  = sector_start;
 			args[loop].input         = input;
 			args[loop].output        = output;
-			
+
 			args[loop].modulo        = NB_THREAD;
 			args[loop].modulo_result = loop;
-			
+
 			args[loop].io_data       = io_data;
-			
+
 			pthread_create( &thread[loop], NULL,
 			                thread_encrypt, (void*) &args[loop] );
 		}
-		
+
 		/* Wait for threads to end */
 		for(loop = 0; loop < NB_THREAD; ++loop)
 			pthread_join(thread[loop], NULL);
@@ -254,16 +254,16 @@ int encrypt_write_sectors(
 		arg.sector_start  = sector_start;
 		arg.input         = input;
 		arg.output        = output;
-		
+
 		arg.modulo        = 0;
 		arg.modulo_result = 42;
-		
+
 		arg.io_data       = io_data;
-		
+
 		thread_encrypt(&arg);
 	}
 #endif
-	
+
 	/* Write the sectors we want */
 	ssize_t write_size = pwrite(
 		io_data->volume_fd,
@@ -271,39 +271,39 @@ int encrypt_write_sectors(
 		nb_write_sector * sector_size,
 		sector_start + io_data->part_off
 	);
-	
+
 	free(output);
 	if(write_size <= 0)
 		return FALSE;
-	
+
 	return TRUE;
 }
 
 
 /**
  * Decrypt a sector region according to one or more thread
- * 
+ *
  * @param params The structure used for thread parameters storage
  */
 static void* thread_decrypt(void* params)
 {
 	if(!params)
 		return NULL;
-	
+
 	thread_arg_t* args    = (thread_arg_t*)params;
 	dis_iodata_t* io_data = args->io_data;
-	
+
 	off_t loop               = 0;
 	off_t offset             = args->sector_start;
-	
+
 	uint8_t* loop_input      = args->input;
 	uint8_t* loop_output     = args->output;
-	
+
 	int      hover           = 0;
 	uint16_t version         = dis_metadata_information_version(io_data->metadata);
 	uint16_t sector_size     = args->sector_size;
-	
-	
+
+
 	// TODO see to be more intelligent on these loops
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
 	                               offset      += sector_size,
@@ -313,7 +313,7 @@ static void* thread_decrypt(void* params)
 		if(args->modulo != 0 && args->modulo != 1
 			&& (loop % args->modulo) == args->modulo_result)
 			continue;
-		
+
 		/*
 		 * For BitLocker-encrypted volume with W$ 7/8:
 		 *   - Don't decrypt the firsts sectors whatever might be the case, they
@@ -327,9 +327,9 @@ static void* thread_decrypt(void* params)
 		 *   size (but still in the volume's size obv). This is needed when the
 		 *   encryption was paused during BitLocker's turn on.
 		 */
-		
+
 		off_t sector_offset = args->sector_start / sector_size + loop;
-		
+
 		/* Check for zero out areas */
 		hover = dis_metadata_is_overwritten(
 			io_data->metadata,
@@ -340,8 +340,8 @@ static void* thread_decrypt(void* params)
 			memset(loop_output, 0, sector_size);
 			continue;
 		}
-		
-		
+
+
 		/* Check for sectors fixing and non-encrypted sectors */
 		if(version == V_SEVEN &&
 		   (uint64_t)sector_offset < io_data->nb_backup_sectors)
@@ -401,34 +401,34 @@ static void* thread_decrypt(void* params)
 				                    " failed!\n", offset);
 		}
 	}
-	
+
 	return args->output;
 }
 
 
 /**
  * Encrypt a sector region according to one or more thread
- * 
+ *
  * @param params The structure used for thread parameters storage
  */
 static void* thread_encrypt(void* params)
 {
 	if(!params)
 		return NULL;
-	
+
 	thread_arg_t* args    = (thread_arg_t*)params;
 	dis_iodata_t* io_data = args->io_data;
-	
+
 	off_t   loop         = 0;
 	off_t offset         = args->sector_start;
-	
+
 	uint8_t* loop_input  = args->input;
 	uint8_t* loop_output = args->output;
-	
+
 	uint16_t version     = dis_metadata_information_version(io_data->metadata);
 	uint16_t sector_size = args->sector_size;
-	
-	
+
+
 	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
 	                               offset      += sector_size,
 	                               loop_input  += sector_size,
@@ -437,16 +437,16 @@ static void* thread_encrypt(void* params)
 		if(args->modulo != 0 && args->modulo != 1
 			&& (loop % args->modulo) == args->modulo_result)
 			continue;
-		
+
 		/*
 		 * Just encrypt this sector
 		 * Exception: don't encrypt it if the sector wasn't (as in the
 		 * "BitLocker's-volume-encryption-was-paused case decribed in the
 		 * decryption function above")
 		 */
-		
+
 		off_t sector_offset = args->sector_start / sector_size + loop;
-		
+
 		/*
 		 * NOTE: Seven specificities are dealt with earlier in the process
 		 * see dislocker.c:enlock()
@@ -482,7 +482,7 @@ static void* thread_encrypt(void* params)
 				                    " failed!\n", offset);
 		}
 	}
-	
+
 	return args->input;
 }
 
@@ -494,21 +494,21 @@ static void* thread_encrypt(void* params)
 /**
  * "Fix" the firsts sectors of a BitLocker volume encrypted with W$ Seven for
  * read operation
- * 
+ *
  * @param io_data Data needed by the decryption to deal with encrypted data
  * @param sector_address Address of the sector to decrypt
  * @param output The buffer where to put fixed data
  */
 static void fix_read_sector_seven(dis_iodata_t* io_data,
                                   off_t sector_address, uint8_t *output)
-{ 
+{
 	// Check parameter
 	if(!output)
 		return;
-	
+
 	ssize_t read_size;
-	
-	/* 
+
+	/*
 	 * NTFS's boot sectors are saved into the field "boot_sectors_backup" into
 	 * metadata's header: the information structure. This field should have been
 	 * reported into the "backup_sectors_addr" field of the dis_iodata_t
@@ -517,19 +517,19 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 	 */
 	off_t from = sector_address;
 	off_t to   = from + (off_t)io_data->backup_sectors_addr;
-	
+
 	xprintf(L_DEBUG, "  Fixing sector (7): from %#" F_OFF_T " to %#" F_OFF_T
 	                 "\n", from, to);
-	
+
 	to += io_data->part_off;
-	
-	
+
+
 	uint8_t* input = malloc(io_data->sector_size);
 	memset(input, 0, io_data->sector_size);
-	
+
 	/* Read the real sector we need, at the offset we need it */
 	read_size = pread(io_data->volume_fd, input, io_data->sector_size, to);
-	
+
 	if(read_size <= 0)
 	{
 		free(input);
@@ -537,9 +537,9 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 		                 "\n", io_data->sector_size, to);
 		return;
 	}
-	
+
 	to -= io_data->part_off;
-	
+
 	/* If the sector wasn't yet encrypted, don't decrypt it */
 	if((uint64_t)to >= io_data->encrypted_volume_size)
 	{
@@ -554,7 +554,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 			output
 		);
 	}
-	
+
 	free(input);
 }
 
@@ -562,23 +562,23 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 /**
  * "Fix" the firsts sectors of a BitLocker volume encrypted with W$ Vista for
  * read operation
- * 
+ *
  * @param io_data Data needed by the decryption to deal with encrypted data
  * @param input The sector which needs a fix
  * @param output The buffer where to put fixed data
  */
 static void fix_read_sector_vista(dis_iodata_t* io_data,
                                   uint8_t* input, uint8_t *output)
-{ 
+{
 	// Check parameter
 	if(!input || !output)
 		return;
-	
-	/* 
+
+	/*
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
 	 */
 	memcpy(output, input, io_data->sector_size);
-	
+
 	dis_metadata_vista_vbr_fve2ntfs(io_data->metadata, output);
 }
 
@@ -586,23 +586,23 @@ static void fix_read_sector_vista(dis_iodata_t* io_data,
 /**
  * "Fix" the firsts sectors of a BitLocker volume encrypted with W$ Vista for
  * write operation
- * 
+ *
  * @param io_data Data needed by the decryption to deal with encrypted data
  * @param input The sector which needs a fix
  * @param output The buffer where to put fixed data
  */
 static void fix_write_sector_vista(dis_iodata_t* io_data,
                                    uint8_t* input, uint8_t *output)
-{ 
+{
 	// Check parameter
 	if(!input || !output)
 		return;
-	
-	/* 
+
+	/*
 	 * Only two fields need to be changed: the NTFS signature and the MFT mirror
 	 */
 	memcpy(output, input, io_data->sector_size);
-	
+
 	dis_metadata_vista_vbr_ntfs2fve(io_data->metadata, output);
 }
 

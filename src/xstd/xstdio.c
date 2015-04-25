@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -63,14 +63,14 @@ static int            tty_fd = -1;
 
 /**
  * Initialize outputs for display messages
- * 
+ *
  * @param v Application verbosity
  * @param file File where putting logs (stdout if NULL)
  */
 void xstdio_init(DIS_LOGS v, const char* file)
 {
 	verbosity = v;
-	
+
 	FILE* log = NULL;
 	if(file)
 	{
@@ -83,8 +83,8 @@ void xstdio_init(DIS_LOGS v, const char* file)
 	}
 	else
 		log = stdout;
-	
-	
+
+
 	switch(v)
 	{
 		default:
@@ -110,7 +110,7 @@ void xstdio_init(DIS_LOGS v, const char* file)
 				fclose(log);
 			break;
 	}
-	
+
 	xprintf(L_DEBUG, "Verbosity level to %s (%d) into '%s'\n",
 	        msg_tab[verbosity], verbosity, file == NULL ? "stdout" : file);
 }
@@ -118,26 +118,26 @@ void xstdio_init(DIS_LOGS v, const char* file)
 
 /**
  * Create and return an unbuffered stdin
- * 
+ *
  * @return The file descriptor of the unbuffered input tty
  */
 int get_input_fd()
 {
 	if(tty_fd > -1)
 		return tty_fd;
-	
+
 	struct termios ti;
-	
+
 	if ((tty_fd = open("/dev/tty", O_RDONLY | O_NONBLOCK)) < 0)
 		return -1;
-	
+
 	tcgetattr(tty_fd, &ti);
 	ti_save = ti;
 	ti.c_lflag    &= (typeof(tcflag_t)) ~(ICANON | ECHO);
 	ti.c_cc[VMIN]  = 1;
 	ti.c_cc[VTIME] = 0;
 	tcsetattr(tty_fd, TCSANOW, &ti);
-	
+
 	return tty_fd;
 }
 
@@ -161,7 +161,7 @@ void close_input_fd()
 void xstdio_end()
 {
 	close_input_fd();
-	
+
 	if(verbosity > L_QUIET)
 		fclose(fds[L_CRITICAL]);
 }
@@ -169,7 +169,7 @@ void xstdio_end()
 
 /**
  * Remove the '\n', '\r' or '\r\n' before the first '\0' if present
- * 
+ *
  * @param string String where the '\n', '\r' or '\r\n' is removed
  */
 void chomp(char* string)
@@ -177,13 +177,13 @@ void chomp(char* string)
 	size_t len = strlen(string);
 	if(len == 0)
 		return;
-	
+
 	if(string[len - 1] == '\n' || string[len - 1] == '\r')
 		string[len - 1] = '\0';
-	
+
 	if(len == 1)
 		return;
-	
+
 	if(string[len - 2] == '\r')
 		string[len - 2] = '\0';
 }
@@ -192,7 +192,7 @@ void chomp(char* string)
 /**
  * Do as printf(3) but displaying nothing if verbosity is not high enough
  * Messages are redirected to the log file if specified into xstdio_init()
- * 
+ *
  * @param level Level of the message to print
  * @param format String to display (cf printf(3))
  * @param ... Cf printf(3)
@@ -201,23 +201,23 @@ void chomp(char* string)
 int xprintf(DIS_LOGS level, const char* format, ...)
 {
 	int ret = -1;
-	
+
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
-	
+
 	if(level >= DIS_LOGS_NB)
 		level = L_DEBUG;
-	
-	
+
+
 	va_list arg;
 	va_start(arg, format);
-	
+
 	ret = xvprintf(level, format, arg);
-	
+
 	va_end(arg);
-	
+
 	fflush(fds[level]);
-	
+
 	return ret;
 }
 
@@ -225,7 +225,7 @@ int xprintf(DIS_LOGS level, const char* format, ...)
 /**
  * Do as vprintf(3) but displaying nothing if verbosity is not high enough
  * Messages are redirected to the log file if specified into xstdio_init()
- * 
+ *
  * @param level Level of the message to print
  * @param format String to display (cf vprintf(3))
  * @param ap Cf vprintf(3)
@@ -234,17 +234,17 @@ int xvprintf(DIS_LOGS level, const char* format, va_list ap)
 {
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
-	
-	
+
+
 	if(level >= DIS_LOGS_NB)
 		level = L_DEBUG;
-	
-	
+
+
 	time_t current_time = time(NULL);
 	char* time2string = ctime(&current_time);
-	
+
 	chomp(time2string);
-	
+
 	fprintf(fds[level], "%s [%s] ", time2string, msg_tab[level]);
 	return vfprintf(fds[level], format, ap);
 }
@@ -252,7 +252,7 @@ int xvprintf(DIS_LOGS level, const char* format, va_list ap)
 
 /**
  * perror wrapper
- * 
+ *
  * @param append The string to append to the error message
  */
 void xperror(char* append)
@@ -260,12 +260,12 @@ void xperror(char* append)
 	size_t len = strlen(append) + strlen(ERROR_STR) + 2;
 	char *error_msg = xmalloc(len * sizeof(char));
 	snprintf(error_msg, len, "\n"ERROR_STR"%s", append);
-	
+
 	perror(error_msg);
-	
+
 	xfree(error_msg);
 	free(append);
-	
+
 	exit(PERROR_EXIT);
 }
 

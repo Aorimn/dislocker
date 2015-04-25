@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -72,16 +72,16 @@ PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
 
 /**
  * Hide a commandline option, replacing the actual optarg by 'X's.
- * 
+ *
  * @param opt The option to hide
  */
 static void hide_opt(char* opt)
 {
 	if(!opt)
 		return;
-	
+
 	size_t len = strlen(opt);
-	
+
 	while(len)
 	{
 		opt[--len] = 'X';
@@ -91,10 +91,10 @@ static void hide_opt(char* opt)
 
 /**
  * Parse arguments strings
- * 
+ *
  * @warning If -h/--help is encountered, the help is printed and the program
  * exits (using exit(EXIT_SUCCESS)).
- * 
+ *
  * @param cfg The config pointer to dis_config_t structure
  * @param argc Number of arguments given to the program
  * @param argv Arguments given to the program
@@ -106,13 +106,13 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	/** See man getopt_long(3) */
 	extern int optind;
 	int optchar = 0;
-	
+
 	enum {
 		NO_OPT,   /* No option for this argument */
 		NEED_OPT, /* Need an option for this one */
-		MAY_OPT   /* User may provide an option  */ 
+		MAY_OPT   /* User may provide an option  */
 	};
-	
+
 	/* Options which could be passed as argument */
 	const char          short_opts[] = "cf:F::hk:l:o:p::qrsu::vV:";
 	const struct option long_opts[] = {
@@ -132,13 +132,13 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		{"volume",            NEED_OPT, NULL, 'V'},
 		{0, 0, 0, 0}
 	};
-	
+
 	if(!dis_ctx || !argv)
 		return -1;
-	
+
 	dis_config_t* cfg = &dis_ctx->cfg;
-	
-	
+
+
 	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
 	{
 		switch(optchar)
@@ -236,30 +236,30 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 		}
 	}
-	
-	
+
+
 	/* Check verbosity */
 	if(cfg->verbosity > L_DEBUG)
 		cfg->verbosity = L_DEBUG;
-	
+
 	/* Check decryption method */
 	if(!cfg->decryption_mean)
 		cfg->decryption_mean |= DIS_USE_CLEAR_KEY;
-	
+
 	/* Check if a block is forced */
 	if(cfg->force_block != 1 &&
 	   cfg->force_block != 2 &&
 	   cfg->force_block != 3)
 		cfg->force_block = 0;
-	
-	
+
+
 	return optind;
 }
 
 
 /**
  * Modify dislocker's options one-by-one
- * 
+ *
  * @param cfg Dislocker's config
  * @param opt_name The option's name to change
  * @param opt_value The new value of the option. Note that this is a pointer. If
@@ -269,9 +269,9 @@ int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 {
 	if (!dis_ctx || !opt_value)
 		return FALSE;
-	
+
 	dis_config_t* cfg = &dis_ctx->cfg;
-	
+
 	switch(opt_name)
 	{
 		case DIS_OPT_VOLUME_PATH:
@@ -426,40 +426,40 @@ int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 			}
 			break;
 	}
-	
+
 	return TRUE;
 }
 
 
 /**
  * Free dis_config_t members
- * 
+ *
  * @param cfg Dislocker's config
  */
 void dis_free_args(dis_context_t dis_ctx)
 {
 	if (!dis_ctx)
 		return;
-	
+
 	dis_config_t* cfg = &dis_ctx->cfg;
-	
+
 	if(cfg->recovery_password)
 		memclean(cfg->recovery_password,
 		         strlen((char*)cfg->recovery_password) + sizeof(char));
-	
+
 	if(cfg->user_password)
 		memclean(cfg->user_password,
 		         strlen((char*)cfg->user_password) + sizeof(char));
-	
+
 	if(cfg->bek_file)
 		memclean(cfg->bek_file, strlen(cfg->bek_file) + sizeof(char));
-	
+
 	if(cfg->fvek_file)
 		memclean(cfg->fvek_file, strlen(cfg->fvek_file) + sizeof(char));
-	
+
 	if(cfg->volume_path)
 		xfree(cfg->volume_path);
-	
+
 	if(cfg->log_file)
 		xfree(cfg->log_file);
 }
@@ -472,13 +472,13 @@ void dis_print_args(dis_context_t dis_ctx)
 {
 	if(!dis_ctx)
 		return;
-	
+
 	dis_config_t* cfg = &dis_ctx->cfg;
-	
+
 	xprintf(L_DEBUG, "--- Config...\n");
 	xprintf(L_DEBUG, "   Verbosity: %d\n", cfg->verbosity);
 	xprintf(L_DEBUG, "   Trying to decrypt '%s'\n", cfg->volume_path);
-	
+
 	if(cfg->decryption_mean & DIS_USE_CLEAR_KEY)
 	{
 		xprintf(L_DEBUG, "   \tusing a clear key on the volume\n");
@@ -505,7 +505,7 @@ void dis_print_args(dis_context_t dis_ctx)
 	{
 		xprintf(L_DEBUG, "   \tnot using any decryption mean\n");
 	}
-	
+
 	if(cfg->force_block)
 		xprintf(
 			L_DEBUG,
@@ -514,14 +514,14 @@ void dis_print_args(dis_context_t dis_ctx)
 		);
 	else
 		xprintf(L_DEBUG, "   Using the first valid metadata block\n");
-	
+
 	if(cfg->flags & DIS_FLAG_READ_ONLY)
 		xprintf(
 			L_DEBUG,
 			"   Not allowing any write on the BitLocker volume "
 			"(read only mode)\n"
 		);
-	
+
 	xprintf(L_DEBUG, "... End config ---\n");
 }
 

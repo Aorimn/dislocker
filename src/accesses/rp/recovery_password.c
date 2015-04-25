@@ -39,7 +39,7 @@
 
 /**
  * Get the VMK datum using a recovery password
- * 
+ *
  * @param dis_metadata The metadata structure
  * @param cfg The configuration structure
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
@@ -50,12 +50,12 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	// Check parameters
 	if(!dis_meta || !cfg)
 		return FALSE;
-	
+
 	uint8_t* recovery_key = NULL;
 	uint8_t salt[16] = {0,};
-	
+
 	int result = FALSE;
-	
+
 	/* If the recovery password wasn't provide, ask for it */
 	if(!cfg->recovery_password)
 		if(!prompt_rp(&cfg->recovery_password))
@@ -63,12 +63,12 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 			xprintf(L_ERROR, "Cannot get valid recovery password. Abort.\n");
 			return FALSE;
 		}
-	
-	
+
+
 	xprintf(L_DEBUG, "Using the recovery password: '%s'.\n",
 	                (char *)cfg->recovery_password);
-	
-	
+
+
 	/*
 	 * We need a salt contained in the VMK datum associated to the recovery
 	 * password, so go get this salt and the VMK datum first
@@ -80,8 +80,8 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 		*vmk_datum = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We have the datum containing other data, so get in there and take the
 	 * nested one with type 3 (stretch key)
@@ -96,12 +96,12 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 		*vmk_datum = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/* The salt is in here, don't forget to keep it somewhere! */
 	memcpy(salt, ((datum_stretch_key_t*)stretch_datum)->salt, 16);
-	
-	
+
+
 	/* Get data which can be decrypted with this password */
 	void* aesccm_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum) || !aesccm_datum)
@@ -110,8 +110,8 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 		*vmk_datum = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We have all the things we need to compute the intermediate key from
 	 * the recovery password, so do it!
@@ -125,16 +125,16 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 		xfree(recovery_key);
 		return FALSE;
 	}
-	
+
 	/* We don't need the recovery_password anymore */
 	memclean((char*)cfg->recovery_password, strlen((char*)cfg->recovery_password));
 	cfg->recovery_password = NULL;
-	
+
 	/* As the computed key length is always the same, use a direct value */
 	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, 32, (datum_key_t**)vmk_datum);
-	
+
 	xfree(recovery_key);
-	
+
 	return result;
 }
 
@@ -350,19 +350,19 @@ int prompt_rp(uint8_t** rp)
 
 	fd_set rfds;
 	int    nfds = in + 1;
-	
+
 	if(in < 0)
 	{
 		fprintf(stderr, "Cannot open tty.\n");
 		return FALSE;
 	}
-	
+
 	if(FD_SETSIZE < 0)
 	{
 		fprintf(stderr, "Cannot add fd in the set.\n");
 		return FALSE;
 	}
-	
+
 	if((unsigned) in >= (unsigned) FD_SETSIZE)
 	{
 		fprintf(stderr,
@@ -371,8 +371,8 @@ int prompt_rp(uint8_t** rp)
 		close_input_fd();
 		return FALSE;
 	}
-	
-	
+
+
 	/* 8 = 7 hyphens separating the blocks + 1 '\0' at the end of the string */
 	*rp = malloc(NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
 	memset(*rp, 0, NB_RP_BLOCS * NB_DIGIT_BLOC + 8);

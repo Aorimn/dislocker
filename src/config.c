@@ -137,6 +137,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		return -1;
 
 	dis_config_t* cfg = &dis_ctx->cfg;
+	int true = TRUE;
 
 
 	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
@@ -145,13 +146,13 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		{
 			case 'c':
 			{
-				int t = TRUE;
-				dis_setopt(dis_ctx, DIS_OPT_CLEAR_KEY, &t);
+				dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &true);
 				break;
 			}
 			case 'f':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_BEK_FILE_PATH, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_SET_BEK_FILE_PATH, optarg);
 				break;
 			}
 			case 'F':
@@ -172,7 +173,8 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 			case 'k':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_FVEK_FILE_PATH, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
 				break;
 			}
 			case 'l':
@@ -188,7 +190,8 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 			case 'p':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_RECOVERY_PASSWORD, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &true);
+				dis_setopt(dis_ctx, DIS_OPT_SET_RECOVERY_PASSWORD, optarg);
 				hide_opt(optarg);
 				break;
 			}
@@ -200,19 +203,18 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 			case 'r':
 			{
-				int t = TRUE;
-				dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &t);
+				dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &true);
 				break;
 			}
 			case 's':
 			{
-				int t = TRUE;
-				dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &t);
+				dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &true);
 				break;
 			}
 			case 'u':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USER_PASSWORD, optarg);
+				dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &true);
+				dis_setopt(dis_ctx, DIS_OPT_SET_USER_PASSWORD, optarg);
 				hide_opt(optarg);
 				break;
 			}
@@ -257,6 +259,15 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 }
 
 
+static void set_decryption_mean(dis_config_t* cfg, int set, unsigned value)
+{
+	if(set == TRUE)
+		cfg->decryption_mean |= value;
+	else
+		cfg->decryption_mean &= (unsigned) ~value;
+}
+
+
 /**
  * Modify dislocker's options one-by-one
  *
@@ -280,79 +291,75 @@ int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 			if(opt_value == NULL)
 				cfg->volume_path = NULL;
 			else
-			{
 				cfg->volume_path = strdup((const char*) opt_value);
-			}
 			break;
-		case DIS_OPT_CLEAR_KEY:
+		case DIS_OPT_USE_CLEAR_KEY:
 			if(opt_value == NULL)
 				cfg->decryption_mean &= (unsigned) ~DIS_USE_CLEAR_KEY;
 			else
-			{
-				if(*(int*) opt_value == TRUE)
-					cfg->decryption_mean |= DIS_USE_CLEAR_KEY;
-				else
-					cfg->decryption_mean &= (unsigned) ~DIS_USE_CLEAR_KEY;
-			}
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_CLEAR_KEY);
 			break;
-		case DIS_OPT_BEK_FILE_PATH:
+		case DIS_OPT_USE_BEK_FILE:
+			if(opt_value == NULL)
+				cfg->decryption_mean &= (unsigned) ~DIS_USE_BEKFILE;
+			else
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_BEKFILE);
+			break;
+		case DIS_OPT_SET_BEK_FILE_PATH:
 			if(cfg->bek_file != NULL)
 				free(cfg->bek_file);
 			if(opt_value == NULL)
-			{
 				cfg->bek_file = NULL;
-				cfg->decryption_mean &= (unsigned) ~DIS_USE_BEKFILE;
-			}
 			else
-			{
 				cfg->bek_file = strdup((const char*) opt_value);
-				cfg->decryption_mean |= DIS_USE_BEKFILE;
-			}
 			break;
-		case DIS_OPT_RECOVERY_PASSWORD:
+		case DIS_OPT_USE_RECOVERY_PASSWORD:
+			if(opt_value == NULL)
+				cfg->decryption_mean &= (unsigned) ~DIS_USE_RECOVERY_PASSWORD;
+			else
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_RECOVERY_PASSWORD);
+			break;
+		case DIS_OPT_SET_RECOVERY_PASSWORD:
 			if(cfg->recovery_password != NULL)
 				free(cfg->recovery_password);
 			if(opt_value == NULL)
-			{
 				cfg->recovery_password = NULL;
-				cfg->decryption_mean &= (unsigned) ~DIS_USE_RECOVERY_PASSWORD;
-			}
 			else
 			{
 				const char* v = (const char*) opt_value;
 				cfg->recovery_password = (uint8_t *) strdup(v);
-				cfg->decryption_mean |= DIS_USE_RECOVERY_PASSWORD;
 			}
 			break;
-		case DIS_OPT_USER_PASSWORD:
+		case DIS_OPT_USE_USER_PASSWORD:
+			if(opt_value == NULL)
+				cfg->decryption_mean &= (unsigned) ~DIS_USE_USER_PASSWORD;
+			else
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_USER_PASSWORD);
+			break;
+		case DIS_OPT_SET_USER_PASSWORD:
 			if(cfg->user_password != NULL)
 				free(cfg->user_password);
 			if(opt_value == NULL)
-			{
 				cfg->user_password = NULL;
-				cfg->decryption_mean &= (unsigned) ~DIS_USE_USER_PASSWORD;
-			}
 			else
 			{
 				const char* v = (const char*) opt_value;
 				cfg->user_password = (uint8_t *) strdup(v);
-				cfg->decryption_mean |= DIS_USE_USER_PASSWORD;
 			}
 			break;
-		case DIS_OPT_FVEK_FILE_PATH:
+		case DIS_OPT_USE_FVEK_FILE:
+			if(opt_value == NULL)
+				cfg->decryption_mean &= (unsigned) ~DIS_USE_FVEKFILE;
+			else
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_FVEKFILE);
+			break;
+		case DIS_OPT_SET_FVEK_FILE_PATH:
 			if(cfg->fvek_file != NULL)
 				free(cfg->fvek_file);
 			if(opt_value == NULL)
-			{
 				cfg->fvek_file = NULL;
-				cfg->decryption_mean &= (unsigned) ~DIS_USE_FVEKFILE;
-			}
 			else
-			{
-				const char* v = (const char*) opt_value;
-				cfg->fvek_file = strdup(v);
-				cfg->decryption_mean |= DIS_USE_FVEKFILE;
-			}
+				cfg->fvek_file = strdup((const char*) opt_value);
 			break;
 		case DIS_OPT_VERBOSITY:
 			if(opt_value == NULL)

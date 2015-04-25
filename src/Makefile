@@ -75,13 +75,12 @@ man1ext		:=	.1
 man3ext		:=	.3
 mansrcdir	:=	../man/$(shell echo $(OS) | tr A-Z a-z)/
 # Get manpages only if the binary is to be installed
-man1pages	:=	$(wildcard $(foreach bin, $(BINS), $(mansrcdir)$(bin)$(man1ext)))
-# man3pages	:=	$(wildcard $(mansrcdir)*$(man3ext))
-man1pagesgz	:=	$(patsubst %$(man1ext), %$(man1ext).gz, $(man1pages))
-man3pagesgz	:=	$(patsubst %$(man3ext), %$(man3ext).gz, $(man3pages))
-manpages	:=	$(man1pages) $(man3pages)
-manpagesgz	:=	$(man1pagesgz) $(man3pagesgz)
-DEFAULT_MAN	:=	$(word 1, $(BINS))$(man1ext)
+man1pages	=	$(wildcard $(foreach bin, $(BINS), $(mansrcdir)$(bin)$(man1ext)))
+# man3pages	=	$(wildcard $(mansrcdir)*$(man3ext))
+man1pagesgz	=	$(patsubst %$(man1ext), %$(man1ext).gz, $(man1pages))
+man3pagesgz	=	$(patsubst %$(man3ext), %$(man3ext).gz, $(man3pages))
+manpagesgz	=	$(man1pagesgz) $(man3pagesgz)
+DEFAULT_MAN	=	$(word 1, $(BINS))$(man1ext)
 
 
 

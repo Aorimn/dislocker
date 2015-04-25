@@ -11,22 +11,22 @@ def get_partitions
 	reps.each do |rep|
 		uname = "#{rep}uname" if File.exists?("#{rep}uname")
 	end
-	
+
 	if uname.nil?
 		$stderr.puts 'Cannot find uname binary.'
 		return []
 	end
-	
+
 	os = `#{uname} -s`
 	os.chomp!
 	os.downcase!
-	
+
 	if Symbol.all_symbols.any? { |sym| sym.to_s == "get_#{os}_partitions" }
 		return send "get_#{os}_partitions"
 	else
 		$stderr.puts 'OS not supported.'
 	end
-	
+
 	return []
 end
 
@@ -38,18 +38,18 @@ def get_linux_partitions
 	fd = File.open('/proc/partitions', 'r')
 	lines = fd.readlines
 	fd.close
-	
+
 	if lines.count <= 2
 		$stderr.puts 'Wrong file format.'
 		exit -1
 	end
-	
+
 	# Remove header and empty line
 	lines = lines.last(lines.count - 2)
 	lines = lines.map do |line|
 		line.split /\s+/
 	end
-	
+
 	return lines.map do |line|
 		"/dev/#{line[4]}"
 	end
@@ -80,7 +80,7 @@ def is_bitlocker_encrypted?(device)
 		volume_signature = volume_header[3, 8]
 	end
 	fd.close
-	
+
 	$signatures.each do |sig|
 		# First check is the volume's signature
 		if sig == volume_signature
@@ -90,7 +90,7 @@ def is_bitlocker_encrypted?(device)
 			end
 		end
 	end
-	
+
 	return false
 end
 

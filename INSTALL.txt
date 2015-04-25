@@ -16,7 +16,7 @@ You need:
  - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
 If you have Ruby headers, the library will compile with some ruby bindings and
-another program will be available.
+another program - see the NOTE section below - will be available.
 
 For Debian-like:
   aptitude install gcc make libfuse-dev libpolarssl-dev ruby-dev

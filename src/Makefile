@@ -241,7 +241,7 @@ clean:
 
 travis-install-linux:
 	sudo apt-get update -qq
-	sudo apt-get install -qq libfuse-dev libpolarssl-dev
+	sudo apt-get install -qq libfuse-dev libpolarssl-dev ruby-dev
 
 travis-install-osx:
 	brew update

@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -53,7 +53,7 @@ enum datum_types
 	/*  9 */ DATUM_EXTERNAL_KEY,
 	/* 10 */ DATUM_UPDATE,
 	/* 11 */ DATUM_ERROR,
-	
+
 	/* Below is only available on Windows Seven */
 	/* 12 */ DATUM_ASYM_ENC,
 	/* 13 */ DATUM_EXPORTED_KEY,
@@ -189,8 +189,8 @@ typedef struct _datum_virtualization
 	datum_header_safe_t header;
 	uint64_t ntfs_boot_sectors;
 	uint64_t nb_bytes;
-	
-	/* 
+
+	/*
 	 * Below is a structure added to this virtualization structure in Windows 8
 	 * The header is still 0x18 in size, which means xinfo is a payload
 	 */
@@ -214,14 +214,14 @@ typedef struct _datum_types_properties
 	 * structure which is beginning each one of them
 	 */
 	uint16_t size_header;
-	
+
 	/*
 	 * A flag which tells us if the datum has one or more nested datum
 	 * 0 = No nested datum
 	 * 1 = One or more nested datum
 	 */
 	uint8_t has_nested_datum;
-	
+
 	/* Always equal to 0, maybe for padding */
 	uint8_t zero;
 } types_properties_t;
@@ -240,7 +240,7 @@ static const types_properties_t datum_types_prop[] =
 	{ 0x20, 1, 0 },  // EXTERNAL KEY
 	{ 0x2c, 1, 0 },  // UPDATE
 	{ 0x34, 0, 0 },  // ERROR
-	
+
 	/* These ones below were added for Seven */
 	{ 8,    0, 0 },  // ASYM ENC
 	{ 8,    0, 0 },  // EXPORTED KEY

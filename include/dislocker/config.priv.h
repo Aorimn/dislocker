@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -63,7 +63,7 @@ typedef enum {
 typedef struct _dis_cfg {
 	/* BitLocker-volume-to-mount path */
 	char*         volume_path;
-	
+
 	/* Which method to use to decrypt */
 	DIS_DECRYPT_MEAN  decryption_mean;
 	/* Path to the .bek file in case of using the BEKFILE DECRYPT_MEAN */
@@ -77,15 +77,15 @@ typedef struct _dis_cfg {
 	uint8_t*      user_password;
 	/* Use directly the FVEK file DECRYPT_MEAN */
 	char*         fvek_file;
-	
+
 	/* Output verbosity */
 	DIS_LOGS      verbosity;
 	/* Output file */
 	char*         log_file;
-	
+
 	/* Use this block of metadata and not another one (begin at 1) */
 	unsigned char force_block;
-	
+
 	/*
 	 * Begin to read the BitLocker volume at this offset, making this offset the
 	 * zero-one
@@ -95,7 +95,7 @@ typedef struct _dis_cfg {
 	 * Various flags one can use. See dis_flags_e enum above for possible values
 	 */
 	dis_flags_e   flags;
-	
+
 	/* Where dis_initialize() should stop */
 	dis_state_e   init_stop_at;
 } dis_config_t;

@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -41,7 +41,7 @@ typedef struct _volume_header
 	uint8_t  signature[8];        // = "-FVE-FS-" (without 0 at the string's end)   -- offset 3
 	                              // = "NTFS    " (idem) for NTFS volumes (ORLY?)
 	                              // = "MSWIN4.1" for BitLocker-To-Go encrypted volumes
-	
+
 	uint16_t sector_size;         // = 0x0200 = 512 bytes                           -- offset 0xb
 	uint8_t  sectors_per_cluster; //                                                -- offset 0xd
 	uint16_t reserved_clusters;   //                                                -- offset 0xe
@@ -54,7 +54,7 @@ typedef struct _volume_header
 	uint16_t nb_of_heads;         //                                                -- offset 0x1a
 	uint32_t hidden_sectors;      //                                                -- offset 0x1c
 	uint32_t nb_sectors_32b;      //                                                -- offset 0x20
-	
+
 	union {                       //                                                -- offset 0x24
 		struct { // Classic BitLocker
 			uint8_t  unknown2[4];         // NTFS = 0x00800080 (little endian)
@@ -65,28 +65,28 @@ typedef struct _volume_header
 				uint64_t mft_mirror;      //  or an NTFS one
 			};
 			uint8_t  unknown3[96];        //                                        -- offset 0x40
-			
+
 			guid_t   guid;                //                                        -- offset 0xa0
 			uint64_t information_off[3];  // NOT for Vista                          -- offset 0xb0
 			uint64_t eow_information_off[2]; // NOT for Vista NOR 7                 -- offset 0xc8
-			
+
 			uint8_t  unknown4[294];       //                                        -- offset 0xd8
 		};
 		struct { // BitLocker-To-Go
 			uint8_t  unknown5[35];
-			
+
 			uint8_t  fs_name[11];         //                                        -- offset 0x47
 			uint8_t  fs_signature[8];     //                                        -- offset 0x52
-			
+
 			uint8_t  unknown6[334];       //                                        -- offset 0x5a
-			
+
 			guid_t   bltg_guid;           //                                        -- offset 0x1a8
 			uint64_t bltg_header[3];      //                                        -- offset 0x1b8
-			
+
 			uint8_t  Unknown7[46];        //                                        -- offset 0x1d0
 		};
 	};
-	
+
 	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
 } volume_header_t; // Size = 512
 
@@ -104,10 +104,10 @@ typedef struct _bitlocker_dataset
 	uint32_t unknown1;     // = 0x0001 FIXME       -- offset 4
 	uint32_t header_size;  // = 0x0030             -- offset 8
 	uint32_t copy_size;    // = dataset_size       -- offset 0xc
-	
+
 	guid_t guid;           // dataset GUID         -- offset 0x10
 	uint32_t next_counter; //                      -- offset 0x20
-	
+
 	uint16_t algorithm;    //                      -- offset 0x24
 	uint16_t trash;        //                      -- offset 0x26
 	ntfs_time_t timestamp; //                      -- offset 0x28
@@ -132,7 +132,7 @@ typedef uint16_t dis_metadata_state_t;
 
 /**
  * Header of a BitLocker metadata structure, named information
- * 
+ *
  * Datums (protectors) with keys in them follow this header
  */
 typedef struct _bitlocker_information
@@ -140,11 +140,11 @@ typedef struct _bitlocker_information
 	uint8_t signature[8]; // = "-FVE-FS-"                                                   -- offset 0
 	uint16_t size;        // Total size (has to be multiplied by 16 when the version is 2)  -- offset 8
 	version_t version;    // = 0x0002 for Windows 7 and 1 for Windows Vista                 -- offset 0xa
-	
+
 	/* Not sure about the next two fields */
 	dis_metadata_state_t curr_state;  // Current encryption state                           -- offset 0xc
 	dis_metadata_state_t next_state;  // Next encryption state                              -- offset 0xe
-	
+
 	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
 	/*
 	 * This size describe a virtualized region. This region is only checked when
@@ -153,14 +153,14 @@ typedef struct _bitlocker_information
 	 */
 	uint32_t unknown_size;  //                                                              -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
-	
+
 	uint64_t information_off[3];  //                                                        -- offset 0x20
-	
+
 	union {
 		uint64_t boot_sectors_backup; // Address where the boot sectors have been backed up -- offset 0x38
 		uint64_t mftmirror_backup;    // This is the address of the MftMirror for Vista     -- offset 0x38
 	};
-	
+
 	struct _bitlocker_dataset dataset; // See above                                         -- offset 0x40
 } bitlocker_information_t; // Size = 0x40 + 0x30
 
@@ -177,7 +177,7 @@ _Static_assert(
  * encrypted using the VMK.
  * The key contained in the DATUM_KEY structure is the SHA-256 sum of the entire
  * BitLocker's metadata fields (bitlocker_information_t + every datum).
- * 
+ *
  * Therefore, the size field contains 8 plus the size of the datum.
  */
 typedef struct _bitlocker_validations
@@ -244,16 +244,16 @@ typedef struct _regions
 struct _dis_metadata {
 	/* The volume header, 512 bytes */
 	volume_header_t* volume_header;
-	
+
 	/* BitLocker-volume's main metadata */
 	bitlocker_information_t* information;
-	
+
 	/* BitLocker-volume's submain metadata */
 	bitlocker_dataset_t* dataset;
-	
+
 	/* BitLocker-volume's EOW main metadata */
 	bitlocker_eow_infos_t* eow_information;
-	
+
 	/*
 	 * Virtualized regions are presented as zeroes when queried from the NTFS
 	 * layer. In these virtualized regions, we find the 3 BitLocker metadata
@@ -263,13 +263,13 @@ struct _dis_metadata {
 	 */
 	size_t           nb_virt_region;
 	dis_regions_t    virt_region[5];
-	
+
 	/* Size (in bytes) of the NTFS backed-up sectors */
 	off_t            virtualized_size;
-	
+
 	/* Extended info which may be present (NULL otherwise) */
 	extended_info_t* xinfo;
-	
+
 	/* Pointer to a dislocker's context */
 	dis_context_t    dis_ctx;
 };

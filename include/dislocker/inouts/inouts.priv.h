@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -39,13 +39,13 @@
 struct _data {
 	/* The metadata structure object */
 	dis_metadata_t metadata;
-	
+
 	/* The VMK */
 	datum_key_t*   vmk;
-	
+
 	/* The FVEK */
 	datum_key_t*   fvek;
-	
+
 	/* Where the real partition begins */
 	off_t          part_off;
 	/* Volume sector size */
@@ -54,7 +54,7 @@ struct _data {
 	uint64_t       volume_size;
 	/* File descriptor to access the volume */
 	int            volume_fd;
-	
+
 	/* Size of the encrypted part of the volume */
 	uint64_t       encrypted_volume_size;
 	union {
@@ -65,13 +65,13 @@ struct _data {
 	};
 	/* Number of NTFS sectors backuped */
 	uint32_t       nb_backup_sectors;
-	
+
 	/* Structure used to encrypt or decrypt */
 	dis_crypt_t    crypt;
-	
+
 	/* Volume's state is kept here */
 	int            volume_state;
-	
+
 	/* Function to decrypt a region of the volume */
 	int(*decrypt_region)(
 		struct _data* io_data,

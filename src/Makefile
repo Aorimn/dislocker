@@ -149,6 +149,7 @@ export
 	gzip -c $< > $@
 % : %.rb
 	cp $< $@
+	sed -e 's/SED_LIBDIR_PLACEHOLDER/$(subst /,\/,$(libdir))/' -i $@
 
 
 all : $(BIN) $(manpagesgz)

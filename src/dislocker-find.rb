@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# This placeholder is replaced during `make' for the script to find libdislocker
+# once installed
+$LOAD_PATH.unshift 'SED_LIBDIR_PLACEHOLDER'
 require 'libdislocker'
 
 $signatures = Dislocker::Signatures::BitLocker

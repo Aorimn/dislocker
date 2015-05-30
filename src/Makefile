@@ -22,8 +22,8 @@ LIB		=	-lpthread -lpolarssl -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
-CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN)
+CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN) $(RPM_OPT_FLAGS)
+override LDFLAGS +=	-l$(PROGNAME) $(LIB) $(LHARDEN) $(RPM_LD_FLAGS)
 LINKERNAME	:=	lib$(PROGNAME).so
 SONAME		:=	$(LINKERNAME).$(VERSION_MAJOR)
 LIBNAME		:=	$(LINKERNAME).$(VERSION)
@@ -51,18 +51,18 @@ OBJECTS		=	$(SOURCES:.c=.o)
 
 
 
-DESTDIR		=	/usr
+PREFIX		=	/usr
 
-BINARIES_PATH	=	$(DESTDIR)/bin/
-LIBRARY_PATH	=	$(DESTDIR)/lib/
+BINARIES_PATH	=	$(DESTDIR)$(PREFIX)/bin/
+LIBRARY_PATH	=	$(DESTDIR)$(PREFIX)/lib/
 # Change library path for OS which have a lib64/ directory as ld's looking into
 # it while loading the library instead of lib/
-ifneq ("$(wildcard $(DESTDIR)/lib64/)", "")
-LIBRARY_PATH	=	$(DESTDIR)/lib64/
+ifneq ("$(wildcard $(PREFIX)/lib64/)", "")
+LIBRARY_PATH	=	$(DESTDIR)$(PREFIX)/lib64/
 endif
 
 MAN_NUMBER	:=	1
-MAN_PATH	:=	$(DESTDIR)/share/man/man$(MAN_NUMBER)/
+MAN_PATH	:=	$(DESTDIR)$(PREFIX)/share/man/man$(MAN_NUMBER)/
 MAN_ROOT	:=	../man/
 MAN_PAGE	:=	$(BIN)_man
 
@@ -155,12 +155,13 @@ $(BIN)-bek: $(LIBNAME) $(BIN)-bek.o
 
 
 install: all
+	mkdir -p $(BINARIES_PATH) $(LIBRARY_PATH) $(MAN_PATH)$(BIN)
 	install -pm755 $(BINS) $(BINARIES_PATH)
 	ln -s $(DEFAULT_PROG) $(BINARIES_PATH)$(BIN)
 	install -pm755 $(LIBNAME) $(LIBRARY_PATH)
-	ln -s $(LIBRARY_PATH)$(LIBNAME) $(LIBRARY_PATH)$(SONAME)
-	ln -s $(LIBRARY_PATH)$(SONAME) $(LIBRARY_PATH)$(LINKERNAME)
-	cp $(MAN_ROOT)$(MAN_PAGE) $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
+	ln -s $(LIBNAME) $(LIBRARY_PATH)$(SONAME)
+	ln -s $(SONAME) $(LIBRARY_PATH)$(LINKERNAME)
+	cp -p $(MAN_ROOT)$(MAN_PAGE) $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	gzip $(MAN_ROOT)$(BIN).$(MAN_NUMBER)
 	mv $(MAN_ROOT)$(BIN).$(MAN_NUMBER).gz $(MAN_PATH)
 	@echo "==========================================================="

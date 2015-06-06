@@ -24,6 +24,7 @@
 #define DISLOCKER_CFG_H
 
 
+#include <sys/types.h>
 #include "dislocker/dislocker.h"
 
 

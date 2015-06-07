@@ -122,10 +122,12 @@ _Static_assert(
 /** Different states BitLocker is in */
 enum state_types
 {
-	DECRYPTED                = 1,
-	SWITCHING_ENCRYPTION     = 2,
-	ENCRYPTED                = 4,
-	SWITCH_ENCRYPTION_PAUSED = 5
+	METADATA_STATE_NULL                     = 0,
+	METADATA_STATE_DECRYPTED                = 1,
+	METADATA_STATE_SWITCHING_ENCRYPTION     = 2,
+	METADATA_STATE_EOW_ACTIVATED            = 3,
+	METADATA_STATE_ENCRYPTED                = 4,
+	METADATA_STATE_SWITCH_ENCRYPTION_PAUSED = 5
 };
 typedef uint16_t dis_metadata_state_t;
 

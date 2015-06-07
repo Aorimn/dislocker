@@ -31,10 +31,10 @@
 /** BitLocker's states into string */
 static const char* states_str[] =
 {
-	"UNKNOWN 0",
+	"NULL",
 	"DECRYPTED",
 	"SWITCHING ENCRYPTION",
-	"UNKNOWN 3",
+	"EOW ACTIVATED",
 	"ENCRYPTED",
 	"SWITCHING ENCRYPTION PAUSED",
 	"UNKNOWN STATE (too big)"

@@ -186,7 +186,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	/*
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
-	if(dis_ctx->metadata->information->curr_state != DECRYPTED)
+	if(dis_ctx->metadata->information->curr_state != METADATA_STATE_DECRYPTED)
 	{
 		/*
 		 * Init the crypto structure

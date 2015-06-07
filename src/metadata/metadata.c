@@ -223,7 +223,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	/*
 	 * If the state of the volume is currently decrypted, there's no key to grab
 	 */
-	if(information->curr_state != DECRYPTED)
+	if(information->curr_state != METADATA_STATE_DECRYPTED)
 	{
 		/*
 		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
@@ -600,7 +600,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		regions[3].size = datum->nb_bytes;
 
 		/* Another area to report as filled with zeroes, new to W8 as well */
-		if(information->curr_state == SWITCHING_ENCRYPTION)
+		if(information->curr_state == METADATA_STATE_SWITCHING_ENCRYPTION)
 		{
 			dis_meta->nb_virt_region++;
 			regions[4].addr = information->encrypted_volume_size;
@@ -1028,9 +1028,9 @@ int check_state(dis_metadata_t dis_metadata)
 	char* unknown = "unknown-";
 	char* next_state = NULL;
 
-	if(information->next_state == DECRYPTED)
+	if(information->next_state == METADATA_STATE_DECRYPTED)
 		next_state = dec;
-	else if(information->next_state == ENCRYPTED)
+	else if(information->next_state == METADATA_STATE_ENCRYPTED)
 		next_state = enc;
 	else
 	{
@@ -1046,7 +1046,7 @@ int check_state(dis_metadata_t dis_metadata)
 
 	switch(information->curr_state)
 	{
-		case SWITCHING_ENCRYPTION:
+		case METADATA_STATE_SWITCHING_ENCRYPTION:
 			dis_printf(L_ERROR,
 				"The volume is currently being %srypted, which is an unstable "
 				"state. If you know what you're doing, pass `-s' to the command"
@@ -1054,7 +1054,7 @@ int check_state(dis_metadata_t dis_metadata)
 				next_state
 			);
 			return FALSE;
-		case SWITCH_ENCRYPTION_PAUSED:
+		case METADATA_STATE_SWITCH_ENCRYPTION_PAUSED:
 			dis_printf(L_WARNING,
 				"The volume is currently in a secure state, "
 				"but don't resume the %sryption while using " PROGNAME " for "
@@ -1063,10 +1063,10 @@ int check_state(dis_metadata_t dis_metadata)
 				next_state
 			);
 			break;
-		case DECRYPTED:
+		case METADATA_STATE_DECRYPTED:
 			dis_printf(L_WARNING,
-				"The disk is about to get encrypted. Don't use " PROGNAME " if "
-				"you're willing to do so, this may corrupt your data.\n"
+				"The disk is about to get encrypted. Using " PROGNAME " while "
+				"encrypting the disk in parallel, this may corrupt your data.\n"
 			);
 	}
 

@@ -95,6 +95,9 @@ char* cipherstr(cipher_t enc)
 
 	switch (enc)
 	{
+		case 0:
+			value = "NULL";
+			break;
 		case STRETCH_KEY :
 			value = "STRETCH_KEY";
 			break;

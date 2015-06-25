@@ -11,10 +11,12 @@ class Dislocker < Formula
   version "0.4.0"
 
   depends_on "polarssl"
-  depends_on "osxfuse"
+  depends_on :osxfuse
 
   def install
+    system "mkdir -p #{prefix}/{bin,lib,share/man/man1}"
     system "make -C src"
     system "make -C src install DESTDIR=#{prefix}/"
+    system "cp #{prefix}/lib/libdislocker.0.dylib #{prefix}/bin/"
   end
 end

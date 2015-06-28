@@ -202,11 +202,14 @@ if(RUBY_FOUND)
 		COMMAND gzip -c ${DIS_MAN}/${BIN_FIND}.1 > ${DIS_MAN}/${BIN_FIND}.1.gz
 	)
 	set (CLEAN_FILES ${CLEAN_FILES} ${DIS_MAN}/${BIN_FIND}.1.gz)
-	install (PROGRAMS ${BIN_FIND} DESTINATION "${bindir}")
+	install (PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND} DESTINATION "${bindir}")
 	install (FILES ${DIS_MAN}/${BIN_FIND}.1.gz DESTINATION "${mandir}/man1")
 else()
 	set (BIN_FIND true)
 endif()
+
+install (CODE "execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${BIN_FUSE} \"${bindir}/${PROJECT_NAME}\")")
+install (CODE "execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${BIN_FUSE}.1.gz \"${mandir}/man1/${PROJECT_NAME}.1.gz\")")
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
 

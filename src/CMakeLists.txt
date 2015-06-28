@@ -77,9 +77,11 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 	# Don't use `-read_only_relocs' here as it seems to only work for 32 bits
 	# binaries
 	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-bind_at_load")
+	set (FUSE_LIB osxfuse_i64)
 else()
 	# Useless warnings when used within Darwin
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")
+	set (FUSE_LIB fuse)
 endif()
 
 if(${CMAKE_COMPILER_IS_GNUCC})
@@ -152,7 +154,7 @@ set (CLEAN_FILES "")
 
 set (BIN_FUSE ${PROJECT_NAME}-fuse)
 add_executable (${BIN_FUSE} ${BIN_FUSE}.c)
-target_link_libraries (${BIN_FUSE} fuse ${PROJECT_NAME})
+target_link_libraries (${BIN_FUSE} ${FUSE_LIB} ${PROJECT_NAME})
 set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=26)
 add_custom_command (TARGET ${BIN_FUSE} POST_BUILD
 	COMMAND gzip -c ${DIS_MAN}/${BIN_FUSE}.1 > ${DIS_MAN}/${BIN_FUSE}.1.gz

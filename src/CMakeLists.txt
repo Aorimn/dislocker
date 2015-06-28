@@ -70,6 +70,8 @@ if(DEFINED RPM_OPT_FLAGS)
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${RPM_OPT_FLAGS}")
 endif()
 
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D DEBUG=${DEBUG} -D__DIS_CORE_DUMPS")
+
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 	# Don't use `-read_only_relocs' here as it seems to only work for 32 bits

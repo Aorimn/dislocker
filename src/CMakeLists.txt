@@ -26,7 +26,7 @@ add_definitions (-D__OS="${CMAKE_SYSTEM_NAME}")
 string (TOUPPER "${CMAKE_SYSTEM_NAME}" SYSNAME)
 add_definitions (-D__${SYSNAME})
 
-if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+if("${CMAKE_SIZEOF_VOID_P}" EQUAL 8)
 	add_definitions (-D__ARCH="x86_64")
 	add_definitions (-D__ARCH_X86_64)
 else()
@@ -71,7 +71,7 @@ if(DEFINED RPM_OPT_FLAGS)
 endif()
 
 
-if("${CMAKE_SYSTEM_NAME}" EQUAL "Darwin")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 	# Don't use `-read_only_relocs' here as it seems to only work for 32 bits
 	# binaries
 	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-bind_at_load")
@@ -82,7 +82,7 @@ endif()
 
 if(${CMAKE_COMPILER_IS_GNUCC})
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-z,now -Wl,-z,relro")
-elseif("${CMAKE_C_COMPILER_ID}" EQUAL "Clang")
+elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
 endif()
 if(DEFINED LDFLAGS)

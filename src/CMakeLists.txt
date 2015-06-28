@@ -195,3 +195,25 @@ install (PROGRAMS ${BIN_FIND} DESTINATION "${bindir}")
 install (FILES ${DIS_MAN}/${BIN_FIND}.1.gz DESTINATION "${mandir}/man1")
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
+
+# Travis targets
+add_custom_target(travis-install-linux
+	COMMAND sudo apt-get update -qq
+	COMMAND sudo apt-get install -qq libfuse-dev libpolarssl-dev ruby-dev
+)
+
+add_custom_target(travis-install-osx
+	COMMAND brew update
+	COMMAND brew install -v osxfuse
+	COMMAND brew install -v polarssl
+)
+
+add_custom_target(travis-test
+	COMMAND dislocker -h
+	COMMAND dislocker-fuse -h
+	COMMAND dislocker-file -h
+	COMMAND dislocker-metadata -h
+	COMMAND dislocker-bek -h
+	COMMAND dislocker-find -h
+	COMMAND man -w dislocker
+)

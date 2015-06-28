@@ -97,6 +97,7 @@ if(DEFINED RPM_LD_FLAGS)
 endif()
 
 
+# Libraries
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package (PolarSSL REQUIRED)
@@ -107,6 +108,12 @@ else()
   return()
 endif()
 
+find_package (Ruby)
+if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARIES)
+  include_directories (${RUBY_INCLUDE_DIRS})
+  set (LIB "${LIB} ${RUBY_LIBRARIES}")
+  add_definitions (-D_HAVE_RUBY=${RUBY_VERSION})
+endif()
 
 # Places
 if(NOT DEFINED sharedir)
@@ -144,7 +151,6 @@ if("${isSystemDir}" STREQUAL "-1")
 endif()
 
 # Targets
-# TODO ruby bindings
 add_library (${PROJECT_NAME} SHARED ${SOURCES})
 target_link_libraries (${PROJECT_NAME} ${LIB})
 set_target_properties (${PROJECT_NAME} PROPERTIES VERSION "${VERSION}" SOVERSION "${VERSION_MAJOR}")
@@ -183,20 +189,24 @@ add_executable (${BIN_BEK} ${BIN_BEK}.c)
 target_link_libraries (${BIN_BEK} ${PROJECT_NAME})
 install (TARGETS ${BIN_BEK} RUNTIME DESTINATION "${bindir}")
 
-set (BIN_FIND ${PROJECT_NAME}-find)
-add_custom_target(${BIN_FIND} ALL
-	COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/${BIN_FIND}.rb" "${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND}"
-	COMMAND sed -e 's&@SED_LIBDIR_PLACEHOLDER@&${libdir}&' -i "${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND}"
-	COMMAND chmod u+x "${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND}"
-	SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${BIN_FIND}.rb"
-)
-set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND})
-add_custom_command (TARGET ${BIN_FIND} POST_BUILD
-	COMMAND gzip -c ${DIS_MAN}/${BIN_FIND}.1 > ${DIS_MAN}/${BIN_FIND}.1.gz
-)
-set (CLEAN_FILES ${CLEAN_FILES} ${DIS_MAN}/${BIN_FIND}.1.gz)
-install (PROGRAMS ${BIN_FIND} DESTINATION "${bindir}")
-install (FILES ${DIS_MAN}/${BIN_FIND}.1.gz DESTINATION "${mandir}/man1")
+if(RUBY_FOUND)
+	set (BIN_FIND ${PROJECT_NAME}-find)
+	add_custom_target(${BIN_FIND} ALL
+		COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/${BIN_FIND}.rb" "${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND}"
+		COMMAND sed -e 's&@SED_LIBDIR_PLACEHOLDER@&${libdir}&' -i "${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND}"
+		COMMAND chmod u+x "${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND}"
+		SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${BIN_FIND}.rb"
+	)
+	set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND})
+	add_custom_command (TARGET ${BIN_FIND} POST_BUILD
+		COMMAND gzip -c ${DIS_MAN}/${BIN_FIND}.1 > ${DIS_MAN}/${BIN_FIND}.1.gz
+	)
+	set (CLEAN_FILES ${CLEAN_FILES} ${DIS_MAN}/${BIN_FIND}.1.gz)
+	install (PROGRAMS ${BIN_FIND} DESTINATION "${bindir}")
+	install (FILES ${DIS_MAN}/${BIN_FIND}.1.gz DESTINATION "${mandir}/man1")
+else()
+	set (BIN_FIND true)
+endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
 

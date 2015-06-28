@@ -8,10 +8,15 @@ os:
     - linux
     - osx
 
+before_install:
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq; fi
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -qq libfuse-dev libpolarssl-dev ruby-dev; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install -v osxfuse; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install -v polarssl; fi
+
 install:
     - cmake .
-    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make travis-install-linux; fi
-    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make travis-install-osx; fi
     - make
     - sudo make install
 

@@ -21,6 +21,7 @@
  * USA.
  */
 
+#include <string.h>
 #include "dislocker/return_values.h"
 #include "dislocker/xstd/xstdio.h"
 #include "dislocker/xstd/xstdlib.h"

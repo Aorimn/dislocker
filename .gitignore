@@ -17,3 +17,12 @@ src/libdislocker.so.0.4.1
 *.gcno
 *.gcda
 *.gcov
+
+# cmake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+cmake_uninstall.cmake
+install_manifest.txt
+

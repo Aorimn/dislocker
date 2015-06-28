@@ -17,7 +17,7 @@ before_install:
 
 install:
     - cmake .
-    - make
+    - make VERBOSE=1
     - sudo make install
 
 script:

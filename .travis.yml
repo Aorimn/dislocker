@@ -12,9 +12,9 @@ before_install:
     - cd src
 
 install:
+    - cmake .
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make travis-install-linux; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make travis-install-osx; fi
-    - cmake .
     - make
     - sudo make install
 

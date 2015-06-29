@@ -1,0 +1,118 @@
+.\"
+.\"
+.TH DISLOCKER-FUSE 1 2011-09-07 "Linux" "DISLOCKER-FUSE"
+.SH NAME
+Dislocker fuse - Read/write BitLocker encrypted volumes under Linux, OSX and FreeBSD.
+.SH SYNOPSIS
+dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
+
+Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
+.SH DESCRIPTION
+Given a decryption mean, the program is used to read or write BitLocker encrypted volumes. Technically, the program will create a virtual NTFS partition that you can mount as any other NTFS partition.
+.PP
+The virtual partition is linked to the underlying BitLocker volume, so any write to this volume is put on the BitLocker volume as well. However, you can use dd(1) to get rid of this limitation -- if it's a limitation for you. An example is provided in the EXAMPLES section of this man page.
+.SH OPTIONS
+Program's options are described below:
+.PP
+.TP
+.B -c, --clearkey
+decrypt volume using a clear key which is searched on the volume (default)
+.TP
+.B -f, --bekfile \fIBEK_FILE\fR
+decrypt volume using the bek file (present on a USB key)
+.TP
+.B -F, --force-block=[\fIN\fB]\fR
+force use of metadata block number \fIN\fR (1, 2 or 3).
+Without \fIN\fR, the first block is forced.
+Without this option, the program will try each block until a valid one is found
+.TP
+.B -h
+print the help and exit
+.TP
+.B -k, --fvek \fIFVEK_FILE\fR
+decrypt volume using the FVEK directly.
+See the FVEK FILE section below to understand what is to be put into this \fIFVEK_FILE\fR
+.TP
+.B -l, --logfile \fILOG_FILE\fR
+put messages into this file (stdout by default)
+.TP
+.B -o, --offset \fIOFFSET\fR
+BitLocker partition offset in base 10 (default is 0).
+Protip: in your shell, you probably can pass \fB-o $((\fI0xdeadbeef\fB))\fR if you have a 16-based number and are too lazy to convert it in another way.
+.TP
+.B -p, --recovery-password=[\fIRECOVERY_PASSWORD\fB]\fR
+decrypt volume using the recovery password method.
+If no recovery-password is provided, it will be asked afterward; this has the advantage that the program will validate each block one by one, on the fly, as you type it and not to leak the password on the commandline
+.TP
+.B -q, --quiet
+do NOT display any information.
+This option has priority on any previous `\fB-v\fR'. One probably wants to check the return value of the program when using this option
+.TP
+.B -r, --readonly
+do not allow to write on the BitLocker volume (read only mode)
+.TP
+.B -s, --stateok
+do not check the volume's state, assume it's ok to mount it.
+Do not use this if you don't know what you're doing
+.TP
+.B -u, --user-password=[\fIUSER_PASSWORD\fB]\fR
+decrypt the volume using the user password method.
+If no user-password is provided, it will be asked afterward; this has the advantage not to leak the password on the commandline
+.TP
+.B -v, --verbosity
+increase verbosity (CRITICAL level by default), see also `\fB-q\fR'
+.TP
+.B -V, --volume \fIVOLUME\fR
+volume to get metadata and encrypted keys from
+.TP
+.B --
+mark the end of program's options and the beginning of FUSE's ones (useful if you want to pass something like -d to FUSE)
+.PP
+
+.B ARGS
+are any arguments you want to pass to FUSE. Note that you need to pass at least the mount-point.
+.SH NOTES
+FAT formatted volumes encrypted by BitLocker are not supported yet.
+This takes in most of the formatted USB drive.
+.SH FVEK FILE
+.TP
+The FVEK file option expects a specific format from the file. The file is split into two major parts:
+- 2 bytes describing the encryption in use, from 0x8000 to 0x8003 for AES 128 or 256 bits, with or without diffuser.
+
+- 64 bytes (512 bits) which are the FVEK as in the FVEK key protector once decrypted.
+.PP
+The file is therefore 66 bytes long, not more nor less.
+Note that you may have to deal with endianness.
+.SH EXAMPLES
+These are exemples you can run directly.
+First, you may want to copy the BitLocker volume:
+.IP
+.B % dd if=/dev/sda2 of=encrypted.bitlocker
+.IP
+This will copy the entire volume located into \fB/dev/sda2\fR to \fBencrypted.bitlocker\fR.
+You're not forced to do this step, but this will ensure no write whatesoever is performed on the BitLocker volume.
+.P
+Then dislock it:
+.IP
+.B % dislocker -V encrypted.bitlocker -f /path/to/usb/file.BEK -- ntfs/
+.IP
+This will create a file into the \fBntfs/\fR directory named dislocker-file.
+.TP
+To mount partitions once decrypted, you first need to create the block device:
+.B % hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount ntfs/dislocker-file
+.TP
+Then mount it on a directory into /Volumes, as for instance:
+.B % mkdir /Volumes/blah && mount -t ntfs /dev/disk1 /Volumes/blah
+.P
+--
+.TP
+It seems that you have to unmount the NTFS partition and the dislocker one before halting the system, or you will run into unexpected behaviour. In order to do so, you may run these commands (replacing your mount points):
+.B % umount /Volumes/blah && hdiutil detach /dev/disk1 && umount /mnt/ntfs/
+.P
+--
+.P
+Note that these are \fBexamples\fR and, as such, may need to be modified. For instance, you may want to change the decryption method used in them.
+.SH AUTHOR
+This tool is developped by Romain Coltel on behalf of HSC (\fBhttp://www.hsc.fr/\fR)
+.PP
+Feel free to send bugs report to <dislocker __AT__ hsc __DOT__ fr>

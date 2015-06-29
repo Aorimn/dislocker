@@ -4,17 +4,17 @@
  * Dislocker -- enables to read/write on BitLocker encrypted partitions under
  * Linux
  * Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
@@ -45,16 +45,16 @@ int main(int argc, char **argv)
 		usage(argv);
 		return 1;
 	}
-	
+
 	int optchar = 0;
 	uint8_t *user_password = NULL;
-	
+
 	uint8_t   user_hash[32]  = {0,};
-	
-	
+
+
 	uint8_t salt[16] = {0,}; // TODO
-	
-	
+
+
 	while((optchar = getopt(argc, argv, "u:h")) != -1)
 	{
 		switch(optchar)
@@ -72,33 +72,33 @@ int main(int argc, char **argv)
 				exit(1);
 		}
 	}
-	
+
 	xstdio_init(L_DEBUG, NULL);
-	
+
 	if(user_password == NULL)
 	{
-		xprintf(L_CRITICAL, "No user password given, aborting.\n");
+		dis_printf(L_CRITICAL, "No user password given, aborting.\n");
 		goto error;
 	}
-	
-	xprintf(L_INFO, "User Password: %s\n", (char *)user_password);
-	
+
+	dis_printf(L_INFO, "User Password: %s\n", (char *)user_password);
+
 	if(!user_key(user_password, salt, user_hash))
 	{
-		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
+		dis_printf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
 		goto error;
 	}
-	
-	
-	xprintf(L_INFO, "User hash:\n");
+
+
+	dis_printf(L_INFO, "User hash:\n");
 	hexdump(L_INFO, user_hash, 32);
-	
-	
+
+
 error:
 	if(user_password)
 		free(user_password);
-	
+
 	xstdio_end();
-	
+
 	return 0;
 }

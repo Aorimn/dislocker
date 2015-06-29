@@ -24,8 +24,8 @@
 #  define _WITH_GETLINE
 #endif /* __FREEBSD */
 
-#include "user_pass.h"
-#include "metadata/vmk.h"
+#include "dislocker/accesses/user_pass/user_pass.h"
+#include "dislocker/metadata/vmk.h"
 
 #include <termios.h>
 #include <stdio.h>
@@ -34,33 +34,33 @@
 
 /**
  * Get the VMK datum using a user password
- * 
+ *
  * @param dataset The dataset of BitLocker's metadata on the volume
  * @param cfg The configuration structure
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_datum)
+int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
 {
 	// Check parameters
-	if(!dataset || !cfg)
+	if(!dis_meta || !cfg)
 		return FALSE;
-	
+
 	uint8_t user_hash[32] = {0,};
 	uint8_t salt[16]      = {0,};
-	
+
 	/* If the user password wasn't provide, ask for it */
 	if(!cfg->user_password)
 		if(!prompt_up(&cfg->user_password))
 		{
-			xprintf(L_ERROR, "Cannot get valid user password. Abort.\n");
+			dis_printf(L_ERROR, "Cannot get valid user password. Abort.\n");
 			return FALSE;
 		}
-		
-	xprintf(L_DEBUG, "Using the user password: '%s'.\n",
+
+	dis_printf(L_DEBUG, "Using the user password: '%s'.\n",
 	                (char *)cfg->user_password);
-	
-	
+
+
 	/*
 	 * We need a salt contained in the VMK datum associated to the recovery
 	 * password, so go get this salt and the VMK datum first
@@ -68,16 +68,16 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	 * There may be another mean to find the correct datum, but I don't see
 	 * another one here
 	 */
-	if(!get_vmk_datum_from_range((void*)dataset, 0x2000, 0x2000, (void**)vmk_datum))
+	if(!get_vmk_datum_from_range(dis_meta, 0x2000, 0x2000, (void**)vmk_datum))
 	{
-		xprintf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
+		dis_printf(L_ERROR, "Error, can't find a valid and matching VMK datum. Abort.\n");
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We have the datum containing other data, so get in there and take the
 	 * nested one with type 3 (stretch key)
@@ -86,49 +86,49 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	if(!get_nested_datumtype(*vmk_datum, DATUM_STRETCH_KEY, &stretch_datum) || !stretch_datum)
 	{
 		char* type_str = datumtypestr(DATUM_STRETCH_KEY);
-		xprintf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
+		dis_printf(L_ERROR, "Error looking for the nested datum of type %hd (%s) in the VMK one. "
 		                 "Internal failure, abort.\n", DATUM_STRETCH_KEY, type_str);
-		xfree(type_str);
+		dis_free(type_str);
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/* The salt is in here, don't forget to keep it somewhere! */
 	memcpy(salt, ((datum_stretch_key_t*)stretch_datum)->salt, 16);
-	
-	
+
+
 	/* Get data which can be decrypted with this password */
 	void* aesccm_datum = NULL;
 	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum) || !aesccm_datum)
 	{
-		xprintf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
+		dis_printf(L_ERROR, "Error finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
-	
+
+
 	/*
 	 * We have all the things we need to compute the intermediate key from
 	 * the user password, so do it!
 	 */
 	if(!user_key(cfg->user_password, salt, user_hash))
 	{
-		xprintf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
+		dis_printf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
 		*vmk_datum = NULL;
 		memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 		cfg->user_password = NULL;
 		return FALSE;
 	}
-	
+
 	/* We don't need the user password anymore */
 	memclean((char*)cfg->user_password, strlen((char*)cfg->user_password));
 	cfg->user_password = NULL;
-	
+
 	/* As the computed key length is always the same, use a direct value */
 	return get_vmk((datum_aes_ccm_t*)aesccm_datum, user_hash, 32, (datum_key_t**)vmk_datum);;
 }
@@ -169,7 +169,7 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 
 	/* Read the password. */
 	nread = getline(lineptr, &n, stream);
-	xprintf(L_DEBUG, "New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n", (void*)*lineptr, n);
+	dis_printf(L_DEBUG, "New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n", (void*)*lineptr, n);
 
 #ifndef __CK_DOING_TESTS
 	/* Restore terminal. */
@@ -194,7 +194,7 @@ int user_key(const uint8_t *user_password,
 {
 	if(!user_password || !salt || !result_key)
 	{
-		xprintf(L_ERROR, "Invalid parameter given to user_key().\n");
+		dis_printf(L_ERROR, "Invalid parameter given to user_key().\n");
 		return FALSE;
 	}
 
@@ -207,16 +207,16 @@ int user_key(const uint8_t *user_password,
 	 * We first get the SHA256(SHA256(to_UTF16(user_password)))
 	 */
 	utf16_length   = (strlen((char*)user_password)+1) * sizeof(uint16_t);
-	utf16_password = xmalloc(utf16_length);
+	utf16_password = dis_malloc(utf16_length);
 
 	if(!asciitoutf16(user_password, utf16_password))
 	{
-		xprintf(L_ERROR, "Can't convert user password to UTF-16, aborting.\n");
+		dis_printf(L_ERROR, "Can't convert user password to UTF-16, aborting.\n");
 		memclean(utf16_password, utf16_length);
 		return FALSE;
 	}
 
-	xprintf(L_DEBUG, "UTF-16 user password:\n");
+	dis_printf(L_DEBUG, "UTF-16 user password:\n");
 	hexdump(L_DEBUG, (uint8_t*)utf16_password, utf16_length);
 
 	/* We're not taking the '\0\0' end of the UTF-16 string */
@@ -228,7 +228,7 @@ int user_key(const uint8_t *user_password,
 	 */
 	if(!stretch_user_key(user_hash, (uint8_t *)salt, result_key))
 	{
-		xprintf(L_ERROR, "Can't stretch the user password, aborting.\n");
+		dis_printf(L_ERROR, "Can't stretch the user password, aborting.\n");
 		memclean(utf16_password, utf16_length);
 		return FALSE;
 	}
@@ -264,9 +264,9 @@ int prompt_up(uint8_t** up)
 	if(nb_read <= 0)
 	{
 		if(*up)
-			xfree(*up);
+			dis_free(*up);
 		*up = NULL;
-		xprintf(L_ERROR, "Can't get a user password using getline()\n");
+		dis_printf(L_ERROR, "Can't get a user password using getline()\n");
 		return FALSE;
 	}
 

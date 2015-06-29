@@ -1,15 +1,28 @@
 *.o
 *.kate-swp
-*~
+#*~
 *.swp
-dislocker
-dislocker-bek
-dislocker-file
-dislocker-fuse
-dislocker-metadata
-libdislocker.so
+*.gz
+src/dislocker
+src/dislocker-bek
+src/dislocker-file
+src/dislocker-find
+src/dislocker-fuse
+src/dislocker-metadata
+src/libdislocker.so
+src/libdislocker.so.0
+src/libdislocker.so.0.4.1
 
 # Unit test files
 *.gcno
 *.gcda
 *.gcov
+
+# cmake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+cmake_uninstall.cmake
+install_manifest.txt
+

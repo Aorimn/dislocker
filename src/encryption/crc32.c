@@ -13,14 +13,14 @@
 /* The implementation here was originally done by Gary S. Brown.  I have
    borrowed the tables directly, and made some minor changes to the
    crc32-function (including changing the interface). //ylo */
-  
+
   /*
    * I also modified on 6th, May 2011 in order to mimic the
    * ComputeCrc32 FVE function and to work on 64bits platforms
-   *  -- Romain Coltel 
+   *  -- Romain Coltel
    */
 
-#include "crc32.h"
+#include "dislocker/encryption/crc32.h"
 
   /* ============================================================= */
   /*  COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or       */
@@ -123,7 +123,7 @@ unsigned int crc32(const unsigned char *s, unsigned int len)
 {
   unsigned int i;
   unsigned int crc32val;
-  
+
   crc32val = 0;
   crc32val = ~crc32val; // -- Added
   for (i = 0;  i < len;  i ++)

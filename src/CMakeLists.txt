@@ -141,7 +141,9 @@ string (TOLOWER "${CMAKE_SYSTEM_NAME}" SYSNAME)
 set (DIS_MAN ../man/${SYSNAME})
 
 # RPATH handling
-cmake_policy (SET CMP0042 NEW)
+if(POLICY CMP0042)
+	cmake_policy (SET CMP0042 NEW)
+endif()
 set (CMAKE_SKIP_BUILD_RPATH  FALSE)
 set (CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set (CMAKE_INSTALL_RPATH "${libdir}")

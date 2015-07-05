@@ -141,15 +141,11 @@ string (TOLOWER "${CMAKE_SYSTEM_NAME}" SYSNAME)
 set (DIS_MAN ../man/${SYSNAME})
 
 # RPATH handling
+cmake_policy (SET CMP0042 NEW)
 set (CMAKE_SKIP_BUILD_RPATH  FALSE)
 set (CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set (CMAKE_INSTALL_RPATH "${libdir}")
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-# RPATH to be used when installing, but only if it's not a system directory
-list (FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${libdir}" isSystemDir)
-if("${isSystemDir}" STREQUAL "-1")
-	set (CMAKE_INSTALL_RPATH "${libdir}")
-endif()
 
 # Targets
 add_library (${PROJECT_NAME} SHARED ${SOURCES})

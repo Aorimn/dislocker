@@ -21,6 +21,6 @@ class Dislocker < Formula
         end
         
         system "make -C src SSLIB=#{ssl_libname}"
-        system "make -C src install DESTDIR=#{prefix}/"
+        system "make -C src install prefix=#{prefix}/"
     end
 end

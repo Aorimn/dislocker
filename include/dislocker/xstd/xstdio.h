@@ -32,14 +32,6 @@
 #define LOG_MODE "a"
 
 
-/* An error string */
-#define ERROR_STR "\n\e[31m***\e[0m ERROR::"
-
-
-/* The exit which return from a xperror call */
-#define PERROR_EXIT 2
-
-
 
 
 /** Messages debug level */

@@ -249,24 +249,3 @@ int dis_vprintf(DIS_LOGS level, const char* format, va_list ap)
 	return vfprintf(fds[level], format, ap);
 }
 
-
-/**
- * perror wrapper
- *
- * @param append The string to append to the error message
- */
-void dis_perror(char* append)
-{
-	size_t len = strlen(append) + strlen(ERROR_STR) + 2;
-	char *error_msg = dis_malloc(len * sizeof(char));
-	snprintf(error_msg, len, "\n"ERROR_STR"%s", append);
-
-	perror(error_msg);
-
-	dis_free(error_msg);
-	free(append);
-
-	exit(PERROR_EXIT);
-}
-
-

@@ -63,28 +63,16 @@ static int dis_open_file(const char* file, int flags, mode_t mode)
 
 	if((fd = open(file, flags, mode)) < 0)
 	{
-		char* err_string = NULL;
-		size_t arbitrary_value = 42;
-		char* before = "Failed to open file";
-		char* after = dis_malloc(arbitrary_value);
+#define DIS_FILE_OPEN_FAIL_STR "Failed to open file"
+#define DIS_FILE_OPEN_FAIL_LEN sizeof(DIS_FILE_OPEN_FAIL_STR)
+		size_t len = DIS_FILE_OPEN_FAIL_LEN + strlen(file) + 4;
+		char* err_string = dis_malloc(len);
 
-		snprintf(after, arbitrary_value, "%s", file);
+		snprintf(err_string, len , "%s '%s'", DIS_FILE_OPEN_FAIL_STR, file);
 
-		if(arbitrary_value < strlen(file))
-		{
-			after[arbitrary_value-4] = '.';
-			after[arbitrary_value-3] = '.';
-			after[arbitrary_value-2] = '.';
-		}
-
-		size_t len = strlen(before);
-
-		err_string = dis_malloc(len + arbitrary_value + 4);
-		snprintf(err_string, len + arbitrary_value + 4, "%s '%s'", before, after);
-
-		dis_free(after);
-
-		dis_perror(err_string);
+		perror(err_string);
+		dis_free(err_string);
+		exit(2);
 	}
 
 	dis_printf(L_DEBUG, "Opened (fd #%d).\n", fd);

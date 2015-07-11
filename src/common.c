@@ -123,11 +123,7 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
 
-#ifdef __ARCH_X86_64
-	dis_printf(L_DEBUG, "Reading %lu bytes from #%d into %p\n", count, fd, buf);
-#else
-	dis_printf(L_DEBUG, "Reading %u bytes from #%d into %p\n", count, fd, buf);
-#endif /* __ARCH_X86_64 */
+	dis_printf(L_DEBUG, "Reading %# " F_SIZE_T " bytes from #%d into %p\n", count, fd, buf);
 
 	if((res = read(fd, buf, count)) < 0)
 	{
@@ -153,11 +149,7 @@ ssize_t dis_write(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
 
-#ifdef __ARCH_X86_64
-	dis_printf(L_DEBUG, "Writing %lu bytes to #%d from %p\n", count, fd, buf);
-#else
-	dis_printf(L_DEBUG, "Writing %u bytes to #%d from %p\n", count, fd, buf);
-#endif /* __ARCH_X86_64 */
+	dis_printf(L_DEBUG, "Writing %#" F_SIZE_T " bytes to #%d from %p\n", count, fd, buf);
 
 	if((res = write(fd, buf, count)) < 0)
 	{

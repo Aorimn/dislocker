@@ -235,9 +235,11 @@ int dis_vprintf(DIS_LOGS level, const char* format, va_list ap)
 	if(verbosity < level || verbosity <= L_QUIET)
 		return 0;
 
-
 	if(level >= DIS_LOGS_NB)
 		level = L_DEBUG;
+
+	if(!fds[level])
+		return 0;
 
 
 	time_t current_time = time(NULL);

@@ -26,6 +26,8 @@
 #include "dislocker/xstd/xstdlib.h"
 #include "dislocker/encryption/encommon.priv.h"
 
+#include <string.h>
+
 
 /**
  * Create "an object" of type dis_crypt_t

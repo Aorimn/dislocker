@@ -169,17 +169,17 @@ int main(int argc, char** argv)
 	/* Get command line options */
 	param_idx = dis_getopts(dis_ctx, argc, argv);
 
-	/* Check that we have the file where to put NTFS data */
-	if(param_idx >= argc || param_idx <= 0)
-	{
-		fprintf(stderr, "Error, no file given. Abort.\n");
-		return EXIT_FAILURE;
-	}
-
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
 	{
 		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		return EXIT_FAILURE;
+	}
+
+	/* Check that we have the file where to put NTFS data */
+	if(param_idx >= argc || param_idx <= 0)
+	{
+		dis_printf(stderr, "Error, no file given. Abort.\n");
 		return EXIT_FAILURE;
 	}
 

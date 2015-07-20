@@ -206,18 +206,17 @@ int main(int argc, char** argv)
 	dis_ctx = dis_new();
 	param_idx = dis_getopts(dis_ctx, argc, argv);
 
-	/* Check we got enough arguments for at least one more, the mount point */
-	if(param_idx >= argc || param_idx <= 0)
-	{
-		dis_printf(L_CRITICAL, "Error, no mount point given. Abort.\n");
-		return EXIT_FAILURE;
-	}
-
-
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
 	{
 		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
+		return EXIT_FAILURE;
+	}
+
+	/* Check we got enough arguments for at least one more, the mount point */
+	if(param_idx >= argc || param_idx <= 0)
+	{
+		dis_printf(L_CRITICAL, "Error, no mount point given. Abort.\n");
 		return EXIT_FAILURE;
 	}
 

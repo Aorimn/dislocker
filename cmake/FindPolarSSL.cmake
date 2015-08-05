@@ -8,15 +8,21 @@
 # POLARSSL_VERSION_MINOR
 # POLARSSL_VERSION_PATCH
 # POLARSSL_VERSION_STRING
+# POLARSSL_INC_FOLDER
 
 include(FindPackageHandleStandardArgs)
 
-find_path(POLARSSL_INCLUDE_DIRS NAMES polarssl/ssl.h)
+find_path(POLARSSL_INCLUDE_DIRS NAMES mbedtls/ssl.h)
+set(POLARSSL_INC_FOLDER mbedtls)
+if(NOT ${POLARSSL_INCLUDE_DIRS})
+  find_path(POLARSSL_INCLUDE_DIRS NAMES polarssl/ssl.h)
+  set(POLARSSL_INC_FOLDER polarssl)
+endif()
 
 #
 # polarssl -> mbedtls
 # Try to find mbedtls.a , if fails tries to find polarssl.
-# Only because some distrib (like osx) do not link libmbedtls
+# Only because some distrib (like osx or fedora) do not link libmbedtls
 # to polarssl for compat
 #
 find_library(POLARSSL_LIBRARIES NAMES mbedtls)
@@ -33,7 +39,7 @@ if( ${POLARSSL_LIBRARIES-NOTFOUND} )
 endif()
 
 execute_process(
-    COMMAND bash -c "echo \"#include <polarssl/version.h>\n#include <stdio.h>\nint main(){printf(POLARSSL_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
+    COMMAND bash -c "echo \"#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(POLARSSL_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
     OUTPUT_VARIABLE POLARSSL_VERSION_STRING
     )
 
@@ -52,4 +58,5 @@ mark_as_advanced(
   POLARSSL_VERSION_MINOR
   POLARSSL_VERSION_PATCH
   POLARSSL_VERSION_STRING
+  POLARSSL_INC_FOLDER
   )

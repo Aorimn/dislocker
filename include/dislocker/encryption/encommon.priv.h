@@ -26,7 +26,6 @@
 
 #include "dislocker/encryption/encommon.h"
 
-#include "polarssl/aes.h"
 #include "dislocker/ssl_bindings.h"
 
 

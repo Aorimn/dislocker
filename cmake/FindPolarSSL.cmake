@@ -9,15 +9,18 @@
 # POLARSSL_VERSION_PATCH
 # POLARSSL_VERSION_STRING
 # POLARSSL_INC_FOLDER
+# POLARSSL_REAL_NAME
 
 include(FindPackageHandleStandardArgs)
 
 find_path(POLARSSL_INCLUDE_DIRS NAMES mbedtls/ssl.h)
-set(POLARSSL_INC_FOLDER mbedtls)
+set(POLARSSL_REAL_NAME MBEDTLS)
 if(NOT ${POLARSSL_INCLUDE_DIRS})
   find_path(POLARSSL_INCLUDE_DIRS NAMES polarssl/ssl.h)
-  set(POLARSSL_INC_FOLDER polarssl)
+  set(POLARSSL_REAL_NAME POLARSSL)
 endif()
+
+string(TOLOWER "${POLARSSL_REAL_NAME}" POLARSSL_INC_FOLDER)
 
 #
 # polarssl -> mbedtls
@@ -39,7 +42,7 @@ if( ${POLARSSL_LIBRARIES-NOTFOUND} )
 endif()
 
 execute_process(
-    COMMAND bash -c "echo \"#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(POLARSSL_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
+    COMMAND bash -c "echo \"#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
     OUTPUT_VARIABLE POLARSSL_VERSION_STRING
     )
 
@@ -59,4 +62,5 @@ mark_as_advanced(
   POLARSSL_VERSION_PATCH
   POLARSSL_VERSION_STRING
   POLARSSL_INC_FOLDER
+  POLARSSL_REAL_NAME
   )

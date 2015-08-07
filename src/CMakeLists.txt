@@ -114,7 +114,7 @@ find_package (Ruby)
 if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARIES)
 	include_directories (${RUBY_INCLUDE_DIRS})
 	set (LIB "${LIB} ${RUBY_LIBRARIES}")
-	add_definitions (-D_HAVE_RUBY=${RUBY_VERSION})
+	add_definitions (-D_HAVE_RUBY=${RUBY_VERSION_STRING})
 endif()
 
 # Places
@@ -156,6 +156,14 @@ target_link_libraries (${PROJECT_NAME} ${LIB})
 set_target_properties (${PROJECT_NAME} PROPERTIES VERSION "${VERSION}" SOVERSION "${VERSION_MAJOR}")
 set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-pie -fPIE")
 install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${libdir}")
+
+if (${APPLE})
+	set (BUNDLE_NAME ${PROJECT_NAME}_bundle)
+	add_library (${BUNDLE_NAME} MODULE ${SOURCES})
+	target_link_libraries (${BUNDLE_NAME} ${LIB})
+	set_target_properties (${BUNDLE_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} SUFFIX .bundle)
+	install (TARGETS ${BUNDLE_NAME} DESTINATION "${libdir}")
+endif()
 
 set (CLEAN_FILES "")
 

@@ -24,13 +24,21 @@ string(TOLOWER "${POLARSSL_REAL_NAME}" POLARSSL_INC_FOLDER)
 
 #
 # polarssl -> mbedtls
-# Try to find mbedtls.a , if fails tries to find polarssl.
-# Only because some distrib (like osx or fedora) do not link libmbedtls
-# to polarssl for compat
+# Try to find first libmbedcrypto.a, then libmbedtls.a, and if this fails tries
+# to find polarssl.
+# Only because mbed is separating ssl/tls functions from crypto (aes/sha)
+# functions and some distrib (like osx or fedora) do not symbolically link
+# libmbedtls to polarssl for compat
 #
-find_library(POLARSSL_LIBRARIES NAMES mbedtls)
+find_library(POLARSSL_LIBRARIES NAMES mbedcrypto)
+set(POLARSSL_USED_LIBRARY mbedcrypto)
 if(NOT ${POLARSSL_LIBRARIES})
-  find_library(POLARSSL_LIBRARIES NAMES polarssl)
+  find_library(POLARSSL_LIBRARIES NAMES mbedtls)
+  set(POLARSSL_USED_LIBRARY mbedtls)
+  if(NOT ${POLARSSL_LIBRARIES})
+    find_library(POLARSSL_LIBRARIES NAMES polarssl)
+    set(POLARSSL_USED_LIBRARY polarssl)
+  endif()
 endif()
 
 find_package_handle_standard_args(POLARSSL REQUIRED_VARS POLARSSL_INCLUDE_DIRS POLARSSL_LIBRARIES)
@@ -42,9 +50,13 @@ if( ${POLARSSL_LIBRARIES-NOTFOUND} )
 endif()
 
 execute_process(
-    COMMAND bash -c "echo \"#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
-    OUTPUT_VARIABLE POLARSSL_VERSION_STRING
+  COMMAND bash -c "echo \"#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
+  OUTPUT_VARIABLE POLARSSL_VERSION_STRING
     )
+
+if( "${POLARSSL_VERSION_STRING}" STREQUAL "2.0.0" AND NOT "${POLARSSL_USED_LIBRARY}" STREQUAL "mbedcrypto" )
+  message("*** WARNING *** Your mbedTLS version is 2.0.0, it's possible the `make' command doesn't work.\nPlease refer to the INSTALL.txt's \"mbedTLS 2.0.0\" section if you have any problem.\n")
+endif()
 
 string(REPLACE "." ";" POLARSSL_VERSION_LIST ${POLARSSL_VERSION_STRING})
 

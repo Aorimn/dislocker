@@ -50,9 +50,19 @@ if( ${POLARSSL_LIBRARIES-NOTFOUND} )
 endif()
 
 execute_process(
-  COMMAND bash -c "echo \"#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}\">a.c;cc a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES} ;./a.out;rm -f a.c a.out"
+  COMMAND echo "#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"
+  OUTPUT_FILE a.c
+)
+execute_process(
+  COMMAND ${CMAKE_C_COMPILER} a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES}
+)
+execute_process(
+  COMMAND ./a.out
   OUTPUT_VARIABLE POLARSSL_VERSION_STRING
-    )
+)
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E remove a.c a.out
+)
 
 if( "${POLARSSL_VERSION_STRING}" STREQUAL "2.0.0" AND NOT "${POLARSSL_USED_LIBRARY}" STREQUAL "mbedcrypto" )
   message("*** WARNING *** Your mbedTLS version is 2.0.0, it's possible the `make' command doesn't work.\nPlease refer to the INSTALL.txt's \"mbedTLS 2.0.0\" section if you have any problem.\n")

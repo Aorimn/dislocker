@@ -13,7 +13,7 @@
 
 include(FindPackageHandleStandardArgs)
 
-find_path(POLARSSL_INCLUDE_DIRS NAMES mbedtls/ssl.h)
+find_path(POLARSSL_INCLUDE_DIRS NAMES mbedtls/ssl.h HINTS /usr/local/include)
 set(POLARSSL_REAL_NAME MBEDTLS)
 if( "${POLARSSL_INCLUDE_DIRS}" STREQUAL "POLARSSL_INCLUDE_DIRS-NOTFOUND")
   find_path(POLARSSL_INCLUDE_DIRS NAMES polarssl/ssl.h)

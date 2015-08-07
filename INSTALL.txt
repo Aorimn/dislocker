@@ -41,8 +41,10 @@ following command:
   brew install src/dislocker.rb
 This will install dislocker.
 For OSX users, it's highly possible that you have to follow the `mbedTLS 2.0.0'
-section below. If so, you will have to build dislocker from source, without the
-help of Homebrew.
+section below. If so, you will have to install OSXfuse through Homebrew:
+  brew install osxfuse
+And once you have followed the `mbedTLS 2.0.0' section's instructions, you can
+follow the steps below, in the `If you aren't on MacOSX...' point.
 
 . If you're on FreeBSD, follow the instructions below (next point) by replacing
 `make' with `gmake':
@@ -87,15 +89,13 @@ library, thus breaking the dislocker compilation.
 If you have this problem, it's recommended to run the following commands:
   git clone https://github.com/ARMmbed/mbedtls.git
   cd mbedtls
-  git checkout master
-And compile the library:
+  git checkout mbedtls-2.0.0
+Then apply the patch given by the following command:
+  git show 6f42417b library/CMakeLists.txt
+And compile/install the library:
   cmake .
   make
-Finally, come back to the dislocker directory and modify src/CMakeLists.txt by
-replacing the following line (around line 107):
-  set (LIB "${LIB} ${POLARSSL_LIBRARIES}")
-by
-  set (LIB "${LIB} /path/to/mbedtls/library/libmbedcrypto.a")
+  sudo make install
 
 You can then resume the installation where you have left it.
 

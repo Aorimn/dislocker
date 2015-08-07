@@ -66,8 +66,8 @@ a valid FAT32 filesystem. In that filesystem they store executables and
 datafiles that allow access to the encrypted volume. Besides that you
 will see big "encrypted" files that hold the actual encrypted volume.
 
-On the other side, it is a bitlocker volume. Just with some unused space, from
-the bitlocker point-of-view. That's where the FAT32 stuff lives.
+On the other side, it is a BitLocker volume. Just with some unused space, from
+the BitLocker point-of-view. That's where the FAT32 stuff lives.
 
 So, to access a  BitLocker-To-Go encrypted media, the whole partition is the
 volume that dislocker works with. The use of dislocker is therefore the same
@@ -84,9 +84,9 @@ file:
   > dislocker-bek
 - Another one for printing information about a BitLocker-encrypted volume
   > dislocker-metadata
-- A third one is not a binary but a Ruby script which try to find BitLocker
+- A third one is not a binary but a Ruby script which tries to find BitLocker
   encrypted partition among the plugged-in disks (only work if the library is
-  compiled with the ruby bindings)
+  compiled with the Ruby bindings)
   > dislocker-find
 - Another one for decrypting a BitLocker encrypted partition into a flat file
 formatted as an NTFS partition you can mount
@@ -97,7 +97,6 @@ dynamically decrypts a BitLocker encrypted partition using FUSE
 
 You can build each one independently providing it as the makefile target. For
 instance, if you want to compile dislocker-fuse only, you'd simply run:
+  cmake .
   make dislocker-fuse
-To install this binary only, you would then run the following command:
-  make install BINS=dislocker-fuse
 

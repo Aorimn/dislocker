@@ -10,20 +10,21 @@ REQUIREMENTS
 
 You need:
  - Compiler, gcc or clang;
+ - cmake (at least version 2.6)
  - make (or gmake, for FreeBSD)
  - Headers for FUSE;
- - Headers for PolarSSL;
+ - Headers for PolarSSL/mbedTLS;
  - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
-If you have Ruby headers, the library will compile with some ruby bindings and
+If you have Ruby headers, the library will compile with some Ruby bindings and
 another program - see the NOTE section below - will be available.
 
 For Debian-like:
-  aptitude install gcc make libfuse-dev libpolarssl-dev ruby-dev
+  aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev
 For Fedora-like:
-  yum install gcc make fuse-devel polarssl-devel ruby-devel
+  yum install gcc cmake make fuse-devel polarssl-devel ruby-devel
 For FreeBSD:
-  pkg install gmake fusefs-libs polarssl
+  pkg install cmake gmake fusefs-libs polarssl
 For OSX: Follow the instructions in the next section.
 
 Note that the code expects at least FUSE 2.6.
@@ -33,34 +34,36 @@ Note that the code expects at least FUSE 2.6.
 INSTALLING
 `----------
 
-First thing to do is to cd into the src/ directory. Then, each OS type has its
-own section below, beware to follow yours:
+Each OS type has its own section below, beware to follow yours:
 
 . If you are on MacOSX, just install Homebrew (http://brew.sh/) and run the
 following command:
-$ brew install dislocker.rb
+  brew install src/dislocker.rb
 This will install dislocker.
+For OSX users, it's highly possible that you have to follow the `mbedTLS 2.0.0'
+section below. If so, you will have to build dislocker from source, without the
+help of Homebrew.
 
 . If you're on FreeBSD, follow the instructions below (next point) by replacing
 `make' with `gmake':
 
 . If you aren't on MacOSX...
 If you already have installed the dependencies (see REQUIREMENTS section above),
-you just have to type `make' to generate the library and binaries, then
-`make install' as super-user to install these library and binaries on the
-filesystem.
+you have to type the following commands to install the binaries on your system:
+  cmake .
+  make
+  sudo make install
+Don't forget the dot (.) on the cmake command-line. If you only want to generate
+the binaries, without installing them, you can skip the last command (the one
+beginning with sudo).
 
-Note that the `-Werror' flag on the `WFLAGS' line in the Makefile may break the
-compilation for useless warnings, so you can remove it, but it is at your own
-risks.
+Note that the `-Werror' flag in the cmake WARN_FLAGS variable may break the
+compilation for useless warnings. If you know what you're doing, you can remove
+it by running the following cmake command instead of the one above:
+  cmake -D WARN_FLAGS:STRING="-Wall -Werror -Wextra" .
 
-The binary will be installed into `/usr/bin/' by default, pass the bindir
-variable to make to change that in the `make install` command. This would do
-something like `make install bindir=/home/blah/compile/bin/`
-Same thing goes for the library except the variable name is libdir, which is
-`/usr/lib/' by default (or `/usr/lib64/' if it exists).
-Note that you can also pass DESTDIR or prefix in order to change the default
-installation directories at once.
+See the cmake documentation (on http://www.cmake.org/documentation/) if you want
+to customize the build.
 
 Once installed, see dislocker(1) for details on how to use it.
 
@@ -74,6 +77,30 @@ type `make uninstall` as super-user.
 
 
 
+mbedTLS 2.0.0
+`-------------
+
+Since the version 2.0.0 of mbedTLS, the build separate "crypto" functions such
+as AES and SHA256 into a separate, libmbedcrypto, library. However, a typo
+didn't installed this library, resulting in some packagers not providing this
+library, thus breaking the dislocker compilation.
+If you have this problem, it's recommended to run the following commands:
+  git clone https://github.com/ARMmbed/mbedtls.git
+  cd mbedtls
+  git checkout master
+And compile the library:
+  cmake .
+  make
+Finally, come back to the dislocker directory and modify src/CMakeLists.txt by
+replacing the following line (around line 107):
+  set (LIB "${LIB} ${POLARSSL_LIBRARIES}")
+by
+  set (LIB "${LIB} /path/to/mbedtls/library/libmbedcrypto.a")
+
+You can then resume the installation where you have left it.
+
+
+
 PORTABILITY
 `-----------
 
@@ -82,7 +109,7 @@ It won't work on Windows and may not work on other BSDs (not tested).
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
 
-Cases where you need to remove the `-Werror' from the WFLAGS variable:
+Cases where you need to remove the `-Werror' from the WARN_FLAGS variable:
  - You're on Ubuntu 10.04;
  - You're using GCC with a version older than 4.3.
 
@@ -114,7 +141,6 @@ dynamically decrypts a BitLocker encrypted partition using FUSE
 
 You can build each one independently providing it as the makefile target. For
 instance, if you want to compile dislocker-fuse only, you'd simply run:
+  cmake .
   make dislocker-fuse
-To install this binary only, you would then run the following command:
-  make install BINS=dislocker-fuse
 

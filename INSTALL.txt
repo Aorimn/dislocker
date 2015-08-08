@@ -62,7 +62,7 @@ beginning with sudo).
 Note that the `-Werror' flag in the cmake WARN_FLAGS variable may break the
 compilation for useless warnings. If you know what you're doing, you can remove
 it by running the following cmake command instead of the one above:
-  cmake -D WARN_FLAGS:STRING="-Wall -Werror -Wextra" .
+  cmake -D WARN_FLAGS:STRING="-Wall -Wextra" .
 
 See the cmake documentation (on http://www.cmake.org/documentation/) if you want
 to customize the build.
@@ -86,7 +86,9 @@ Since the version 2.0.0 of mbedTLS, the build separate "crypto" functions such
 as AES and SHA256 into a separate, libmbedcrypto, library. However, a typo
 didn't installed this library, resulting in some packagers not providing this
 library, thus breaking the dislocker compilation.
-If you have this problem, it's recommended to run the following commands:
+If you have this problem, it's recommended to run the following commands (they
+have been put in the src/mbed_install.sh script, if you don't want to
+copy/paste):
   git clone https://github.com/ARMmbed/mbedtls.git
   cd mbedtls
   git checkout mbedtls-2.0.0

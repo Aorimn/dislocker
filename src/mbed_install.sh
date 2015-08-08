@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ `brew info polarssl |head -1 |grep 2.0.0` ]
+if brew info polarssl |head -1 |grep -q 2.0.0
 then
 	git clone https://github.com/ARMmbed/mbedtls.git
 	cd mbedtls
@@ -10,6 +10,7 @@ then
 	make VERBOSE=1
 	make install
 	cd ..
+	rm -fr mbedtls
 else
 	brew install -v polarssl
 fi

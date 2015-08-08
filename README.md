@@ -50,7 +50,7 @@ Once installed, see `dislocker(1)` for details on how to use it.
 
 There may be bugs, and I'll be happy to hear about it!
 
-Feel free to send comments and feedbacks to <dislocker __AT__ hsc __DOT__ fr>.
+Feel free to send comments and feedbacks to `dislocker __AT__ hsc __DOT__ fr`.
 
 
 
@@ -79,12 +79,16 @@ whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 Five binaries are built when compiling dislocker as described in the `INSTALL.txt`
 file:
 1. `dislocker-bek`: for disecting a .bek file and printing information about it
+
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume
+
 3. `dislocker-find`: not a binary but a Ruby script which tries to find BitLocker
   encrypted partition among the plugged-in disks (only work if the library is
   compiled with the Ruby bindings)
+
 4. `dislocker-file`: for decrypting a BitLocker encrypted partition into a flat file
 formatted as an NTFS partition you can mount
+
 5. `dislocker-fuse`: the one you're using when calling `dislocker',
 which dynamically decrypts a BitLocker encrypted partition using FUSE
 

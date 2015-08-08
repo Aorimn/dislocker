@@ -10,10 +10,23 @@ src/dislocker-find
 src/dislocker-fuse
 src/dislocker-metadata
 src/libdislocker.so
-src/libdislocker.so.0
+src/libdislocker.so.0.4
 src/libdislocker.so.0.4.1
+
+# Configured files
+include/dislocker/ssl_bindings.h
+src/dislocker-find.rb
 
 # Unit test files
 *.gcno
 *.gcda
 *.gcov
+
+# cmake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+cmake_uninstall.cmake
+install_manifest.txt
+

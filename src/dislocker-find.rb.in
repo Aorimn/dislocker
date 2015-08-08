@@ -2,7 +2,7 @@
 
 # This placeholder is replaced during `make' for the script to find libdislocker
 # once installed
-$LOAD_PATH.unshift 'SED_LIBDIR_PLACEHOLDER'
+$LOAD_PATH.unshift '@libdir@'
 require 'libdislocker'
 
 $signatures = Dislocker::Signatures::BitLocker

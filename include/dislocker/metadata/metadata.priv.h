@@ -149,11 +149,11 @@ typedef struct _bitlocker_information
 
 	uint64_t encrypted_volume_size; // Size of the encrypted volume                         -- offset 0x10
 	/*
-	 * This size describe a virtualized region. This region is only checked when
-	 * this->curr_state == 2. It begins at the offset described by
+	 * The following size describes a virtualized region. This region is only
+	 * checked when this->curr_state == 2. It begins at the offset described by
 	 * this->encrypted_volume_size
 	 */
-	uint32_t unknown_size;  //                                                              -- offset 0x18
+	uint32_t convert_size;  //                                                              -- offset 0x18
 	uint32_t nb_backup_sectors;   //                                                        -- offset 0x1c
 
 	uint64_t information_off[3];  //                                                        -- offset 0x20

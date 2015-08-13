@@ -604,7 +604,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		{
 			dis_meta->nb_virt_region++;
 			regions[4].addr = information->encrypted_volume_size;
-			regions[4].size = information->unknown_size;
+			regions[4].size = information->convert_size;
 		}
 
 		dis_meta->virtualized_size = (off_t)datum->nb_bytes;

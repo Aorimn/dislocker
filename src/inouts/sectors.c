@@ -344,7 +344,7 @@ static void* thread_decrypt(void* params)
 
 		/* Check for sectors fixing and non-encrypted sectors */
 		if(version == V_SEVEN &&
-		   (uint64_t)sector_offset < io_data->nb_backup_sectors)
+		   (uint32_t)sector_offset < io_data->nb_backup_sectors)
 		{
 			/*
 			 * The firsts sectors are encrypted in a different place on a

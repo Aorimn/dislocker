@@ -288,7 +288,7 @@ static int get_volume_header(volume_header_t *volume_header, int fd, off_t offse
 	// Go to the beginning
 	dis_lseek(fd, offset, SEEK_SET);
 
-	dis_printf(L_INFO, "Reading volume header...\n");
+	dis_printf(L_DEBUG, "Reading volume header...\n");
 
 	// Read and place data into the volume_header_t structure
 	ssize_t nb_read = dis_read(fd, volume_header, sizeof(volume_header_t));
@@ -297,7 +297,7 @@ static int get_volume_header(volume_header_t *volume_header, int fd, off_t offse
 	if(nb_read != sizeof(volume_header_t))
 		return FALSE;
 
-	dis_printf(L_INFO, "Volume header read\n");
+	dis_printf(L_DEBUG, "Volume header read\n");
 
 	return TRUE;
 }
@@ -432,7 +432,7 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_confi
 	}
 	else
 	{
-		dis_printf(L_ERROR, "Unknown volume GUID not supported.\n");
+		dis_printf(L_ERROR, "Unknown volume GUID, not supported.\n");
 		return FALSE;
 	}
 
@@ -483,7 +483,7 @@ static int begin_compute_regions(volume_header_t* vh,
 		);
 
 		uint64_t new_offset = vh->metadata_lcn * vh->sectors_per_cluster * vh->sector_size;
-		dis_printf(L_INFO, "Changing first metadata offset from %#llx to %#llx\n", vh->information_off[0], new_offset);
+		dis_printf(L_DEBUG, "Changing first metadata offset from %#llx to %#llx\n", vh->information_off[0], new_offset);
 		regions[0].addr = new_offset;
 
 		/* Now that we have the first offset, go get the others */
@@ -505,7 +505,7 @@ static int begin_compute_regions(volume_header_t* vh,
 	}
 	else
 	{
-		dis_printf(L_ERROR, "Wtf!? Unknown volume GUID not supported.");
+		dis_printf(L_ERROR, "Wtf!? Unknown volume signature not supported.");
 		return FALSE;
 	}
 
@@ -656,7 +656,7 @@ static int get_metadata(off_t source, void **metadata, int fd)
 	// Go to the beginning of the BitLocker header
 	dis_lseek(fd, source, SEEK_SET);
 
-	dis_printf(L_INFO, "Reading bitlocker header at %#" F_OFF_T "...\n", source);
+	dis_printf(L_DEBUG, "Reading bitlocker header at %#" F_OFF_T "...\n", source);
 
 	bitlocker_information_t information;
 
@@ -696,7 +696,7 @@ static int get_metadata(off_t source, void **metadata, int fd)
 	// Copy the header at the begining of the metadata
 	memcpy(*metadata, &information, sizeof(bitlocker_information_t));
 
-	dis_printf(L_INFO, "Reading data...\n");
+	dis_printf(L_DEBUG, "Reading data...\n");
 
 	// Read the rest, the real data
 	nb_read = dis_read(fd, *metadata + sizeof(bitlocker_information_t), rest_size);
@@ -709,7 +709,7 @@ static int get_metadata(off_t source, void **metadata, int fd)
 		return FALSE;
 	}
 
-	dis_printf(L_INFO, "End get_metadata.\n");
+	dis_printf(L_DEBUG, "End get_metadata.\n");
 
 	return TRUE;
 }
@@ -799,7 +799,7 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 	// Copy the header at the begining of the EOW information
 	memcpy(*eow_infos, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
 
-	dis_printf(L_INFO, "Reading EOW information's payload...\n");
+	dis_printf(L_DEBUG, "Reading EOW information's payload...\n");
 
 	// Read the rest, the payload
 	nb_read = dis_read(fd, *eow_infos + sizeof(bitlocker_eow_infos_t), rest_size);
@@ -812,7 +812,7 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 		return FALSE;
 	}
 
-	dis_printf(L_INFO, "End get_eow_information.\n");
+	dis_printf(L_DEBUG, "End get_eow_information.\n");
 
 
 	return TRUE;
@@ -859,7 +859,7 @@ static int get_metadata_lazy_checked(
 			return FALSE;
 		}
 
-		dis_printf(L_INFO, "Block n°%d obtained\n", cfg->force_block);
+		dis_printf(L_DEBUG, "Block n°%d obtained\n", cfg->force_block);
 
 		return TRUE;
 	}
@@ -885,7 +885,8 @@ static int get_metadata_lazy_checked(
 
 		validations_offset = (off_t)regions[current].addr + metadata_size;
 
-		dis_printf(L_INFO, "Reading validations data at offset %#llx.\n", validations_offset);
+		dis_printf(L_DEBUG, "Reading validations data at offset %#llx.\n",
+		        validations_offset);
 
 
 		/* Go to the beginning of the BitLocker validation header */
@@ -909,14 +910,14 @@ static int get_metadata_lazy_checked(
 		 * this provides a better checksum (sha256 hash)
 		 *  => This needs the VMK (decrypted)
 		 */
-		dis_printf(L_INFO, "Looking if %#x == %#x for metadata validation\n",
+		dis_printf(L_DEBUG, "Looking if %#x == %#x for metadata validation\n",
 		        metadata_crc32, validations.crc32);
 
 		++current;
 		if(metadata_crc32 == validations.crc32)
 		{
 			cfg->force_block = current;
-			dis_printf(L_INFO, "We have a winner (n°%d)!\n", cfg->force_block);
+			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", cfg->force_block);
 			break;
 		}
 		else

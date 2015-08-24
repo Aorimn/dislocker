@@ -37,7 +37,7 @@
 /*
  * Number of thread you want to run for enc/decryption
  * NOTE: FUSE uses its own threads so the FUSE's functions can be called in
- * parallel. Use the environment variable FUSE_THREAD_STACK to change the
+ * parallel. Use the environment variable FUSE_MAX_WORKERS to change the
  * FUSE's threads number.
  */
 #define NB_THREAD 2

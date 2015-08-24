@@ -145,7 +145,7 @@ int decrypt_key(
 	 * Check if the MACs correspond, if not,
 	 * we didn't decrypt correctly the input buffer
 	 */
-	dis_printf(L_INFO, "Looking if MACs match...\n");
+	dis_printf(L_DEBUG, "Looking if MACs match...\n");
 	dis_printf(L_DEBUG, "They are just below:\n");
 	hexdump(L_DEBUG, mac_first, AUTHENTICATOR_LENGTH);
 	hexdump(L_DEBUG, mac_second, AUTHENTICATOR_LENGTH);
@@ -156,7 +156,7 @@ int decrypt_key(
 		return FALSE;
 	}
 
-	dis_printf(L_INFO, "Ok, they match!\n");
+	dis_printf(L_DEBUG, "Ok, they match!\n");
 
 	memset(mac_first,  0, AUTHENTICATOR_LENGTH);
 	memset(mac_second, 0, AUTHENTICATOR_LENGTH);
@@ -189,7 +189,7 @@ static int aes_ccm_encrypt_decrypt(
 	if(!ctx || !input || !mac || !output)
 		return FALSE;
 
-	dis_printf(L_INFO, "Entering aes_ccm_encrypt_decrypt...\n");
+	dis_printf(L_DEBUG, "Entering aes_ccm_encrypt_decrypt...\n");
 
 	unsigned char iv[16];
 	unsigned int loop = 0;
@@ -284,7 +284,7 @@ static int aes_ccm_encrypt_decrypt(
 	memset(iv, 0, sizeof(iv));
 	memset(tmp_buf, 0, sizeof(tmp_buf));
 
-	dis_printf(L_INFO, "Ending aes_ccm_encrypt_decrypt successfully!\n");
+	dis_printf(L_DEBUG, "Ending aes_ccm_encrypt_decrypt successfully!\n");
 
 	return TRUE;
 }
@@ -311,7 +311,7 @@ static int aes_ccm_compute_unencrypted_tag(
 	if(!ctx || !buffer || !mac || nonce_length > 0xe)
 		return FALSE;
 
-	dis_printf(L_INFO, "Entering aes_ccm_compute_unencrypted_tag...\n");
+	dis_printf(L_DEBUG, "Entering aes_ccm_compute_unencrypted_tag...\n");
 
 	unsigned char iv[AUTHENTICATOR_LENGTH];
 	unsigned int loop = 0;
@@ -372,7 +372,7 @@ static int aes_ccm_compute_unencrypted_tag(
 
 	memset(iv, 0, AUTHENTICATOR_LENGTH);
 
-	dis_printf(L_INFO, "Ending aes_ccm_compute_unencrypted_tag successfully!\n");
+	dis_printf(L_DEBUG, "Ending aes_ccm_compute_unencrypted_tag successfully!\n");
 
 	return TRUE;
 }

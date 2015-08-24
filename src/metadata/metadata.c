@@ -1150,7 +1150,7 @@ int dis_metadata_is_overwritten(
 		if(offset >= metadata_offset &&
 		   offset < metadata_offset + metadata_size)
 		{
-			dis_printf(L_INFO, "In metadata file (1:%#"
+			dis_printf(L_DEBUG, "In metadata file (1:%#"
 			        F_OFF_T ")\n", offset);
 			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
 		}
@@ -1158,7 +1158,7 @@ int dis_metadata_is_overwritten(
 		if(offset < metadata_offset &&
 		   offset + (off_t)size > metadata_offset)
 		{
-			dis_printf(L_INFO, "In metadata file (2:%#"
+			dis_printf(L_DEBUG, "In metadata file (2:%#"
 			        F_OFF_T "+ %#" F_SIZE_T ")\n", offset, size);
 			return DIS_RET_ERROR_METADATA_FILE_OVERWRITE;
 		}

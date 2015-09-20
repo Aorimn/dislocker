@@ -37,7 +37,7 @@ static int get_volume_header(
 static int check_volume_header(
 	dis_metadata_t dis_metadata,
 	int volume_fd,
-	dis_config_t *cfg
+	off_t disk_offset
 );
 
 static int begin_compute_regions(
@@ -59,7 +59,8 @@ static int get_metadata_lazy_checked(
 	volume_header_t* volume_header,
 	int fd,
 	void** metadata,
-	dis_config_t *cfg,
+	off_t disk_offset,
+	unsigned char force_block,
 	dis_regions_t *regions
 );
 
@@ -67,7 +68,7 @@ static int get_eow_check_valid(
 	volume_header_t *volume_header,
 	int fd,
 	void **eow_infos,
-	dis_config_t* cfg
+	off_t disk_offset
 );
 
 
@@ -134,7 +135,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 
 
 	/* Checking the volume header */
-	if(!check_volume_header(dis_meta, dis_ctx->fve_fd, &dis_ctx->cfg))
+	if(!check_volume_header(dis_meta, dis_ctx->fve_fd, dis_ctx->cfg.offset))
 	{
 		dis_printf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
 		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
@@ -163,7 +164,8 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		dis_meta->volume_header,
 		dis_ctx->fve_fd,
 		&metadata,
-		&dis_ctx->cfg,
+		dis_ctx->cfg.offset,
+		dis_ctx->cfg.force_block,
 		dis_meta->virt_region))
 	{
 		dis_printf(
@@ -308,12 +310,12 @@ static inline int get_version_from_volume_header(volume_header_t *volume_header)
  *
  * @param volume_header A volume header structure to check
  * @param volume_fd The opened file descriptor of the BitLocker volume
- * @param cfg Config asked by the user and used
+ * @param disk_offset The offset of the beginning of the volume
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_config_t *cfg)
+static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, off_t disk_offset)
 {
-	if(!dis_meta || volume_fd < 0 || !cfg)
+	if(!dis_meta || volume_fd < 0)
 		return FALSE;
 
 	volume_header_t* volume_header = dis_meta->volume_header;
@@ -384,7 +386,7 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, dis_confi
 			dis_meta->eow_information = NULL;
 
 			// Third: check if this struct passes checks
-			if(get_eow_check_valid(volume_header, volume_fd, &eow_infos, cfg))
+			if(get_eow_check_valid(volume_header, volume_fd, &eow_infos, disk_offset))
 			{
 				dis_printf(L_INFO,
 				        "EOW information at offset % " F_OFF_T
@@ -804,17 +806,18 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
  * @param volume_header The volume header structure already taken
  * @param fd The opened file descriptor of the volume
  * @param metadata A validated metadata resulting of this function
- * @param cfg Config asked by the user and used
+ * @param disk_offset The offset to the beginning of the volume
+ * @param force_block The metadata block to use (0 if any)
  * @param regions Regions used by metadata, mostly the metadata's offsets for
  * use in this function
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 static int get_metadata_lazy_checked(
-	volume_header_t *volume_header, int fd, void **metadata, dis_config_t *cfg,
-	dis_regions_t *regions)
+	volume_header_t *volume_header, int fd, void **metadata, off_t disk_offset,
+	unsigned char force_block, dis_regions_t *regions)
 {
 	// Check parameters
-	if(!volume_header || fd < 0 || !metadata || !cfg)
+	if(!volume_header || fd < 0 || !metadata)
 		return FALSE;
 
 	dis_printf(L_DEBUG, "Entering get_metadata_lazy_checked\n");
@@ -827,17 +830,17 @@ static int get_metadata_lazy_checked(
 	bitlocker_validations_t validations;
 
 	/* If the user wants a specific metadata block */
-	if(cfg->force_block != 0)
+	if(force_block != 0)
 	{
-		dis_printf(L_INFO, "Obtaining block n°%d, forced by user...\n", cfg->force_block);
+		dis_printf(L_INFO, "Obtaining block n°%d, forced by user...\n", force_block);
 		// Get the metadata
-		if(!get_metadata((off_t)regions[cfg->force_block-1].addr + cfg->offset, metadata, fd))
+		if(!get_metadata((off_t)regions[force_block-1].addr + disk_offset, metadata, fd))
 		{
-			dis_printf(L_ERROR, "Can't get metadata (n°%d, forced by user)\n", cfg->force_block);
+			dis_printf(L_ERROR, "Can't get metadata (n°%d, forced by user)\n", force_block);
 			return FALSE;
 		}
 
-		dis_printf(L_DEBUG, "Block n°%d obtained\n", cfg->force_block);
+		dis_printf(L_DEBUG, "Block n°%d obtained\n", force_block);
 
 		return TRUE;
 	}
@@ -845,7 +848,7 @@ static int get_metadata_lazy_checked(
 	while(current < 3)
 	{
 		/* Get the metadata */
-		if(!get_metadata((off_t)regions[current].addr + cfg->offset, metadata, fd))
+		if(!get_metadata((off_t)regions[current].addr + disk_offset, metadata, fd))
 		{
 			dis_printf(L_ERROR, "Can't get metadata (n°%d)\n", current+1);
 			return FALSE;
@@ -868,7 +871,7 @@ static int get_metadata_lazy_checked(
 
 
 		/* Go to the beginning of the BitLocker validation header */
-		dis_lseek(fd, validations_offset + cfg->offset, SEEK_SET);
+		dis_lseek(fd, validations_offset + disk_offset, SEEK_SET);
 
 		/* Get the validations metadata */
 		memset(&validations, 0, sizeof(bitlocker_validations_t));
@@ -894,8 +897,8 @@ static int get_metadata_lazy_checked(
 		++current;
 		if(metadata_crc32 == validations.crc32)
 		{
-			cfg->force_block = current;
-			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", cfg->force_block);
+			force_block = current;
+			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", force_block);
 			break;
 		}
 		else
@@ -912,14 +915,14 @@ static int get_metadata_lazy_checked(
  * @param volume_header The volume header structure already taken
  * @param fd The opened file descriptor of the volume
  * @param eow_infos The EOW information resulting of this function
- * @param cfg Configuration used
+ * @param disk_offset The offset to the beginning of the volume
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 static int get_eow_check_valid(
-	volume_header_t *volume_header, int fd, void **eow_infos, dis_config_t* cfg)
+	volume_header_t *volume_header, int fd, void **eow_infos, off_t disk_offset)
 {
 	// Check parameters
-	if(!volume_header || fd < 0 || !eow_infos || !cfg)
+	if(!volume_header || fd < 0 || !eow_infos)
 		return FALSE;
 
 	dis_printf(L_DEBUG, "Entering get_eow_check_valid\n");
@@ -935,7 +938,7 @@ static int get_eow_check_valid(
 	{
 		/* Compute the on-disk offset */
 		curr_offset = (off_t)volume_header->eow_information_off[current]
-		            + cfg->offset;
+		            + disk_offset;
 		++current;
 
 		/* Get the EOW information */

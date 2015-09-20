@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "dislocker/accesses/accesses.h"
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/metadata.h"
 #include "dislocker/metadata/print_metadata.h"
@@ -188,6 +189,20 @@ int dis_initialize(dis_context_t dis_ctx)
 	 */
 	if(dis_ctx->metadata->information->curr_state != METADATA_STATE_DECRYPTED)
 	{
+		/*
+		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
+		 */
+		if((ret = dis_get_access(dis_ctx)) != DIS_RET_SUCCESS)
+		{
+			/*
+			 * If it's less than 0, then it's an error, if not, it's an early
+			 * return of this function.
+			 */
+			if(ret < 0)
+				dis_printf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+			return ret;
+		}
+
 		/*
 		 * Init the crypto structure
 		 */

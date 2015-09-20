@@ -21,8 +21,6 @@
  * USA.
  */
 
-#include "dislocker/accesses/accesses.h"
-
 #include "dislocker/encryption/crc32.h"
 #include "dislocker/metadata/metadata.priv.h"
 #include "dislocker/metadata/print_metadata.h"
@@ -219,26 +217,6 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	print_data(L_DEBUG, dis_meta);
 
 	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK);
-
-	/*
-	 * If the state of the volume is currently decrypted, there's no key to grab
-	 */
-	if(information->curr_state != METADATA_STATE_DECRYPTED)
-	{
-		/*
-		 * Get the keys -- VMK & FVEK -- for dec/encryption operations
-		 */
-		if((ret = dis_get_access(dis_ctx)) != DIS_RET_SUCCESS)
-		{
-			/*
-			 * If it's less than 0, then it's an error, if not, it's an early
-			 * return of this function.
-			 */
-			if(ret < 0)
-				dis_printf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
-			return ret;
-		}
-	}
 
 	/*
 	 * Initialize region to report as filled with zeroes, if asked from the NTFS

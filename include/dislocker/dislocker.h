@@ -93,6 +93,12 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size);
  */
 int dis_destroy(dis_context_t dis_ctx);
 
+/**
+ * Retrieve the fd for the FVE volume. This permits reading/writing - although
+ * not encouraged - directly to the volume.
+ */
+int get_fvevol_fd(dis_context_t dis_ctx);
+
 
 #endif /* DISLOCKER_MAIN_H */
 

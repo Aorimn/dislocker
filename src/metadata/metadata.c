@@ -74,9 +74,22 @@ static int get_eow_check_valid(
 
 
 
-dis_metadata_t dis_metadata_new(dis_context_t dis_ctx)
+dis_metadata_config_t dis_metadata_config_new()
 {
-	if(!dis_ctx)
+	return dis_malloc(sizeof(struct _dis_metadata_config));
+}
+
+void dis_metadata_config_destroy(dis_metadata_config_t dis_meta_cfg)
+{
+	if(dis_meta_cfg)
+		dis_free(dis_meta_cfg);
+}
+
+
+
+dis_metadata_t dis_metadata_new(dis_metadata_config_t dis_metadata_cfg)
+{
+	if(!dis_metadata_cfg)
 		return NULL;
 
 	dis_metadata_t dis_meta = dis_malloc(sizeof(struct _dis_metadata));
@@ -86,7 +99,7 @@ dis_metadata_t dis_metadata_new(dis_context_t dis_ctx)
 
 	memset(dis_meta->volume_header, 0, sizeof(volume_header_t));
 
-	dis_meta->dis_ctx = dis_ctx;
+	dis_meta->cfg = dis_metadata_cfg;
 
 	return dis_meta;
 }
@@ -106,7 +119,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	if(!dis_meta)
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
 
-	dis_context_t dis_ctx = dis_meta->dis_ctx;
+	dis_metadata_config_t dis_meta_cfg = dis_meta->cfg;
 
 	int ret = DIS_RET_SUCCESS;
 
@@ -118,8 +131,8 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	/* Getting volume infos */
 	if(!get_volume_header(
 		dis_meta->volume_header,
-		dis_ctx->fve_fd,
-		dis_ctx->cfg.offset))
+		dis_meta_cfg->fve_fd,
+		dis_meta_cfg->offset))
 	{
 		dis_printf(
 			L_CRITICAL,
@@ -131,24 +144,24 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	/* For debug purpose, print the volume header retrieved */
 	print_volume_header(L_DEBUG, dis_meta);
 
-	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_HEADER);
+	checkupdate_dis_meta_state(dis_meta_cfg, DIS_STATE_AFTER_VOLUME_HEADER);
 
 
 	/* Checking the volume header */
-	if(!check_volume_header(dis_meta, dis_ctx->fve_fd, dis_ctx->cfg.offset))
+	if(!check_volume_header(dis_meta, dis_meta_cfg->fve_fd, dis_meta_cfg->offset))
 	{
 		dis_printf(L_CRITICAL, "Cannot parse volume header. Abort.\n");
 		return DIS_RET_ERROR_VOLUME_HEADER_CHECK;
 	}
 
-	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_VOLUME_CHECK);
+	checkupdate_dis_meta_state(dis_meta_cfg, DIS_STATE_AFTER_VOLUME_CHECK);
 
 
 	/* Fill the regions the metadata occupy on disk */
 	if(!begin_compute_regions(
 		dis_meta->volume_header,
-		dis_ctx->fve_fd,
-		dis_ctx->cfg.offset,
+		dis_meta_cfg->fve_fd,
+		dis_meta_cfg->offset,
 		dis_meta->virt_region))
 	{
 		dis_printf(
@@ -162,10 +175,10 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	/* Getting BitLocker metadata and validate them */
 	if(!get_metadata_lazy_checked(
 		dis_meta->volume_header,
-		dis_ctx->fve_fd,
+		dis_meta_cfg->fve_fd,
 		&metadata,
-		dis_ctx->cfg.offset,
-		dis_ctx->cfg.force_block,
+		dis_meta_cfg->offset,
+		dis_meta_cfg->force_block,
 		dis_meta->virt_region))
 	{
 		dis_printf(
@@ -175,7 +188,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		return DIS_RET_ERROR_METADATA_CHECK;
 	}
 
-	if(dis_ctx->cfg.force_block == 0 || !metadata)
+	if(!metadata)
 	{
 		dis_printf(
 			L_CRITICAL,
@@ -218,7 +231,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	print_information(L_DEBUG, dis_meta);
 	print_data(L_DEBUG, dis_meta);
 
-	checkupdate_dis_state(dis_ctx, DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK);
+	checkupdate_dis_meta_state(dis_meta_cfg, DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK);
 
 	/*
 	 * Initialize region to report as filled with zeroes, if asked from the NTFS
@@ -245,6 +258,7 @@ int dis_metadata_destroy(dis_metadata_t dis_meta)
 	if(dis_meta->information)
 		dis_free(dis_meta->information);
 
+	dis_metadata_config_destroy(dis_meta->cfg);
 	dis_free(dis_meta);
 
 	return DIS_RET_SUCCESS;
@@ -897,8 +911,7 @@ static int get_metadata_lazy_checked(
 		++current;
 		if(metadata_crc32 == validations.crc32)
 		{
-			force_block = current;
-			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", force_block);
+			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", current);
 			break;
 		}
 		else

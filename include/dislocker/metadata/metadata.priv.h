@@ -30,6 +30,16 @@
 #include "dislocker/metadata/guid.h"
 #include "dislocker/ntfs/clock.h"
 
+#include "dislocker/return_values.h"
+#define checkupdate_dis_meta_state(ctx, state)                              \
+	do {                                                                    \
+		(ctx)->curr_state = (state);                                        \
+		if((state) == (ctx)->init_stop_at) {                                \
+			dis_printf(L_DEBUG, "Library end init at state %d\n", (state)); \
+			return (state);                                                 \
+		}                                                                   \
+	} while(0);
+
 
 
 #pragma pack (1)
@@ -240,9 +250,6 @@ typedef struct _regions
 
 
 
-/* In order to get a pointer to a dislocker's context */
-#include "dislocker/dislocker.h"
-
 struct _dis_metadata {
 	/* The volume header, 512 bytes */
 	volume_header_t* volume_header;
@@ -272,9 +279,10 @@ struct _dis_metadata {
 	/* Extended info which may be present (NULL otherwise) */
 	extended_info_t* xinfo;
 
-	/* Pointer to a dislocker's context */
-	dis_context_t    dis_ctx;
+	/* A pointer to the configuration of the metadata */
+	dis_metadata_config_t cfg;
 };
+
 
 #ifdef _HAVE_RUBY
 #include <ruby.h>

@@ -99,6 +99,7 @@ dis_context_t dis_new()
 int dis_initialize(dis_context_t dis_ctx)
 {
 	int ret = DIS_RET_SUCCESS;
+	dis_metadata_config_t dis_meta_cfg = NULL;
 
 
 	/* Initialize outputs */
@@ -162,8 +163,16 @@ int dis_initialize(dis_context_t dis_ctx)
 	/* To print UTF-32 strings */
 	setlocale(LC_ALL, "");
 
+	/*
+	 * The metadata configuration is freed when calling dis_metadata_destroy()
+	 */
+	dis_meta_cfg = dis_metadata_config_new();
+	dis_meta_cfg->fve_fd       = dis_ctx->fve_fd;
+	dis_meta_cfg->force_block  = dis_ctx->cfg.force_block;
+	dis_meta_cfg->offset       = dis_ctx->cfg.offset;
+	dis_meta_cfg->init_stop_at = dis_ctx->cfg.init_stop_at;
 
-	dis_ctx->metadata = dis_metadata_new(dis_ctx);
+	dis_ctx->metadata = dis_metadata_new(dis_meta_cfg);
 	if(dis_ctx->metadata == NULL)
 	{
 		dis_printf(L_CRITICAL, "Can't allocate metadata object. Abort.\n");
@@ -172,6 +181,7 @@ int dis_initialize(dis_context_t dis_ctx)
 	}
 
 	ret = dis_metadata_initialize(dis_ctx->metadata);
+	dis_ctx->curr_state = dis_meta_cfg->curr_state;
 	if(ret != DIS_RET_SUCCESS)
 	{
 		/*
@@ -677,6 +687,12 @@ int dis_destroy(dis_context_t dis_ctx)
 	return EXIT_SUCCESS;
 }
 
+
+
+int get_fvevol_fd(dis_context_t dis_ctx)
+{
+	return dis_ctx->fve_fd;
+}
 
 
 

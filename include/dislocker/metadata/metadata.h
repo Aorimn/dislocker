@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include "dislocker/dislocker.h"
-
+#include "dislocker/metadata/metadata_config.h"
 
 
 
@@ -45,10 +45,12 @@ typedef struct _dis_metadata* dis_metadata_t;
 
 
 
+
+
 /*
  * Prototypes
  */
-dis_metadata_t dis_metadata_new(dis_context_t dis_ctx);
+dis_metadata_t dis_metadata_new(dis_metadata_config_t dis_metadata_cfg);
 dis_metadata_t dis_metadata_get(dis_context_t dis_ctx);
 
 int dis_metadata_initialize(dis_metadata_t dis_metadata);

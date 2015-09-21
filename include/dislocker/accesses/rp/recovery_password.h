@@ -35,6 +35,7 @@
  */
 
 int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum);
+int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password, void** vmk_datum);
 
 int is_valid_key(const uint8_t *recovery_password, uint16_t *short_password);
 

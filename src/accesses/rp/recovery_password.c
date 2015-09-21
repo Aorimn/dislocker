@@ -47,8 +47,22 @@
  */
 int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
 {
+	return get_vmk_from_rp2(dis_meta, cfg->recovery_password, vmk_datum);
+}
+
+
+/**
+ * Get the VMK datum using a recovery password
+ *
+ * @param dis_metadata The metadata structure
+ * @param recovery_password The recovery password provided by the user
+ * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password, void** vmk_datum)
+{
 	// Check parameters
-	if(!dis_meta || !cfg)
+	if(!dis_meta)
 		return FALSE;
 
 	uint8_t* recovery_key = NULL;
@@ -57,8 +71,8 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	int result = FALSE;
 
 	/* If the recovery password wasn't provide, ask for it */
-	if(!cfg->recovery_password)
-		if(!prompt_rp(&cfg->recovery_password))
+	if(!recovery_password)
+		if(!prompt_rp(&recovery_password))
 		{
 			dis_printf(L_ERROR, "Cannot get valid recovery password. Abort.\n");
 			return FALSE;
@@ -66,7 +80,7 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 
 
 	dis_printf(L_DEBUG, "Using the recovery password: '%s'.\n",
-	                (char *)cfg->recovery_password);
+	                (char *)recovery_password);
 
 
 	/*
@@ -118,17 +132,13 @@ int get_vmk_from_rp(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum
 	 */
 	recovery_key = dis_malloc(32 * sizeof(uint8_t));
 
-	if(!intermediate_key(cfg->recovery_password, salt, recovery_key))
+	if(!intermediate_key(recovery_password, salt, recovery_key))
 	{
 		dis_printf(L_ERROR, "Error computing the recovery password to the recovery key. Abort.\n");
 		*vmk_datum = NULL;
 		dis_free(recovery_key);
 		return FALSE;
 	}
-
-	/* We don't need the recovery_password anymore */
-	memclean((char*)cfg->recovery_password, strlen((char*)cfg->recovery_password));
-	cfg->recovery_password = NULL;
 
 	/* As the computed key length is always the same, use a direct value */
 	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, 32, (datum_key_t**)vmk_datum);

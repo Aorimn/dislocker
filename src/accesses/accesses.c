@@ -70,6 +70,13 @@ int dis_get_access(dis_context_t dis_ctx)
 			{
 				dis_printf(L_INFO, "Used user password decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_USER_PASSWORD;
+
+				/* We don't need the user password anymore */
+				memclean(
+					(char*)dis_ctx->cfg.user_password,
+					strlen((char*)dis_ctx->cfg.user_password)
+				);
+				dis_ctx->cfg.user_password = NULL;
 				break;
 			}
 		}
@@ -83,6 +90,14 @@ int dis_get_access(dis_context_t dis_ctx)
 			{
 				dis_printf(L_INFO, "Used recovery password decryption method\n");
 				dis_ctx->cfg.decryption_mean = DIS_USE_RECOVERY_PASSWORD;
+
+				/* We don't need the recovery_password anymore */
+				memclean(
+					(char*)dis_ctx->cfg.recovery_password,
+					strlen((char*)dis_ctx->cfg.recovery_password)
+				);
+				dis_ctx->cfg.recovery_password = NULL;
+
 				break;
 			}
 		}

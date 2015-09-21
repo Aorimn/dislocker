@@ -55,8 +55,22 @@
  */
 int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
 {
+	return get_vmk_from_bekfile2(dis_meta, cfg->bek_file, vmk_datum);
+}
+
+
+/**
+ * Get the VMK datum using a bek file (external key)
+ *
+ * @param dataset The dataset of BitLocker's metadata on the volume
+ * @param bek_file The path to the .BEK file to use
+ * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_datum)
+{
 	// Check parameters
-	if(!dis_meta || !cfg)
+	if(!dis_meta || !vmk_datum)
 		return FALSE;
 
 	guid_t key_guid = {0,};
@@ -70,24 +84,30 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 	int fd_bek = 0;
 
 
-	if(cfg->bek_file)
+	if(bek_file)
 	{
 		/* Check if the bek file exists */
-		fd_bek = dis_open(cfg->bek_file, O_RDONLY);
+		fd_bek = dis_open(bek_file, O_RDONLY);
 		if(fd_bek < 0)
 		{
-			dis_printf(L_ERROR, "Cannot open FVEK file (%s)\n", cfg->bek_file);
+			dis_printf(L_ERROR, "Cannot open FVEK file (%s)\n", bek_file);
 			return FALSE;
 		}
 	}
 	else
 	{
-		dis_printf(L_ERROR, "Using bekfile method (USB) but missing the bekfile name. Abort.\n");
+		dis_printf(
+			L_ERROR,
+			"Using bekfile method (USB) but missing the bekfile name. Abort.\n"
+		);
 		return FALSE;
 	}
 
-	dis_printf(L_INFO, "Using the bekfile '%s' to decrypt the VMK.\n",
-	                cfg->bek_file);
+	dis_printf(
+		L_INFO,
+		"Using the bekfile '%s' to decrypt the VMK.\n",
+		bek_file
+	);
 
 	/*
 	 * We need the recovery key id which can be found in the bek file
@@ -192,7 +212,11 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
 
 
 /**
- * TODO
+ * Get the dataset present in a .BEK file
+ *
+ * @param fd The file descriptor to the .BEK file
+ * @param bek_dataset The extracted dataset
+ * @return TRUE if result can be trusted, FALSE otherwise
  */
 int get_bek_dataset(int fd, void** bek_dataset)
 {

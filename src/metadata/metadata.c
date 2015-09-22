@@ -21,8 +21,10 @@
  * USA.
  */
 
+#define _GNU_SOURCE 1
 #include "dislocker/encryption/crc32.h"
 #include "dislocker/metadata/metadata.priv.h"
+#include "dislocker/metadata/metadata_config.h"
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
 
@@ -76,7 +78,15 @@ static int get_eow_check_valid(
 
 dis_metadata_config_t dis_metadata_config_new()
 {
-	return dis_malloc(sizeof(struct _dis_metadata_config));
+	size_t len = sizeof(struct _dis_metadata_config);
+	dis_metadata_config_t dis_meta_cfg = dis_malloc(len);
+
+	if(dis_meta_cfg == NULL)
+		return NULL;
+
+	memset(dis_meta_cfg, 0, len);
+
+	return dis_meta_cfg;
 }
 
 void dis_metadata_config_destroy(dis_metadata_config_t dis_meta_cfg)

@@ -28,6 +28,15 @@
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
 
+/*
+ * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables
+ * and O_LARGEFILE isn't defined
+ */
+#if defined(__DARWIN) || defined(__FREEBSD)
+#  define O_LARGEFILE 0
+#endif /* __DARWIN || __FREEBSD */
+
+
 
 
 static int get_volume_header(

@@ -28,6 +28,9 @@
 
 #include <getopt.h>
 #include <locale.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "dislocker/return_values.h"
 #include "dislocker/config.h"
@@ -61,6 +64,9 @@ int main(int argc, char **argv)
 
 	int optchar = 0;
 	char *volume_path = NULL;
+	dis_metadata_config_t dis_meta_cfg = NULL;
+	dis_metadata_t dis_metadata = NULL;
+	int fve_fd = -1;
 
 	void* vmk_clear_key_datum = NULL;
 
@@ -97,28 +103,29 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	dis_context_t dis_ctx = dis_new();
+	/* Initialize outputs */
+	dis_stdio_init(verbosity, NULL);
+
+	dis_printf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
+
+	/* Open the volume as a (big) normal file */
+	dis_printf(L_DEBUG, "Trying to open '%s'...\n", volume_path);
+	fve_fd = dis_open(volume_path, O_RDONLY|O_LARGEFILE);
 
 	/*
 	 * Initialize dislocker's configuration
+	 *
 	 */
-	dis_setopt(dis_ctx, DIS_OPT_VOLUME_PATH,   volume_path);
-	dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
-	dis_setopt(dis_ctx, DIS_OPT_VERBOSITY,     &verbosity);
+	dis_meta_cfg = dis_metadata_config_new();
+	dis_meta_cfg->fve_fd       = fve_fd;
+	dis_meta_cfg->offset       = offset;
 
-	/* We don't want to give decryption mean, we only want the metadata */
-	dis_state_e init_state = DIS_STATE_AFTER_BITLOCKER_INFORMATION_CHECK;
-	dis_setopt(dis_ctx, DIS_OPT_INITIALIZE_STATE, &init_state);
-
-	/* Initialize dislocker */
-	if(dis_initialize(dis_ctx) < 0)
+	dis_metadata = dis_metadata_new(dis_meta_cfg);
+	if(dis_metadata_initialize(dis_metadata) != DIS_RET_SUCCESS)
 	{
 		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;
 	}
-
-
-	dis_metadata_t dis_metadata = dis_metadata_get(dis_ctx);
 
 
 	// Printing volume header
@@ -144,7 +151,8 @@ int main(int argc, char **argv)
 		dis_printf(L_INFO, "No clear key found.\n");
 
 
-	dis_destroy(dis_ctx);
+	dis_close(fve_fd);
+	dis_metadata_destroy(dis_metadata);
 
 	return EXIT_SUCCESS;
 }

@@ -705,6 +705,10 @@ int get_fvevol_fd(dis_context_t dis_ctx)
 #ifdef _HAVE_RUBY
 #include <ruby.h>
 
+
+VALUE dis_rb_classes[DIS_RB_CLASS_MAX];
+
+
 static VALUE rb_init_dislocker(VALUE self, VALUE rb_vdis_ctx)
 {
 	rb_iv_set(self, "@context", rb_vdis_ctx);
@@ -716,7 +720,7 @@ static VALUE rb_init_dislocker(VALUE self, VALUE rb_vdis_ctx)
 
 static VALUE rb_dislock(VALUE self, VALUE rb_vbuffer, VALUE rb_voffset, VALUE rb_vsize)
 {
-	// TODO
+	// TODO implement the function
 	(void) self;
 	(void) rb_vbuffer;
 	(void) rb_voffset;
@@ -726,7 +730,7 @@ static VALUE rb_dislock(VALUE self, VALUE rb_vbuffer, VALUE rb_voffset, VALUE rb
 
 static VALUE rb_enlock(VALUE self, VALUE rb_vbuffer, VALUE rb_voffset, VALUE rb_vsize)
 {
-	// TODO
+	// TODO implement the function
 	(void) self;
 	(void) rb_vbuffer;
 	(void) rb_voffset;
@@ -736,7 +740,7 @@ static VALUE rb_enlock(VALUE self, VALUE rb_vbuffer, VALUE rb_voffset, VALUE rb_
 
 static VALUE rb_destroy_dislocker(VALUE self)
 {
-	// TODO
+	// TODO implement the function
 	(void) self;
 	return Qtrue;
 }
@@ -745,7 +749,10 @@ static VALUE rb_destroy_dislocker(VALUE self)
 void Init_libdislocker()
 {
 	VALUE rb_mDislocker = rb_define_module("Dislocker");
+	dis_rb_classes[DIS_RB_CLASS_DISLOCKER] = rb_mDislocker;
+
 	Init_metadata(rb_mDislocker);
+	Init_accesses(rb_mDislocker);
 
 	rb_define_method(rb_mDislocker, "initialize", rb_init_dislocker, 1);
 	rb_define_method(rb_mDislocker, "dislock", rb_dislock, 3);

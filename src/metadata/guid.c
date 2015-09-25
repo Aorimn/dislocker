@@ -121,9 +121,9 @@ static VALUE rb_format_guid(VALUE self, VALUE rb_vGuid)
 	return rb_str_new(formated_guid, 37);
 }
 
-void Init_guid(VALUE rb_mDislockerMetadata)
+void Init_guid(VALUE rb_cDislockerMetadata)
 {
-	VALUE rb_mDisMetadataGuid = rb_define_module_under(rb_mDislockerMetadata, "GUID");
+	VALUE rb_mDisMetadataGuid = rb_define_module_under(rb_cDislockerMetadata, "GUID");
 	VALUE offset_guids = rb_ary_new3(
 		2,
 		rb_str_new((const char*)INFORMATION_OFFSET_GUID, 16),

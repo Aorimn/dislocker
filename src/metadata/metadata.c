@@ -1275,11 +1275,126 @@ uint32_t dis_metadata_backup_sectors_count(dis_metadata_t dis_meta)
 	return dis_meta->information->nb_backup_sectors;
 }
 
+
 #ifdef _HAVE_RUBY
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
+static VALUE rb_cDislockerMetadata_has_clearkey(VALUE self)
+{
+	void* vmk_datum = NULL;
+	dis_metadata_t dis_meta = DATA_PTR(self);
+
+	if(dis_metadata_has_clear_key(dis_meta, &vmk_datum) == TRUE &&
+	   vmk_datum != NULL)
+	{
+		return Qtrue;
+	}
+
+	return Qfalse;
+}
+
+
+static void rb_cDislockerMetadata_free(dis_metadata_t dis_meta)
+{
+	dis_close(dis_meta->cfg->fve_fd);
+	if(dis_metadata_destroy(dis_meta) != DIS_RET_SUCCESS)
+	{
+		rb_raise(
+			rb_eRuntimeError,
+		   "Wrong metadata, object cannot be cleanly freed."
+		);
+	}
+}
+
+static VALUE rb_cDislockerMetadata_alloc(VALUE klass)
+{
+	dis_metadata_t dis_meta = NULL;
+
+	return Data_Wrap_Struct(
+		klass,
+		NULL,
+		rb_cDislockerMetadata_free,
+		dis_meta
+	);
+}
+
+static VALUE rb_cDislockerMetadata_init(int argc, VALUE *argv, VALUE self)
+{
+	int fd          = -1;
+	double dOffset  = 0;
+	int iForceBlock = 0;
+	dis_metadata_config_t dis_meta_cfg = NULL;
+
+	if(argc < 1)
+	{
+		rb_raise(
+			rb_eArgError,
+		   "initialize: fvevol_path [offset] [force_block]"
+		);
+	}
+
+	Check_Type(argv[0], T_STRING);
+	fd = open(StringValuePtr(argv[0]), O_RDWR|O_LARGEFILE);
+
+	dis_meta_cfg = dis_metadata_config_new();
+	dis_meta_cfg->fve_fd = fd;
+
+	if(argc > 1)
+	{
+		Check_Type(argv[1], T_FIXNUM);
+		dOffset = NUM2DBL(argv[1]);
+		// TODO add check
+		dis_meta_cfg->offset = (off_t) dOffset;
+	}
+
+	if(argc > 2)
+	{
+		Check_Type(argv[2], T_FIXNUM);
+		iForceBlock = NUM2INT(argv[2]);
+		if(iForceBlock >= 1 && iForceBlock <= 3)
+			dis_meta_cfg->force_block = (unsigned char) iForceBlock;
+		else
+			dis_meta_cfg->force_block = 0;
+	}
+
+	DATA_PTR(self) = dis_metadata_new(dis_meta_cfg);
+
+	if(dis_metadata_initialize(DATA_PTR(self)) != DIS_RET_SUCCESS)
+		rb_raise(rb_eRuntimeError, "Couldn't retrieve metadata");
+
+	return Qnil;
+}
+
 void Init_metadata(VALUE rb_mDislocker)
 {
-	VALUE rb_mDislockerMetadata = rb_define_module_under(rb_mDislocker, "Metadata");
+	VALUE rb_cDislockerMetadata = rb_define_class_under(
+		rb_mDislocker,
+		"Metadata",
+		rb_cObject
+	);
+	extern VALUE dis_rb_classes[DIS_RB_CLASS_MAX];
+	dis_rb_classes[DIS_RB_CLASS_METADATA] = rb_cDislockerMetadata;
 
-	Init_guid(rb_mDislockerMetadata);
+	rb_define_alloc_func(rb_cDislockerMetadata, rb_cDislockerMetadata_alloc);
+	rb_define_method(
+		rb_cDislockerMetadata,
+		"initialize",
+		rb_cDislockerMetadata_init,
+		-1
+	);
+
+	rb_define_method(
+		rb_cDislockerMetadata,
+		"has_clearkey?",
+		rb_cDislockerMetadata_has_clearkey,
+		0
+	);
+
+
+	Init_datum(rb_cDislockerMetadata);
+	Init_guid(rb_cDislockerMetadata);
 }
 #endif

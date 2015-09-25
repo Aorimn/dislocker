@@ -266,10 +266,10 @@ enum types
 	TYPE_UNKNOWN1 = 0x0000,
 	TYPE_UNKNOWN2,
 	TYPE_VMK,
-	TYPE_FVEK_INSIDE,
+	TYPE_FVEK,
 	TYPE_UNKNOWN3,
 	TYPE_UNKNOWN4,
-	TYPE_UNKNOWN5,
+	TYPE_STARTUP_KEY,
 	TYPE_ENCTIME_INFORMATION,
 	TYPE_UNKNOWN7,
 	TYPE_UNKNOWN8,
@@ -352,6 +352,15 @@ static const print_datum_f print_datum_tab[NB_DATUM_TYPES] =
 	print_datum_generic,
 	print_datum_generic,
 };
+
+
+#ifdef _HAVE_RUBY
+#include <ruby.h>
+
+void Init_datum(VALUE rb_cDislockerMetadata);
+
+VALUE rb_cDislockerMetadataDatum_new(VALUE klass, VALUE datum);
+#endif
 
 
 

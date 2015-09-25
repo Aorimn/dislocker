@@ -75,4 +75,19 @@ struct _dis_ctx {
 	int fve_fd;
 };
 
+
+
+#ifdef _HAVE_RUBY
+
+enum {
+	DIS_RB_CLASS_DISLOCKER = 0,
+	DIS_RB_CLASS_METADATA,
+	DIS_RB_CLASS_DATUM,
+	DIS_RB_CLASS_ACCESSES,
+	DIS_RB_CLASS_MAX
+};
+
+#endif /* _HAVE_RUBY */
+
+
 #endif /* DIS_DISLOCKER_PRIV_H */

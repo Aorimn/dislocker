@@ -712,3 +712,246 @@ int dis_metadata_has_clear_key(dis_metadata_t dis_meta, void** vmk_datum)
 	return get_vmk_datum_from_range(dis_meta, 0x00, 0xff, vmk_datum);
 }
 
+
+
+#ifdef _HAVE_RUBY
+#include "dislocker/dislocker.priv.h"
+
+struct _rb_dis_datum {
+	/* The actual datum's data */
+	datum_generic_type_t* datum;
+
+	/* If the datum was malloc()-ed, then it needs to be free()-d */
+	char need_free;
+};
+typedef struct _rb_dis_datum* rb_dis_datum_t;
+
+
+static VALUE rb_cDislockerMetadataDatum_get_datum_size(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	return INT2NUM(rb_datum->datum->header.datum_size);
+}
+
+static VALUE rb_cDislockerMetadataDatum_get_entry_type(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	return INT2NUM(rb_datum->datum->header.type);
+}
+
+static VALUE rb_cDislockerMetadataDatum_get_value_type(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	return INT2NUM(rb_datum->datum->header.datum_type);
+}
+
+static VALUE rb_cDislockerMetadataDatum_get_error_status(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	return INT2NUM(rb_datum->datum->header.error_status);
+}
+
+static VALUE rb_cDislockerMetadataDatum_get_payload(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	void* payload = NULL;
+	size_t size = 0;
+	extern VALUE dis_rb_classes[DIS_RB_CLASS_MAX];
+
+	if(get_payload_safe(rb_datum->datum, &payload, &size))
+	{
+		if(size > LONG_MAX)
+		{
+			rb_raise(
+				rb_eRuntimeError,
+				"Wtf with this datum's payload size (%" F_SIZE_T ")?",
+				size
+			);
+		}
+
+		VALUE new_rb_datum = rb_cDislockerMetadataDatum_new(
+			dis_rb_classes[DIS_RB_CLASS_DATUM],
+			rb_str_new(payload, (long int) size)
+		);
+
+		return new_rb_datum;
+	}
+
+	return Qnil;
+}
+
+static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_generic_type_t* gt = rb_datum->datum;
+	char* entry_type = "UNKNOWN";
+	char* value_type = "UNKNOWN";
+
+	VALUE rb_str    = rb_str_new("", 0);
+	size_t strp_len = 1024;
+	int written     = -1;
+	char strp[strp_len];
+
+	if(gt == NULL)
+		return rb_str;
+
+	if(gt->header.type < NB_TYPES)
+		entry_type = (char*) types_str[gt->header.type];
+
+	if(gt->header.datum_type < NB_DATUM_TYPES)
+		value_type = (char*) datum_types_str[gt->header.datum_type];
+
+
+	written = snprintf(
+		strp,
+		strp_len,
+		"Total size: 0x%1$04hx (%1$hd) bytes\n",
+		gt->header.datum_size
+	);
+	if(written < 0)
+		rb_raise(rb_eRuntimeError, "Error encountered.");
+	rb_str_cat(rb_str, strp, written);
+
+	written = snprintf(
+		strp,
+		strp_len,
+		"Entry type: %s (%hu)\n",
+		entry_type,
+		gt->header.type
+	);
+	if(written < 0)
+		rb_raise(rb_eRuntimeError, "Error encountered.");
+	rb_str_cat(rb_str, strp, written);
+
+	written = snprintf(
+		strp,
+		strp_len,
+		"Value type: %s (%hu)\n",
+		value_type,
+		gt->header.datum_type
+	);
+	if(written < 0)
+		rb_raise(rb_eRuntimeError, "Error encountered.");
+	rb_str_cat(rb_str, strp, written);
+
+	written = snprintf(
+		strp,
+		strp_len,
+		"Status    : %#x\n",
+		gt->header.error_status
+	);
+	if(written < 0)
+		rb_raise(rb_eRuntimeError, "Error encountered.");
+	rb_str_cat(rb_str, strp, written);
+
+	// TODO add payload to the returned string
+
+	return rb_str;
+}
+
+
+static void rb_cDislockerMetadataDatum_free(rb_dis_datum_t rb_datum)
+{
+	if(rb_datum)
+	{
+		if(rb_datum->need_free)
+			dis_free(rb_datum->datum);
+		dis_free(rb_datum);
+	}
+}
+
+static VALUE rb_cDislockerMetadataDatum_alloc(VALUE klass)
+{
+	rb_dis_datum_t datum = NULL;
+
+	return Data_Wrap_Struct(
+		klass,
+		NULL,
+		rb_cDislockerMetadataDatum_free,
+		datum
+	);
+}
+
+static VALUE rb_cDislockerMetadataDatum_init(VALUE self, VALUE datum)
+{
+	rb_dis_datum_t rb_datum = dis_malloc(sizeof(struct _rb_dis_datum));
+	if(rb_datum == NULL)
+		rb_raise(rb_eRuntimeError, "Cannot allocate more memory");
+
+	memset(rb_datum, 0, sizeof(struct _rb_dis_datum));
+
+	DATA_PTR(self) = rb_datum;
+
+	Check_Type(datum, T_STRING);
+	rb_datum->datum = (datum_generic_type_t*) StringValuePtr(datum);
+
+	return Qnil;
+}
+
+VALUE rb_cDislockerMetadataDatum_new(VALUE klass, VALUE datum)
+{
+	VALUE rb_datum = rb_cDislockerMetadataDatum_alloc(klass);
+	rb_cDislockerMetadataDatum_init(rb_datum, datum);
+
+	return rb_datum;
+}
+
+void Init_datum(VALUE rb_cDislockerMetadata)
+{
+	VALUE rb_cDislockerMetadataDatum = rb_define_class_under(
+		rb_cDislockerMetadata,
+		"Datum",
+		rb_cObject
+	);
+	extern VALUE dis_rb_classes[DIS_RB_CLASS_MAX];
+	dis_rb_classes[DIS_RB_CLASS_DATUM] = rb_cDislockerMetadataDatum;
+
+	rb_define_alloc_func(
+		rb_cDislockerMetadataDatum,
+		rb_cDislockerMetadataDatum_alloc
+	);
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"initialize",
+		rb_cDislockerMetadataDatum_init,
+		0
+	);
+
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"size",
+		rb_cDislockerMetadataDatum_get_datum_size,
+		0
+	);
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"entry_type",
+		rb_cDislockerMetadataDatum_get_entry_type,
+		0
+	);
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"value_type",
+		rb_cDislockerMetadataDatum_get_value_type,
+		0
+	);
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"error_status",
+		rb_cDislockerMetadataDatum_get_error_status,
+		0
+	);
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"payload",
+		rb_cDislockerMetadataDatum_get_payload,
+		0
+	);
+	rb_define_method(
+		rb_cDislockerMetadataDatum,
+		"to_s",
+		rb_cDislockerMetadataDatum_to_s,
+		0
+	);
+}
+#endif

@@ -209,7 +209,10 @@ int dis_initialize(dis_context_t dis_ctx)
 			 * return of this function.
 			 */
 			if(ret < 0)
+			{
 				dis_printf(L_CRITICAL, "Unable to grab VMK or FVEK. Abort.\n");
+				dis_destroy(dis_ctx);
+			}
 			return ret;
 		}
 

@@ -38,7 +38,7 @@ if ARGV.length > 1
 end
 
 if ARGV.length > 2
-	block = ARGV[2].to_i
+	block = ARGV[2]
 end
 
 dismeta = Dislocker::Metadata.new volume, offset, block

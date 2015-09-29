@@ -35,7 +35,7 @@ offset  = 0
 block   = 0
 
 if ARGV.length > 2
-	offset = ARGV[2]
+	offset = ARGV[2].to_i
 end
 
 if ARGV.length > 3

@@ -1323,9 +1323,8 @@ static VALUE rb_cDislockerMetadata_alloc(VALUE klass)
 
 static VALUE rb_cDislockerMetadata_init(int argc, VALUE *argv, VALUE self)
 {
-	int fd          = -1;
-	double dOffset  = 0;
-	int iForceBlock = 0;
+	int fd = -1;
+	char cForceBlock = 0;
 	dis_metadata_config_t dis_meta_cfg = NULL;
 
 	if(argc < 1)
@@ -1345,17 +1344,15 @@ static VALUE rb_cDislockerMetadata_init(int argc, VALUE *argv, VALUE self)
 	if(argc > 1)
 	{
 		Check_Type(argv[1], T_FIXNUM);
-		dOffset = NUM2DBL(argv[1]);
-		// TODO add check
-		dis_meta_cfg->offset = (off_t) dOffset;
+		dis_meta_cfg->offset = NUM2OFFT(argv[1]);
 	}
 
 	if(argc > 2)
 	{
 		Check_Type(argv[2], T_FIXNUM);
-		iForceBlock = NUM2INT(argv[2]);
-		if(iForceBlock >= 1 && iForceBlock <= 3)
-			dis_meta_cfg->force_block = (unsigned char) iForceBlock;
+		cForceBlock = (char) NUM2CHR(argv[2]);
+		if(cForceBlock >= 1 && cForceBlock <= 3)
+			dis_meta_cfg->force_block = (unsigned char) cForceBlock;
 		else
 			dis_meta_cfg->force_block = 0;
 	}

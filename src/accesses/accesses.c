@@ -202,7 +202,7 @@ struct _rb_dis_access {
 typedef struct _rb_dis_access* rb_dis_access_t;
 
 
-inline VALUE save_ret_vmk(rb_dis_access_t dis_accesses, void* vmk_datum)
+static inline VALUE save_ret_vmk(rb_dis_access_t dis_accesses, void* vmk_datum)
 {
 	extern VALUE dis_rb_classes[DIS_RB_CLASS_MAX];
 	datum_header_safe_t header;

@@ -812,7 +812,8 @@ static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
 	written = snprintf(
 		strp,
 		strp_len,
-		"Total size: 0x%1$04hx (%1$hd) bytes\n",
+		"Total size: 0x%04hx (%hd) bytes\n",
+		gt->header.datum_size,
 		gt->header.datum_size
 	);
 	if(written < 0)

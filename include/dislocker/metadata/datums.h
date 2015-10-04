@@ -355,7 +355,7 @@ static const print_datum_f print_datum_tab[NB_DATUM_TYPES] =
 
 
 #ifdef _HAVE_RUBY
-#include <ruby.h>
+#include "dislocker/ruby.h"
 
 void Init_datum(VALUE rb_cDislockerMetadata);
 

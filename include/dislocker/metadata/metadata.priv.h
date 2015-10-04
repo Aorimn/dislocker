@@ -285,7 +285,7 @@ struct _dis_metadata {
 
 
 #ifdef _HAVE_RUBY
-#include <ruby.h>
+#include "dislocker/ruby.h"
 
 void Init_metadata(VALUE rb_mDislocker);
 #endif

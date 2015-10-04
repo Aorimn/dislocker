@@ -35,7 +35,7 @@
 int dis_get_access(dis_context_t dis_ctx);
 
 #ifdef _HAVE_RUBY
-#include <ruby.h>
+#include "dislocker/ruby.h"
 
 void Init_accesses(VALUE rb_mDislocker);
 #endif

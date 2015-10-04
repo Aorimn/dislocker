@@ -20,30 +20,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef GUID_H
-#define GUID_H
-
-
-#include "dislocker/common.h"
-
-
-// GUID type = array of 16 unsigned bytes
-typedef uint8_t guid_t[16];
-
-
-/*
- * Prototypes
- */
-void format_guid(uint8_t *raw_guid, char* formated_guid);
-
-int check_match_guid(guid_t guid_1, guid_t guid_2);
+#ifndef DIS_RUBY_H
+#define DIS_RUBY_H
 
 #ifdef _HAVE_RUBY
-#include "dislocker/ruby.h"
 
-void Init_guid(VALUE rb_mDislockerMetadata);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+#pragma clang diagnostic ignored "-Wunknown-attributes"
+#include <ruby.h>
+#pragma clang diagnostic pop
+
 #endif
 
-
-#endif // GUID_H
-
+#endif /* DIS_RUBY_H */

@@ -592,15 +592,15 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		 * A second part, new from Windows 8, follows...
 		 */
 		datum_virtualization_t* datum = NULL;
-		if(!get_next_datum(dis_meta, -1,
-		    DATUM_VIRTUALIZATION_INFO, NULL, (void**)&datum))
+		if(!get_next_datum(dis_meta, UINT16_MAX,
+		    DATUMS_VALUE_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
-			char* type_str = datumtypestr(DATUM_VIRTUALIZATION_INFO);
+			char* type_str = datumvaluetypestr(DATUMS_VALUE_VIRTUALIZATION_INFO);
 			dis_printf(
 				L_ERROR,
 				"Error looking for the VIRTUALIZATION datum type"
 				" %hd (%s). Internal failure, abort.\n",
-				DATUM_VIRTUALIZATION_INFO,
+				DATUMS_VALUE_VIRTUALIZATION_INFO,
 				type_str
 			);
 			dis_free(type_str);
@@ -630,7 +630,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 
 
 		/* Extended info is new to Windows 8 */
-		size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
+		size_t win7_size   = datum_value_types_prop[datum->header.value_type].size_header;
 		size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
 		if(actual_size > win7_size)
 		{

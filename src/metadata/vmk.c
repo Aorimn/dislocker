@@ -45,7 +45,7 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 
 	int result = FALSE;
 
-	char* type_str = datumtypestr(DATUM_KEY);
+	char* type_str = datumvaluetypestr(DATUMS_VALUE_KEY);
 
 
 	/* Search for a clear key */
@@ -63,9 +63,16 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 
 	/* Get the clear key */
 	void* key_datum = NULL;
-	if(!get_nested_datumtype(*vmk_datum, DATUM_KEY, &key_datum) || !key_datum)
+	if(!get_nested_datumvaluetype(*vmk_datum, DATUMS_VALUE_KEY, &key_datum) ||
+	   !key_datum)
 	{
-		dis_printf(L_ERROR, "Error looking for the nested datum type %hd (%s) in the VMK one. Internal failure, abort.\n", DATUM_KEY, type_str);
+		dis_printf(
+			L_ERROR,
+			"Error looking for the nested datum type %hd (%s) in the VMK one. "
+			"Internal failure, abort.\n",
+			DATUMS_VALUE_KEY,
+			type_str
+		);
 		dis_free(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
@@ -73,7 +80,12 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 
 	if(!get_payload_safe(key_datum, (void**)&recovery_key, &rk_size))
 	{
-		dis_printf(L_ERROR, "Error getting the key to decrypt VMK from the datum %s. Internal failure, abort.\n", type_str);
+		dis_printf(
+			L_ERROR,
+			"Error getting the key to decrypt VMK from the datum %s. "
+			"Internal failure, abort.\n",
+			type_str
+		);
 		dis_free(type_str);
 		*vmk_datum = NULL;
 		return FALSE;
@@ -83,10 +95,19 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 
 	/* Get the encrypted VMK which will be decrypted with the previously found clear key */
 	void* aesccm_datum = NULL;
-	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, &aesccm_datum))
+	if(!get_nested_datumvaluetype(
+			*vmk_datum,
+			DATUMS_VALUE_AES_CCM,
+			&aesccm_datum
+	))
 	{
-		type_str = datumtypestr(DATUM_AES_CCM);
-		dis_printf(L_ERROR, "Error in finding the %s including the VMK. Internal failure, abort.\n", type_str);
+		type_str = datumvaluetypestr(DATUMS_VALUE_AES_CCM);
+		dis_printf(
+			L_ERROR,
+			"Error in finding the %s including the VMK. "
+			"Internal failure, abort.\n",
+			type_str
+		);
 		dis_free(type_str);
 		dis_free(recovery_key);
 		*vmk_datum = NULL;
@@ -94,7 +115,12 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
 	}
 
 	/* Run the decryption */
-	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
+	result = get_vmk(
+		(datum_aes_ccm_t*) aesccm_datum,
+		recovery_key,
+		rk_size,
+		(datum_key_t**) vmk_datum
+	);
 
 	dis_free(recovery_key);
 
@@ -112,7 +138,8 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum)
  * @param vmk The found datum_key_t containing the decrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, datum_key_t** vmk)
+int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size,
+	datum_key_t** vmk)
 {
 	// Check parameters
 	if(!vmk_datum || !recovery_key || key_size == 0)
@@ -128,7 +155,7 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 	hexdump(L_DEBUG, recovery_key, key_size);
 	dis_printf(L_DEBUG, "==========================================================\n");
 
-	header_size = datum_types_prop[vmk_datum->header.datum_type].size_header;
+	header_size = datum_value_types_prop[vmk_datum->header.value_type].size_header;
 	vmk_size = vmk_datum->header.datum_size - header_size;
 
 	if(!decrypt_key(
@@ -178,7 +205,8 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
  * @param vmk_datum The found datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid, void** vmk_datum)
+int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid,
+	void** vmk_datum)
 {
 	// Check parameters
 	if(!dis_meta || !guid)
@@ -188,13 +216,19 @@ int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid, void** vmk_dat
 
 	while(1)
 	{
-		if(!get_next_datum(dis_meta, 2, DATUM_VMK, *vmk_datum, vmk_datum))
+		if(!get_next_datum(
+				dis_meta,
+				DATUMS_ENTRY_VMK,
+				DATUMS_VALUE_VMK,
+				*vmk_datum,
+				vmk_datum
+		))
 		{
 			*vmk_datum = NULL;
 			return FALSE;
 		}
 
-		if(check_match_guid((*(datum_vmk_t**)vmk_datum)->guid, guid))
+		if(check_match_guid((*(datum_vmk_t**) vmk_datum)->guid, guid))
 			return TRUE;
 	}
 }
@@ -210,7 +244,8 @@ int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid, void** vmk_dat
  * @param vmk_datum The found datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16_t max_range, void** vmk_datum)
+int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range,
+	uint16_t max_range, void** vmk_datum)
 {
 	// Check parameters
 	if(!dis_meta)
@@ -222,7 +257,13 @@ int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16
 
 	while(1)
 	{
-		if(!get_next_datum(dis_meta, 2, DATUM_VMK, *vmk_datum, vmk_datum))
+		if(!get_next_datum(
+				dis_meta,
+				DATUMS_ENTRY_VMK,
+				DATUMS_VALUE_VMK,
+				*vmk_datum,
+				vmk_datum
+		))
 		{
 			*vmk_datum = NULL;
 			return FALSE;

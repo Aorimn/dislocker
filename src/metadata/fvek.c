@@ -55,28 +55,45 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 
 
 	/* First get the AES-CCM datum where the FVEK is */
-	if(!get_next_datum(dis_meta, 3, 5, 0, fvek_datum))
+	if(!get_next_datum(
+			dis_meta,
+			DATUMS_ENTRY_FVEK,
+			DATUMS_VALUE_AES_CCM,
+			0,
+			fvek_datum
+	))
 	{
-		dis_printf(L_CRITICAL, "Error in finding the AES_CCM datum including the VMK. Internal failure, abort.\n");
+		dis_printf(
+			L_CRITICAL,
+			"Error in finding the AES_CCM datum including the VMK. "
+			"Internal failure, abort.\n"
+		);
 		return FALSE;
 	}
 
 	/* Check if the VMK datum is of type KEY (1) */
-	if(!datum_type_must_be(vmk_datum, DATUM_KEY))
+	if(!datum_value_type_must_be(vmk_datum, DATUMS_VALUE_KEY))
 	{
-		dis_printf(L_CRITICAL, "Error, the provided VMK datum's type is incorrect. Abort.\n");
+		dis_printf(
+			L_CRITICAL,
+			"Error, the provided VMK datum's type is incorrect. Abort.\n"
+		);
 		return FALSE;
 	}
 
 	/* Then extract the real key in the VMK key structure */
 	if(!get_payload_safe(vmk_datum, &vmk_key, &vmk_key_size))
 	{
-		dis_printf(L_CRITICAL, "Error getting the key included into the VMK key structure. Internal failure, abort.\n");
+		dis_printf(
+			L_CRITICAL,
+			"Error getting the key included into the VMK key structure. "
+			"Internal failure, abort.\n"
+		);
 		return FALSE;
 	}
 
 	fvek = (datum_aes_ccm_t*)*fvek_datum;
-	header_size = datum_types_prop[fvek->header.datum_type].size_header;
+	header_size = datum_value_types_prop[fvek->header.value_type].size_header;
 	fvek_size = fvek->header.datum_size - header_size;
 
 	/* Finally decrypt the FVEK with the VMK */
@@ -156,8 +173,12 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 
 	if(actual_size != expected_size)
 	{
-		dis_printf(L_ERROR, "Wrong FVEK file size, expected %d but has %d\n",
-				expected_size, actual_size);
+		dis_printf(
+			L_ERROR,
+			"Wrong FVEK file size, expected %d but has %d\n",
+			expected_size,
+			actual_size
+		);
 		return FALSE;
 	}
 
@@ -186,8 +207,8 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	/* ... create the header */
 	datum_key = *fvek_datum;
 	datum_key->header.datum_size = sizeof(datum_key_t) + sizeof(fvek_keys);
-	datum_key->header.type       = 3;
-	datum_key->header.datum_type = DATUM_KEY;
+	datum_key->header.entry_type = 3;
+	datum_key->header.value_type = DATUMS_VALUE_KEY;
 	datum_key->header.error_status = 1;
 
 	datum_key->algo = enc_method.single;

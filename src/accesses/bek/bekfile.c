@@ -53,7 +53,9 @@
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum)
+int get_vmk_from_bekfile(dis_metadata_t dis_meta,
+                         dis_config_t* cfg,
+                         void** vmk_datum)
 {
 	return get_vmk_from_bekfile2(dis_meta, cfg->bek_file, vmk_datum);
 }
@@ -67,7 +69,9 @@ int get_vmk_from_bekfile(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_datum)
+int get_vmk_from_bekfile2(dis_metadata_t dis_meta,
+                          char* bek_file,
+                          void** vmk_datum)
 {
 	// Check parameters
 	if(!dis_meta || !vmk_datum)
@@ -113,7 +117,7 @@ int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_da
 	 * We need the recovery key id which can be found in the bek file
 	 * to find its match in a datum of the volume's metadata
 	 */
-	if(!get_bek_dataset(fd_bek, (void**)&bek_dataset))
+	if(!get_bek_dataset(fd_bek, (void**) &bek_dataset))
 	{
 		dis_printf(L_ERROR, "Unable to retrieve the dataset. Abort.\n");
 		dis_close(fd_bek);
@@ -126,13 +130,25 @@ int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_da
 
 	/* Get the external datum */
 	void* dataset = dis_metadata_set_dataset(dis_meta, bek_dataset);
-	get_next_datum(dis_meta, -1, DATUM_EXTERNAL_KEY, NULL, vmk_datum);
+	get_next_datum(
+		dis_meta,
+		UINT16_MAX,
+		DATUMS_VALUE_EXTERNAL_KEY,
+		NULL,
+		vmk_datum
+	);
 	dis_metadata_set_dataset(dis_meta, dataset);
 
 	/* Check the result datum */
-	if(!*vmk_datum || !datum_type_must_be(*vmk_datum, DATUM_EXTERNAL_KEY))
+	if(!*vmk_datum ||
+	   !datum_value_type_must_be(*vmk_datum, DATUMS_VALUE_EXTERNAL_KEY))
 	{
-		dis_printf(L_ERROR, "Error processing the bekfile: datum of type 9 not found. Internal failure, abort.\n");
+		dis_printf(
+			L_ERROR,
+			"Error processing the bekfile: datum of type %hd not found. "
+			"Internal failure, abort.\n",
+			DATUMS_VALUE_EXTERNAL_KEY
+		);
 		*vmk_datum = NULL;
 		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
@@ -143,20 +159,33 @@ int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_da
 	memcpy(key_guid, datum_exte->guid, 16);
 
 	format_guid(key_guid, rec_id);
-	dis_printf(L_INFO, "Bekfile GUID found: '%s', looking for the same in metadata...\n", rec_id);
+	dis_printf(
+		L_INFO,
+		"Bekfile GUID found: '%s', looking for the same in metadata...\n",
+		rec_id
+	);
 
 	/* Grab the datum nested in the last, we will need it to decrypt the VMK */
-	if(!get_nested_datumtype(*vmk_datum, DATUM_KEY, vmk_datum) || !*vmk_datum)
+	if(!get_nested_datumvaluetype(*vmk_datum, DATUMS_VALUE_KEY, vmk_datum) ||
+	   !*vmk_datum)
 	{
-		dis_printf(L_ERROR, "Error processing the bekfile: no nested datum found. Internal failure, abort.\n");
+		dis_printf(
+			L_ERROR,
+			"Error processing the bekfile: no nested datum found. "
+			"Internal failure, abort.\n"
+		);
 		*vmk_datum = NULL;
 		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
 	}
 
-	if(!get_payload_safe(*vmk_datum, (void**)&recovery_key, &rk_size))
+	if(!get_payload_safe(*vmk_datum, (void**) &recovery_key, &rk_size))
 	{
-		dis_printf(L_ERROR, "Error getting the key to decrypt VMK from the bekfile. Internal failure, abort.\n");
+		dis_printf(
+			L_ERROR,
+			"Error getting the key to decrypt VMK from the bekfile. "
+			"Internal failure, abort.\n"
+		);
 		*vmk_datum = NULL;
 		memclean(bek_dataset, bek_dataset->size);
 		return FALSE;
@@ -174,10 +203,12 @@ int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_da
 	{
 		format_guid(key_guid, rec_id);
 
-		dis_printf(L_ERROR,
-				"\n\tError, can't find a valid and matching VMK datum.\n"
-				"\tThe GUID researched was '%s', check if you have the right bek file for the right volume.\n"
-				"\tAbort.\n",
+		dis_printf(
+			L_ERROR,
+			"\n\tError, can't find a valid and matching VMK datum.\n"
+			"\tThe GUID researched was '%s', check if you have the right "
+			"bek file for the right volume.\n"
+			"\tAbort.\n",
 			rec_id
 		);
 		*vmk_datum = NULL;
@@ -185,16 +216,24 @@ int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_da
 		return FALSE;
 	}
 
-	dis_printf(L_INFO, "VMK datum of id '%s' found. Trying to reach the Key datum...\n", rec_id);
+	dis_printf(
+		L_INFO,
+		"VMK datum of id '%s' found. Trying to reach the Key datum...\n",
+		rec_id
+	);
 
 
 	/*
 	 * We have the datum containing other data, so get in there and take the
 	 * nested one with type 5 (aes-ccm)
 	 */
-	if(!get_nested_datumtype(*vmk_datum, DATUM_AES_CCM, vmk_datum))
+	if(!get_nested_datumvaluetype(*vmk_datum, DATUMS_VALUE_AES_CCM, vmk_datum))
 	{
-		dis_printf(L_ERROR, "Error looking for the nested datum in the VMK one. Internal failure, abort.\n");
+		dis_printf(
+			L_ERROR,
+			"Error looking for the nested datum in the VMK one. "
+			"Internal failure, abort.\n"
+		);
 		*vmk_datum = NULL;
 		dis_free(recovery_key);
 		return FALSE;
@@ -203,7 +242,12 @@ int get_vmk_from_bekfile2(dis_metadata_t dis_meta, char* bek_file, void** vmk_da
 
 	dis_printf(L_INFO, "Key datum found and payload extracted!\n");
 
-	result = get_vmk((datum_aes_ccm_t*)*vmk_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
+	result = get_vmk(
+		(datum_aes_ccm_t*) *vmk_datum,
+		recovery_key,
+		rk_size,
+		(datum_key_t**) vmk_datum
+	);
 
 	dis_free(recovery_key);
 
@@ -234,13 +278,19 @@ int get_bek_dataset(int fd, void** bek_dataset)
 	// Check if we read all we wanted
 	if(nb_read != sizeof(bitlocker_dataset_t))
 	{
-		dis_printf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset header).\n");
+		dis_printf(
+			L_ERROR,
+			"get_bek_dataset::Error, not all byte read (bek dataset header).\n"
+		);
 		return FALSE;
 	}
 
 	if(dataset.size <= sizeof(bitlocker_dataset_t))
 	{
-		dis_printf(L_ERROR, "get_bek_dataset::Error, dataset size < dataset header size.\n");
+		dis_printf(
+			L_ERROR,
+			"get_bek_dataset::Error, dataset size < dataset header size.\n"
+		);
 		return FALSE;
 	}
 
@@ -257,7 +307,10 @@ int get_bek_dataset(int fd, void** bek_dataset)
 	// Check if we read all we wanted
 	if((size_t) nb_read != rest)
 	{
-		dis_printf(L_ERROR, "get_bek_dataset::Error, not all byte read (bek dataset content).\n");
+		dis_printf(
+			L_ERROR,
+			"get_bek_dataset::Error, not all byte read (bek dataset content).\n"
+		);
 		dis_free(*bek_dataset);
 		return FALSE;
 	}

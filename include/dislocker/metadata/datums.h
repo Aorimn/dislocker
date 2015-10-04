@@ -35,38 +35,58 @@
 
 
 /**
- * Here stand datum types stuff
+ * Here stand datums' value types stuff
  */
-#define NB_DATUM_TYPES 20
+#define NB_DATUMS_VALUE_TYPES 20
 
-enum datum_types
+enum value_types
 {
-	/*  0 */ DATUM_ERASED = 0x0000,
-	/*  1 */ DATUM_KEY,
-	/*  2 */ DATUM_UNICODE,
-	/*  3 */ DATUM_STRETCH_KEY,
-	/*  4 */ DATUM_USE_KEY,
-	/*  5 */ DATUM_AES_CCM,
-	/*  6 */ DATUM_TPM_ENCODED,
-	/*  7 */ DATUM_VALIDATION,
-	/*  8 */ DATUM_VMK,
-	/*  9 */ DATUM_EXTERNAL_KEY,
-	/* 10 */ DATUM_UPDATE,
-	/* 11 */ DATUM_ERROR,
+	/*  0 */ DATUMS_VALUE_ERASED = 0x0000,
+	/*  1 */ DATUMS_VALUE_KEY,
+	/*  2 */ DATUMS_VALUE_UNICODE,
+	/*  3 */ DATUMS_VALUE_STRETCH_KEY,
+	/*  4 */ DATUMS_VALUE_USE_KEY,
+	/*  5 */ DATUMS_VALUE_AES_CCM,
+	/*  6 */ DATUMS_VALUE_TPM_ENCODED,
+	/*  7 */ DATUMS_VALUE_VALIDATION,
+	/*  8 */ DATUMS_VALUE_VMK,
+	/*  9 */ DATUMS_VALUE_EXTERNAL_KEY,
+	/* 10 */ DATUMS_VALUE_UPDATE,
+	/* 11 */ DATUMS_VALUE_ERROR,
 
 	/* Below is only available on Windows Seven */
-	/* 12 */ DATUM_ASYM_ENC,
-	/* 13 */ DATUM_EXPORTED_KEY,
-	/* 14 */ DATUM_PUBLIC_KEY,
-	/* 15 */ DATUM_VIRTUALIZATION_INFO,
-	/* 16 */ DATUM_SIMPLE_1,
-	/* 17 */ DATUM_SIMPLE_2,
-	/* 18 */ DATUM_CONCAT_HASH_KEY,
-	/* 19 */ DATUM_SIMPLE_3
+	/* 12 */ DATUMS_VALUE_ASYM_ENC,
+	/* 13 */ DATUMS_VALUE_EXPORTED_KEY,
+	/* 14 */ DATUMS_VALUE_PUBLIC_KEY,
+	/* 15 */ DATUMS_VALUE_VIRTUALIZATION_INFO,
+	/* 16 */ DATUMS_VALUE_SIMPLE_1,
+	/* 17 */ DATUMS_VALUE_SIMPLE_2,
+	/* 18 */ DATUMS_VALUE_CONCAT_HASH_KEY,
+	/* 19 */ DATUMS_VALUE_SIMPLE_3
 };
-typedef uint16_t datum_t;
+typedef uint16_t dis_datums_value_type_t;
 
 
+/* Here are some specifics entry types (second field of the safe header) */
+#define NB_DATUMS_ENTRY_TYPES 12
+
+enum entry_types
+{
+	DATUMS_ENTRY_UNKNOWN1 = 0x0000,
+	DATUMS_ENTRY_UNKNOWN2,
+	DATUMS_ENTRY_VMK,
+	DATUMS_ENTRY_FVEK,
+	DATUMS_ENTRY_UNKNOWN3,
+	DATUMS_ENTRY_UNKNOWN4,
+	DATUMS_ENTRY_STARTUP_KEY,
+	DATUMS_ENTRY_ENCTIME_INFORMATION,
+	DATUMS_ENTRY_UNKNOWN7,
+	DATUMS_ENTRY_UNKNOWN8,
+	DATUMS_ENTRY_UNKNOWN9,
+	DATUMS_ENTRY_UNKNOWN10,
+	DATUMS_ENTRY_FVEK_2
+};
+typedef uint16_t dis_datums_entry_type_t;
 
 
 
@@ -77,8 +97,8 @@ typedef uint16_t datum_t;
 typedef struct _header_safe
 {
 	uint16_t datum_size;
-	uint16_t type;
-	datum_t  datum_type;
+	dis_datums_entry_type_t entry_type;
+	dis_datums_value_type_t value_type;
 	uint16_t error_status;
 } datum_header_safe_t;
 
@@ -207,7 +227,7 @@ typedef struct _datum_virtualization
 /**
  * A hardcoded table defining some properties for each datum
  */
-typedef struct _datum_types_properties
+typedef struct _datum_value_types_properties
 {
 	/*
 	 * The header size of the datum, this is including the datum_header_safe_t
@@ -224,9 +244,9 @@ typedef struct _datum_types_properties
 
 	/* Always equal to 0, maybe for padding */
 	uint8_t zero;
-} types_properties_t;
+} value_types_properties_t;
 
-static const types_properties_t datum_types_prop[] =
+static const value_types_properties_t datum_value_types_prop[] =
 {
 	{ 8,    0, 0 },  // ERASED
 	{ 0xc,  0, 0 },  // KEY
@@ -258,36 +278,13 @@ static const types_properties_t datum_types_prop[] =
 
 
 
-/* Here are some specifics types (second field of the safe header) */
-#define NB_TYPES 12
-
-enum types
-{
-	TYPE_UNKNOWN1 = 0x0000,
-	TYPE_UNKNOWN2,
-	TYPE_VMK,
-	TYPE_FVEK,
-	TYPE_UNKNOWN3,
-	TYPE_UNKNOWN4,
-	TYPE_STARTUP_KEY,
-	TYPE_ENCTIME_INFORMATION,
-	TYPE_UNKNOWN7,
-	TYPE_UNKNOWN8,
-	TYPE_UNKNOWN9,
-	TYPE_UNKNOWN10,
-	TYPE_FVEK_FveSynchronizeDatasetUpdate
-};
-
-
-
-
 
 
 /*
  * Here are prototypes of functions dealing with data
  */
 char* cipherstr(cipher_t enc);
-char* datumtypestr(datum_t datum_type);
+char* datumvaluetypestr(dis_datums_value_type_t value_type);
 
 int get_header_safe(void* data, datum_header_safe_t* header);
 
@@ -314,22 +311,22 @@ void print_mac(DIS_LOGS level, uint8_t* mac);
 
 int get_next_datum(
 	dis_metadata_t dis_metadata,
-	int16_t type,
-	int16_t datum_type,
+	dis_datums_entry_type_t entry_type,
+	dis_datums_value_type_t value_type,
 	void* datum_begin,
 	void** datum_result
 );
 
 int get_nested_datum(void* datum, void** datum_nested);
-int get_nested_datumtype(void* datum, datum_t datum_type, void** datum_nested);
+int get_nested_datumvaluetype(void* datum, dis_datums_value_type_t value_type, void** datum_nested);
 
-int datum_type_must_be(void* datum, datum_t datum_type);
+int datum_value_type_must_be(void* datum, dis_datums_value_type_t value_type);
 
 int dis_metadata_has_clear_key(dis_metadata_t dis_meta, void** vmk_datum);
 
 
 typedef void(*print_datum_f)(DIS_LOGS, void*);
-static const print_datum_f print_datum_tab[NB_DATUM_TYPES] =
+static const print_datum_f print_datum_tab[NB_DATUMS_VALUE_TYPES] =
 {
 	print_datum_erased,
 	print_datum_key,

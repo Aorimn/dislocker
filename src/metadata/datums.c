@@ -30,49 +30,49 @@
 
 
 
-/** Datum types into string */
-static const char* datum_types_str[] =
+/** Datums value types into string */
+static const char* value_type_str[] =
 {
-	"DATUM_ERASED",
-	"DATUM_KEY",
-	"DATUM_UNICODE",
-	"DATUM_STRETCH_KEY",
-	"DATUM_USE",
-	"DATUM_AES_CCM",
-	"DATUM_TPM_ENCODED",
-	"DATUM_VALIDATION",
-	"DATUM_VMK",
-	"DATUM_EXTERNAL_KEY",
-	"DATUM_UPDATE",
-	"DATUM_ERROR",
+	"ERASED",
+	"KEY",
+	"UNICODE",
+	"STRETCH KEY",
+	"USE",
+	"AES-CCM",
+	"TPM_ENCODED",
+	"VALIDATION",
+	"VMK",
+	"EXTERNAL KEY",
+	"UPDATE",
+	"ERROR",
 
-	"DATUM_ASYM_ENC",
-	"DATUM_EXPORTED_KEY",
-	"DATUM_PUBLIC_KEY",
-	"DATUM_VIRTUALIZATION_INFO",
-	"DATUM_SIMPLE_1",
-	"DATUM_SIMPLE_2",
-	"DATUM_CONCAT_HASH_KEY",
-	"DATUM_SIMPLE_3"
+	"ASYM ENC",
+	"EXPORTED KEY",
+	"PUBLIC KEY",
+	"VIRTUALIZATION INFO",
+	"SIMPLE 1",
+	"SIMPLE 2",
+	"CONCAT HASH KEY",
+	"SIMPLE 3"
 };
 
 
 
-/** Types into string */
-static const char* types_str[] =
+/** Datums entry types into string */
+static const char* entry_type_str[] =
 {
-	"TYPE_UNKNOWN_1",
-	"TYPE_UNKNOWN_2",
-	"TYPE_VMK",
-	"TYPE_FVEK_FveDatasetVmkGetFvek",
-	"TYPE_UNKNOWN_3",
-	"TYPE_UNKNOWN_4",
-	"TYPE_UNKNOWN_5",
-	"TYPE_UNKNOWN_6",
-	"TYPE_UNKNOWN_7",
-	"TYPE_UNKNOWN_8",
-	"TYPE_UNKNOWN_9",
-	"TYPE_FVEK_TryObtainKey" // also "TYPE_FVEK_FveSynchronizeDatasetUpdate" if we want
+	"ENTRY TYPE UNKNOWN 1",
+	"ENTRY TYPE UNKNOWN 2",
+	"ENTRY TYPE VMK",
+	"ENTRY TYPE FVEK (FveDatasetVmkGetFvek)",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE UNKNOWN",
+	"ENTRY TYPE FVEK (TryObtainKey)" // also from "FveSynchronizeDatasetUpdate"
 };
 
 
@@ -99,17 +99,17 @@ char* cipherstr(cipher_t enc)
 			value = "NULL";
 			break;
 		case STRETCH_KEY :
-			value = "STRETCH_KEY";
+			value = "STRETCH KEY";
 			break;
 
 		case AES_CCM_256_0 :
 		case AES_CCM_256_1 :
 		case AES_CCM_256_2 :
-			value = "AES_CCM_256";
+			value = "AES-CCM-256";
 			break;
 
 		case EXTERN_KEY :
-			value = "EXTERN_KEY";
+			value = "EXTERN KEY";
 			break;
 
 		case VMK :
@@ -117,23 +117,23 @@ char* cipherstr(cipher_t enc)
 			break;
 
 		case HASH_256 :
-			value = "VALIDATION_HASH_256";
+			value = "VALIDATION HASH 256";
 			break;
 
 		case AES_128_DIFFUSER :
-			value = "AES_128_DIFFUSER";
+			value = "AES-128-DIFFUSER";
 			break;
 
 		case AES_256_DIFFUSER :
-			value = "AES_256_DIFFUSER";
+			value = "AES-256-DIFFUSER";
 			break;
 
 		case AES_128_NO_DIFFUSER :
-			value = "AES_128_NO_DIFFUSER";
+			value = "AES-128-NODIFFUSER";
 			break;
 
 		case AES_256_NO_DIFFUSER :
-			value = "AES_256_NO_DIFFUSER";
+			value = "AES-256-NODIFFUSER";
 			break;
 		default:
 			value = "UNKNOWN CIPHER!";
@@ -154,20 +154,20 @@ char* cipherstr(cipher_t enc)
  * string format
  * @warning This returned string has to be free()d
  *
- * @param datum_type The datum type to tranform
+ * @param value_type The datum's value type to tranform
  * @return The decoded string or NULL if there's no signification (index out of
  * bound)
  */
-char* datumtypestr(datum_t datum_type)
+char* datumvaluetypestr(dis_datums_value_type_t value_type)
 {
-	if(datum_type >= NB_DATUM_TYPES)
+	if(value_type >= NB_DATUMS_VALUE_TYPES)
 		return NULL;
 
 
-	size_t len = strlen(datum_types_str[datum_type]) + 1;
+	size_t len = strlen(value_type_str[value_type]) + 1;
 	char* data = (char*) dis_malloc(len * sizeof(char));
 	memset(data, 0, len);
-	memcpy(data, datum_types_str[datum_type], len);
+	memcpy(data, value_type_str[value_type], len);
 
 	return data;
 }
@@ -190,10 +190,11 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 	memcpy(header, data, sizeof(datum_header_safe_t));
 
 	dis_printf(L_DEBUG, "Header safe: %#x, %#x, %#x, %#x\n", header->datum_size,
-			header->type, header->datum_type, header->error_status);
+			header->entry_type, header->value_type, header->error_status);
 
 	/* Now check if the header is good */
-	if(header->datum_size < sizeof(datum_header_safe_t) || header->datum_type > NB_DATUM_TYPES)
+	if(header->datum_size < sizeof(datum_header_safe_t) ||
+	   header->value_type > NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	return TRUE;
@@ -201,7 +202,7 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 
 
 /**
- * Get the payload based on the datum size and type
+ * Get the payload based on the datum's size and value type
  *
  * @param data The data to take the payload from
  * @param payload The extracted payload (need to be free()d if return is TRUE)
@@ -220,7 +221,7 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
 	if(!get_header_safe(data, &header))
 		return FALSE;
 
-	size_header = datum_types_prop[header.datum_type].size_header;
+	size_header = datum_value_types_prop[header.value_type].size_header;
 
 	if(header.datum_size <= size_header)
 		return FALSE;
@@ -247,9 +248,9 @@ void print_one_datum(DIS_LOGS level, void* datum)
 	datum_header_safe_t* header = (datum_header_safe_t*) datum;
 	print_header(level, header);
 
-	uint16_t datum_type = header->datum_type;
+	dis_datums_value_type_t value_type = header->value_type;
 
-	print_datum_tab[datum_type](level, datum);
+	print_datum_tab[value_type](level, datum);
 }
 
 
@@ -263,18 +264,18 @@ void print_header(DIS_LOGS level, datum_header_safe_t* header)
 {
 	dis_printf(level, "Total datum size: 0x%1$04hx (%1$hd) bytes\n", header->datum_size);
 
-	dis_printf(level, "Type: %hu\n", header->type);
-	if(header->type < NB_TYPES)
-		dis_printf(level, "   `--> %s\n", types_str[header->type]);
+	dis_printf(level, "Datum entry type: %hu\n", header->entry_type);
+	if(header->entry_type < NB_DATUMS_ENTRY_TYPES)
+		dis_printf(level, "   `--> %s\n", entry_type_str[header->entry_type]);
 
-	dis_printf(level, "Datum type: %hu\n", header->datum_type);
+	dis_printf(level, "Datum value type: %hu\n", header->value_type);
 
-	if(header->datum_type < NB_DATUM_TYPES)
+	if(header->value_type < NB_DATUMS_VALUE_TYPES)
 	{
 		dis_printf(level, "   `--> %s -- Total size header: %hu -- Nested datum: %s\n",
-				datum_types_str[header->datum_type],
-				datum_types_prop[header->datum_type].size_header,
-				(datum_types_prop[header->datum_type].has_nested_datum ?
+				value_type_str[header->value_type],
+				datum_value_types_prop[header->value_type].size_header,
+				(datum_value_types_prop[header->value_type].has_nested_datum ?
 					"yes" : "no")
 		);
 	}
@@ -474,7 +475,7 @@ void print_datum_virtualization(DIS_LOGS level, void* vdatum)
 	dis_printf(level, "Number of backuped bytes: %1$#llx (%1$llu)\n", datum->nb_bytes);
 
 	/* For Windows 8 encrypted volumes */
-	size_t win7_size   = datum_types_prop[datum->header.datum_type].size_header;
+	size_t win7_size   = datum_value_types_prop[datum->header.value_type].size_header;
 	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
 	if(actual_size > win7_size)
 	{
@@ -524,16 +525,21 @@ void print_mac(DIS_LOGS level, uint8_t* mac)
  * Get the next specified datum
  *
  * @param dis_metadata The metadata structure
- * @param type The second uint16_t of any datum header struct
- * @param datum_type The third uint16_t of any datum header struct
+ * @param entry_type The second uint16_t of any datum header struct
+ * @param value_type The third uint16_t of any datum header struct
  * @param datum_begin The beginning of the search, begins after this given datum
  * @param datum_result The found datum
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_next_datum(dis_metadata_t dis_meta, int16_t type, int16_t datum_type, void* datum_begin, void** datum_result)
+int get_next_datum(
+	dis_metadata_t dis_meta,
+	dis_datums_entry_type_t entry_type,
+	dis_datums_value_type_t value_type,
+	void* datum_begin,
+	void** datum_result)
 {
 	// Check parameters
-	if(!dis_meta || datum_type > NB_DATUM_TYPES)
+	if(!dis_meta || value_type > NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	dis_printf(L_DEBUG, "Entering get_next_datum...\n");
@@ -561,20 +567,20 @@ int get_next_datum(dis_metadata_t dis_meta, int16_t type, int16_t datum_type, vo
 		if(!get_header_safe(datum, &header))
 			break;
 
-		if(datum_type < 0 && type < 0)
+		if(value_type == UINT16_MAX && entry_type == UINT16_MAX)
 		{
 			/*
-			 * If the datum type is not in range, assume the caller want each
+			 * If the datum types are not in range, assume the caller want each
 			 * datum
 			 */
 			*datum_result = datum;
 			break;
 		}
-		else if((type == header.type || type < 0) &&
-		        (datum_type == header.datum_type || datum_type < 0))
+		else if((entry_type == header.entry_type || entry_type == UINT16_MAX) &&
+		        (value_type == header.value_type || value_type == UINT16_MAX))
 		{
 			/*
-			 * If the type and the datum type searched match,
+			 * If the entry type and the value type searched match,
 			 * then return this datum
 			 */
 			*datum_result = datum;
@@ -613,24 +619,25 @@ int get_nested_datum(void* datum, void** datum_nested)
 	if(!get_header_safe(datum, &header))
 		return FALSE;
 
-	if(!datum_types_prop[header.datum_type].has_nested_datum)
+	if(!datum_value_types_prop[header.value_type].has_nested_datum)
 		return FALSE;
 
-	*datum_nested = (char*)datum + datum_types_prop[header.datum_type].size_header;
+	uint16_t size = datum_value_types_prop[header.value_type].size_header;
+	*datum_nested = (char*)datum + size;
 
 	return TRUE;
 }
 
 
 /**
- * Retrieve a datum nested into another one with a specific type
+ * Retrieve a datum nested into another one with a specific value type
  *
  * @param datum Where to find a nested datum
- * @param datum_type The datum of the searched datum
+ * @param value_type The datum of the searched datum
  * @param datum_nested The datum resulted
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_nested_datumtype(void* datum, datum_t datum_type, void** datum_nested)
+int get_nested_datumvaluetype(void* datum, dis_datums_value_type_t value_type, void** datum_nested)
 {
 	// Check parameters
 	if(!datum)
@@ -650,7 +657,7 @@ int get_nested_datumtype(void* datum, datum_t datum_type, void** datum_nested)
 		return FALSE;
 
 	/* While we don't have the type we're looking for */
-	while(nested_header.datum_type != datum_type)
+	while(nested_header.value_type != value_type)
 	{
 		/* Just go to the next datum */
 		*datum_nested += nested_header.datum_size;
@@ -669,13 +676,13 @@ int get_nested_datumtype(void* datum, datum_t datum_type, void** datum_nested)
 
 
 /**
- * Safely check of the datum type
+ * Safely check of the datum's value type
  *
  * @param datum The datum to validate
- * @param datum_type The datum type to find
+ * @param value_type The datum's value type to find
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int datum_type_must_be(void* datum, datum_t datum_type)
+int datum_value_type_must_be(void* datum, dis_datums_value_type_t value_type)
 {
 	// Check parameters
 	if(!datum)
@@ -686,7 +693,7 @@ int datum_type_must_be(void* datum, datum_t datum_type)
 	if(!get_header_safe(datum, &header))
 		return FALSE;
 
-	if(header.datum_type == datum_type)
+	if(header.value_type == value_type)
 		return TRUE;
 	else
 		return FALSE;
@@ -736,13 +743,13 @@ static VALUE rb_cDislockerMetadataDatum_get_datum_size(VALUE self)
 static VALUE rb_cDislockerMetadataDatum_get_entry_type(VALUE self)
 {
 	rb_dis_datum_t rb_datum = DATA_PTR(self);
-	return INT2NUM(rb_datum->datum->header.type);
+	return INT2NUM(rb_datum->datum->header.entry_type);
 }
 
 static VALUE rb_cDislockerMetadataDatum_get_value_type(VALUE self)
 {
 	rb_dis_datum_t rb_datum = DATA_PTR(self);
-	return INT2NUM(rb_datum->datum->header.datum_type);
+	return INT2NUM(rb_datum->datum->header.value_type);
 }
 
 static VALUE rb_cDislockerMetadataDatum_get_error_status(VALUE self)
@@ -795,11 +802,11 @@ static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
 	if(gt == NULL)
 		return rb_str;
 
-	if(gt->header.type < NB_TYPES)
-		entry_type = (char*) types_str[gt->header.type];
+	if(gt->header.entry_type < NB_DATUMS_ENTRY_TYPES)
+		entry_type = (char*) entry_type_str[gt->header.entry_type];
 
-	if(gt->header.datum_type < NB_DATUM_TYPES)
-		value_type = (char*) datum_types_str[gt->header.datum_type];
+	if(gt->header.value_type < NB_DATUMS_VALUE_TYPES)
+		value_type = (char*) value_type_str[gt->header.value_type];
 
 
 	written = snprintf(
@@ -817,7 +824,7 @@ static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
 		strp_len,
 		"Entry type: %s (%hu)\n",
 		entry_type,
-		gt->header.type
+		gt->header.entry_type
 	);
 	if(written < 0)
 		rb_raise(rb_eRuntimeError, "Error encountered.");
@@ -828,7 +835,7 @@ static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
 		strp_len,
 		"Value type: %s (%hu)\n",
 		value_type,
-		gt->header.datum_type
+		gt->header.value_type
 	);
 	if(written < 0)
 		rb_raise(rb_eRuntimeError, "Error encountered.");

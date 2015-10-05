@@ -135,7 +135,7 @@ int dis_get_access(dis_context_t dis_ctx)
 		else
 		{
 			dis_printf(L_CRITICAL, "Wtf!? Abort.\n");
-			return EXIT_FAILURE;
+			return DIS_RET_ERROR_VMK_RETRIEVAL;
 		}
 	}
 

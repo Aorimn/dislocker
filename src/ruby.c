@@ -20,34 +20,44 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
  * USA.
  */
-#ifndef DIS_RUBY_H
-#define DIS_RUBY_H
 
 #ifdef _HAVE_RUBY
-#include <stdarg.h>
+#include "dislocker/ruby.h"
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-pragmas"
-#pragma clang diagnostic ignored "-Wunknown-attributes"
-#endif /* defined(__clang__) */
+VALUE dis_rb_str_vcatf(VALUE str, const char *fmt, va_list ap)
+{
+	int written = -1;
+	size_t len = 1024;
 
-#include <ruby.h>
+	do {
+		char cstr[len];
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif /* defined(__clang__) */
+		written = vsnprintf(cstr, len, fmt, ap);
 
-#ifndef rb_str_vcatf
-#define rb_str_vcatf dis_rb_str_vcatf
-VALUE rb_str_vcatf(VALUE str, const char *fmt, va_list ap);
-#endif
+		if(written < 0)
+			rb_raise(rb_eRuntimeError, "vsnprintf error");
 
-#ifndef rb_str_catf
-#define rb_str_catf dis_rb_str_catf
-VALUE rb_str_catf(VALUE str, const char *fmt, ...);
-#endif
+		if((size_t) written >= len)
+			len *= 2;
+		else
+		{
+			rb_str_cat2(str, cstr);
+			break;
+		}
+	} while(1);
+
+	return str;
+}
+
+VALUE dis_rb_str_catf(VALUE str, const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	str = rb_str_vcatf(str, format, ap);
+	va_end(ap);
+
+	return str;
+}
 
 #endif /* _HAVE_RUBY */
-
-#endif /* DIS_RUBY_H */

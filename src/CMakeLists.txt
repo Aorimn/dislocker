@@ -120,6 +120,7 @@ if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARIES)
 	include_directories (${RUBY_INCLUDE_DIRS})
 	set (LIB "${LIB} ${RUBY_LIBRARIES}")
 	add_definitions (-D_HAVE_RUBY=${RUBY_VERSION_STRING})
+	set (SOURCES ${SOURCES} ruby.c)
 endif()
 
 # Places

@@ -125,7 +125,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 
 	dis_printf(
 		L_INFO,
-		"Found volume's size: 0x%1$" F_U64_T " (%1$llu) bytes\n",
+		"Found volume's size: 0x%1$" PRIx64 " (%1$" PRIu64 ") bytes\n",
 		io_data->volume_size
 	);
 

@@ -53,10 +53,8 @@
 
 #ifdef __ARCH_X86_64
 # define F_OFF_T "tx"
-# define F_U64_T "lx"
 #else
 # define F_OFF_T "llx"
-# define F_U64_T "llx"
 #endif /* __ARCH_X86_64 */
 
 #define F_SIZE_T "zx"

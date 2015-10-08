@@ -77,9 +77,9 @@ void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 
 	dis_printf(level, "  Volume GUID: '%.37s'\n", rec_id);
 
-	dis_printf(level, "  First metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[0]);
-	dis_printf(level, "  Second metadata header offset: 0x%016" F_U64_T "\n", volume_header->information_off[1]);
-	dis_printf(level, "  Third metadata header offset:  0x%016" F_U64_T "\n", volume_header->information_off[2]);
+	dis_printf(level, "  First metadata header offset:  0x%016" PRIx64 "\n", volume_header->information_off[0]);
+	dis_printf(level, "  Second metadata header offset: 0x%016" PRIx64 "\n", volume_header->information_off[1]);
+	dis_printf(level, "  Third metadata header offset:  0x%016" PRIx64 "\n", volume_header->information_off[2]);
 
 	dis_printf(level, "  Boot Partition Identifier: '0x%04hx'\n", volume_header->boot_partition_identifier);
 	dis_printf(level, "========================================\n");
@@ -124,13 +124,13 @@ void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 	dis_printf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
 	dis_printf(level, "  Size of convertion region: %1$#x (%1$u)\n", information->convert_size);
 	dis_printf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);
-	dis_printf(level, "  First metadata header offset:  %#" F_U64_T "\n", information->information_off[0]);
-	dis_printf(level, "  Second metadata header offset: %#" F_U64_T "\n", information->information_off[1]);
-	dis_printf(level, "  Third metadata header offset:  %#" F_U64_T "\n", information->information_off[2]);
+	dis_printf(level, "  First metadata header offset:  %#" PRIx64 "\n", information->information_off[0]);
+	dis_printf(level, "  Second metadata header offset: %#" PRIx64 "\n", information->information_off[1]);
+	dis_printf(level, "  Third metadata header offset:  %#" PRIx64 "\n", information->information_off[2]);
 	if(information->version == V_SEVEN)
-		dis_printf(level, "  Boot sectors backup address:   %#" F_U64_T "\n", information->boot_sectors_backup);
+		dis_printf(level, "  Boot sectors backup address:   %#" PRIx64 "\n", information->boot_sectors_backup);
 	else
-		dis_printf(level, "  NTFS MftMirror field:   %#" F_U64_T "\n", information->mftmirror_backup);
+		dis_printf(level, "  NTFS MftMirror field:   %#" PRIx64 "\n", information->mftmirror_backup);
 
 	print_dataset(level, dis_meta);
 	dis_printf(level, "=============================================================================\n");
@@ -202,7 +202,7 @@ void print_eow_infos(DIS_LOGS level, dis_metadata_t dis_meta)
 
 	dis_printf(level, "  Number of regions: %u\n", eow_infos->nb_regions);
 	dis_printf(level, "  Crc32: %x\n", eow_infos->crc32);
-	dis_printf(level, "  On-disk offsets: %#" F_U64_T "\n", eow_infos->disk_offsets);
+	dis_printf(level, "  On-disk offsets: %#" PRIx64 "\n", eow_infos->disk_offsets);
 	dis_printf(level, "=============================================================================\n");
 }
 

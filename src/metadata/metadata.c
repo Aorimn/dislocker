@@ -564,11 +564,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 	}
 
 
-	dis_printf(
-		L_DEBUG,
-		"Metadata files size: %#" F_U64_T "\n",
-		metafiles_size
-	);
+	dis_printf(L_DEBUG, "Metadata files size: %#" PRIx64 "\n", metafiles_size);
 
 	/*
 	 * The first 3 regions are for INFORMATION metadata, they have the same size

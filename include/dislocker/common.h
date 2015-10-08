@@ -80,4 +80,11 @@ void memclean(void* ptr, size_t size);
 
 
 
+#ifdef _HAVE_RUBY
+#include "dislocker/ruby.h"
+
+VALUE rb_hexdump(uint8_t* data, size_t data_len);
+
+#endif /* _HAVE_RUBY */
+
 #endif // COMMON_H

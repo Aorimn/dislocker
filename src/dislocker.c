@@ -768,4 +768,4 @@ void Init_libdislocker()
 	rb_define_const(rb_mDisSignatures, "BitLocker", signatures);
 }
 
-#endif
+#endif /* _HAVE_RUBY */

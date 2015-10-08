@@ -52,6 +52,12 @@ typedef struct _extended_info {
 void print_extended_info(DIS_LOGS level, extended_info_t* xinfo);
 
 
+#ifdef _HAVE_RUBY
+#include "dislocker/ruby.h"
+
+VALUE rb_datum_virtualization_extinfo_to_s(extended_info_t* xinfo);
+
+#endif /* _HAVE_RUBY */
 
 
 #endif // EXTENDED_INFO_H

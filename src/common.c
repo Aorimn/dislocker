@@ -248,4 +248,29 @@ void memclean(void* ptr, size_t size)
 	dis_free(ptr);
 }
 
+#ifdef _HAVE_RUBY
+
+VALUE rb_hexdump(uint8_t* data, size_t data_len)
+{
+	VALUE rb_str = rb_str_new("", 0);
+	size_t i, j, max = 0;
+	size_t offset = 16;
+
+	for(i = 0; i < data_len; i += offset)
+	{
+		char s[512] = {0,};
+
+		snprintf(s, 12, "0x%.8zx ", i);
+		max = (i+offset > data_len ? data_len : i + offset);
+
+		for(j = i; j < max; j++)
+			snprintf(&s[11 + 3*(j-i)], 4, "%.2x%s", data[j], (j-i == offset/2-1 && j+1 != max) ? "-" : " ");
+
+		rb_str_catf(rb_str, "%s\n", s);
+	}
+
+	return rb_str;
+}
+
+#endif /* _HAVE_RUBY */
 

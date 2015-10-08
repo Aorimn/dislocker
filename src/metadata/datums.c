@@ -315,15 +315,19 @@ void print_datum_erased(DIS_LOGS level, void* vdatum)
 void print_datum_key(DIS_LOGS level, void* vdatum)
 {
 	datum_key_t* datum = (datum_key_t*) vdatum;
-	char* cipher_str_type = cipherstr((cipher_t)datum->algo);
+	char* cipher_str = cipherstr((cipher_t) datum->algo);
 
 	dis_printf(level, "Unkown: \n");
-	hexdump(level, (void*)&datum->padd, 2);
-	dis_printf(level, "Algo: %s (%#x)\n", cipher_str_type, datum->algo);
+	hexdump(level, (void*) &datum->padd, 2);
+	dis_printf(level, "Algo: %s (%#hx)\n", cipher_str, datum->algo);
 	dis_printf(level, "Key:\n");
-	hexdump(level, (void*)((char*)datum + sizeof(datum_key_t)), datum->header.datum_size - sizeof(datum_key_t));
+	hexdump(
+		level,
+		(void*) ((char*) datum + sizeof(datum_key_t)),
+		datum->header.datum_size - sizeof(datum_key_t)
+	);
 
-	dis_free(cipher_str_type);
+	dis_free(cipher_str);
 }
 
 void print_datum_unicode(DIS_LOGS level, void* vdatum)
@@ -331,13 +335,20 @@ void print_datum_unicode(DIS_LOGS level, void* vdatum)
 	datum_unicode_t* datum = (datum_unicode_t*) vdatum;
 
 	size_t utf16_length = (datum->header.datum_size - sizeof(datum_unicode_t));
-	wchar_t* wchar_s = dis_malloc(((datum->header.datum_size - sizeof(datum_unicode_t)) / 2) * sizeof(wchar_t));
+	wchar_t* wchar_s = dis_malloc(
+		((datum->header.datum_size - sizeof(datum_unicode_t)) / 2)
+		* sizeof(wchar_t)
+	);
 
 	/*
 	 * This datum's payload is an UTF-16 string finished by \0
 	 * We convert it in wchar_t so we can print it
 	 */
-	utf16towchars((uint16_t*)((char*)datum + sizeof(datum_unicode_t)), utf16_length, wchar_s);
+	utf16towchars(
+		(uint16_t*) ((char*) datum + sizeof(datum_unicode_t)),
+		utf16_length,
+		wchar_s
+	);
 	dis_printf(level, "UTF-16 string: '%ls'\n", wchar_s);
 
 	dis_free(wchar_s);
@@ -348,14 +359,14 @@ void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) vdatum;
 
 	dis_printf(level, "Unkown: \n");
-	hexdump(level, (void*)&datum->padd, 2);
+	hexdump(level, (void*) &datum->padd, 2);
 	dis_printf(level, "Algo: %#x\n", datum->algo);
 	dis_printf(level, "Salt: \n");
 	print_mac(level, datum->salt);
 
 	/* This datum's payload seems to be another datum, so print it */
 	dis_printf(level, "   ------ Nested datum ------\n");
-	print_one_datum(level, (char*)datum + sizeof(datum_stretch_key_t));
+	print_one_datum(level, (char*) datum + sizeof(datum_stretch_key_t));
 	dis_printf(level, "   ---------------------------\n");
 }
 
@@ -364,12 +375,12 @@ void print_datum_use_key(DIS_LOGS level, void* vdatum)
 	datum_use_key_t* datum = (datum_use_key_t*) vdatum;
 
 	dis_printf(level, "Algo: %#hx\n", datum->algo);
-	dis_printf(level, "Unkown: \n");
-	hexdump(level, (void*)&datum->padd, 2);
+	dis_printf(level, "Unknown: \n");
+	hexdump(level, (void*) &datum->padd, 2);
 
 	/* This datum's payload seems to be another datum, so print it */
 	dis_printf(level, "   ------ Nested datum ------\n");
-	print_one_datum(level, (char*)datum + sizeof(datum_use_key_t));
+	print_one_datum(level, (char*) datum + sizeof(datum_use_key_t));
 	dis_printf(level, "   ---------------------------\n");
 }
 
@@ -382,8 +393,11 @@ void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
 	dis_printf(level, "MAC: \n");
 	print_mac(level, datum->mac);
 	dis_printf(level, "Payload:\n");
-	hexdump(level, (void*)((char*)datum + sizeof(datum_aes_ccm_t)),
-			datum->header.datum_size - sizeof(datum_aes_ccm_t));
+	hexdump(
+		level,
+		(void*) ((char*) datum + sizeof(datum_aes_ccm_t)),
+		datum->header.datum_size - sizeof(datum_aes_ccm_t)
+	);
 }
 
 void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
@@ -392,8 +406,11 @@ void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 
 	dis_printf(level, "Unknown: %#x\n", datum->unknown);
 	dis_printf(level, "Payload:\n");
-	hexdump(level, (void*)((char*)datum + sizeof(datum_tpm_enc_t)),
-			datum->header.datum_size - sizeof(datum_tpm_enc_t));
+	hexdump(
+		level,
+		(void*) ((char*) datum + sizeof(datum_tpm_enc_t)),
+		datum->header.datum_size - sizeof(datum_tpm_enc_t)
+	);
 }
 
 void print_datum_vmk(DIS_LOGS level, void* vdatum)
@@ -415,12 +432,12 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 	while(computed_size < datum->header.datum_size)
 	{
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-		print_one_datum(level, (char*)datum + computed_size);
+		print_one_datum(level, (char*) datum + computed_size);
 
 		datum_header_safe_t header;
 		memset(&header, 0, sizeof(datum_header_safe_t));
 
-		get_header_safe((char*)datum + computed_size, &header);
+		get_header_safe((char*) datum + computed_size, &header);
 
 		computed_size += header.datum_size;
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
@@ -443,7 +460,12 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 	chomp(date);
 
 	dis_printf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
-	dis_printf(level, "Epoch Timestamp: %u sec, soit %s\n", (unsigned int)ts, date);
+	dis_printf(
+		level,
+		"Epoch Timestamp: %u sec, being %s\n",
+		(unsigned int) ts,
+		date
+	);
 
 	computed_size = sizeof(datum_external_t);
 
@@ -452,12 +474,12 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 	while(computed_size < datum->header.datum_size)
 	{
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-		print_one_datum(level, (char*)datum + computed_size);
+		print_one_datum(level, (char*) datum + computed_size);
 
 		datum_header_safe_t header;
 		memset(&header, 0, sizeof(datum_header_safe_t));
 
-		get_header_safe((char*)datum + computed_size, &header);
+		get_header_safe((char*) datum + computed_size, &header);
 
 		computed_size += header.datum_size;
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
@@ -470,12 +492,21 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 void print_datum_virtualization(DIS_LOGS level, void* vdatum)
 {
 	datum_virtualization_t* datum = (datum_virtualization_t*) vdatum;
+	uint16_t value_type = datum->header.value_type;
 
-	dis_printf(level, "NTFS boot sectors address:  %#llx\n", datum->ntfs_boot_sectors);
-	dis_printf(level, "Number of backuped bytes: %1$#llx (%1$llu)\n", datum->nb_bytes);
+	dis_printf(
+		level,
+		"NTFS boot sectors address:  %#llx\n",
+		datum->ntfs_boot_sectors
+	);
+	dis_printf(
+		level,
+		"Number of backuped bytes: %1$#llx (%1$llu)\n",
+		datum->nb_bytes
+	);
 
 	/* For Windows 8 encrypted volumes */
-	size_t win7_size   = datum_value_types_prop[datum->header.value_type].size_header;
+	size_t win7_size   = datum_value_types_prop[value_type].size_header;
 	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
 	if(actual_size > win7_size)
 	{
@@ -733,6 +764,9 @@ struct _rb_dis_datum {
 };
 typedef struct _rb_dis_datum* rb_dis_datum_t;
 
+/* Declare this function for recursive to_s datums */
+static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self);
+
 
 static VALUE rb_cDislockerMetadataDatum_get_datum_size(VALUE self)
 {
@@ -787,17 +821,42 @@ static VALUE rb_cDislockerMetadataDatum_get_payload(VALUE self)
 	return Qnil;
 }
 
-static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
+static VALUE rb_format_mac(uint8_t* mac)
+{
+	VALUE rb_str = rb_str_new("", 0);
+	int i = 0;
+	char s[16*3 + 1] = {0,};
+
+	for(i = 0; i < 16; ++i)
+		snprintf(&s[i*3], 4, "%02hhx ", mac[i]);
+
+	rb_str_catf(rb_str, "%s\n", s);
+
+	return rb_str;
+}
+
+static VALUE rb_format_nonce(uint8_t* nonce)
+{
+	VALUE rb_str = rb_str_new("", 0);
+	int i = 0;
+	char s[12*3 + 1] = {0,};
+
+	for(i = 0; i < 12; ++i)
+		snprintf(&s[i*3], 4, "%02hhx ", nonce[i]);
+
+	rb_str_catf(rb_str, "%s\n", s);
+
+	return rb_str;
+}
+
+static VALUE rb_cDislockerMetadataDatumHeader_to_s(VALUE self)
 {
 	rb_dis_datum_t rb_datum = DATA_PTR(self);
 	datum_generic_type_t* gt = rb_datum->datum;
 	char* entry_type = "UNKNOWN";
 	char* value_type = "UNKNOWN";
 
-	VALUE rb_str    = rb_str_new("", 0);
-	size_t strp_len = 1024;
-	int written     = -1;
-	char strp[strp_len];
+	VALUE rb_str = rb_str_new("", 0);
 
 	if(gt == NULL)
 		return rb_str;
@@ -809,50 +868,401 @@ static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
 		value_type = (char*) value_type_str[gt->header.value_type];
 
 
-	written = snprintf(
-		strp,
-		strp_len,
+	rb_str_catf(
+		rb_str,
 		"Total size: 0x%04hx (%hd) bytes\n",
 		gt->header.datum_size,
 		gt->header.datum_size
 	);
-	if(written < 0)
-		rb_raise(rb_eRuntimeError, "Error encountered.");
-	rb_str_cat(rb_str, strp, written);
 
-	written = snprintf(
-		strp,
-		strp_len,
+	rb_str_catf( rb_str,
 		"Entry type: %s (%hu)\n",
 		entry_type,
 		gt->header.entry_type
 	);
-	if(written < 0)
-		rb_raise(rb_eRuntimeError, "Error encountered.");
-	rb_str_cat(rb_str, strp, written);
 
-	written = snprintf(
-		strp,
-		strp_len,
+	rb_str_catf(
+		rb_str,
 		"Value type: %s (%hu)\n",
 		value_type,
 		gt->header.value_type
 	);
-	if(written < 0)
-		rb_raise(rb_eRuntimeError, "Error encountered.");
-	rb_str_cat(rb_str, strp, written);
 
-	written = snprintf(
-		strp,
-		strp_len,
+	rb_str_catf(
+		rb_str,
 		"Status    : %#x\n",
 		gt->header.error_status
 	);
-	if(written < 0)
-		rb_raise(rb_eRuntimeError, "Error encountered.");
-	rb_str_cat(rb_str, strp, written);
 
-	// TODO add payload to the returned string
+	return rb_str;
+}
+
+
+VALUE rb_datum_generic_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_generic_type_t* datum = rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	rb_str_cat2(rb_str, "Generic datum: ");
+
+	rb_str_concat(rb_str, rb_hexdump(
+		(uint8_t*) datum + sizeof(datum_generic_type_t),
+		datum->header.datum_size - sizeof(datum_generic_type_t)
+	));
+
+	return rb_str;
+}
+
+VALUE rb_datum_erased_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_generic_type_t* datum = rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	rb_str_cat2(rb_str, "This datum is of ERASED type and should thus be nullified");
+
+	return rb_str;
+}
+
+VALUE rb_datum_key_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_key_t* datum = (datum_key_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	char* cipher_str = cipherstr((cipher_t) datum->algo);
+
+	rb_str_catf(rb_str, "Unknown: 0x%04hx\n", datum->padd);
+	rb_str_catf(rb_str, "Algo: %s (%#hx)\n", cipher_str, datum->algo);
+	rb_str_cat2(rb_str, "Key:\n");
+	rb_str_concat(rb_str, rb_hexdump(
+		(uint8_t*) datum + sizeof(datum_key_t),
+		datum->header.datum_size - sizeof(datum_key_t)
+	));
+
+	dis_free(cipher_str);
+
+	return rb_str;
+}
+
+VALUE rb_datum_unicode_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_unicode_t* datum = (datum_unicode_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	size_t utf16_length = (datum->header.datum_size - sizeof(datum_unicode_t));
+	wchar_t* wchar_s = dis_malloc(
+		((datum->header.datum_size - sizeof(datum_unicode_t)) / 2)
+		* sizeof(wchar_t)
+	);
+
+	/*
+	 * This datum's payload is an UTF-16 string finished by \0
+	 * We convert it in wchar_t so we can print it
+	 */
+	utf16towchars(
+		(uint16_t*)((char*) datum + sizeof(datum_unicode_t)),
+		utf16_length,
+		wchar_s
+	);
+	rb_str_catf(rb_str, "UTF-16 string: '%ls'\n", wchar_s);
+
+	dis_free(wchar_s);
+
+	return rb_str;
+}
+
+VALUE rb_datum_stretch_key_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_stretch_key_t* datum = (datum_stretch_key_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	rb_str_catf(rb_str, "Unknown: 0x%04hx\n", datum->padd);
+	rb_str_catf(rb_str, "Algo: %#x\n", datum->algo);
+	rb_str_cat2(rb_str, "Salt: \n");
+	rb_str_concat(rb_str, rb_format_mac(datum->salt));
+
+	/* This datum's payload seems to be another datum, so print it */
+	rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
+
+	rb_datum->datum = (datum_generic_type_t*)
+	                  datum + sizeof(datum_stretch_key_t);
+	rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
+
+	rb_str_cat2(rb_str, "   ---------------------------\n");
+
+	rb_datum->datum = (datum_generic_type_t*) datum;
+
+	return rb_str;
+}
+
+VALUE rb_datum_use_key_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_use_key_t* datum = (datum_use_key_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	rb_str_catf(rb_str, "Algo: %#hx\n", datum->algo);
+	rb_str_catf(rb_str, "Unknown: 0x%04hx\n", datum->padd);
+
+	/* This datum's payload seems to be another datum, so print it */
+	rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
+	rb_datum->datum = (datum_generic_type_t*) datum + sizeof(datum_use_key_t);
+	rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
+	rb_str_cat2(rb_str, "   ---------------------------\n");
+
+	rb_datum->datum = (datum_generic_type_t*) datum;
+
+	return rb_str;
+}
+
+VALUE rb_datum_aes_ccm_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_aes_ccm_t* datum = (datum_aes_ccm_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	rb_str_cat2(rb_str, "Nonce:\n");
+	rb_str_concat(rb_str, rb_format_nonce(datum->nonce));
+	rb_str_cat2(rb_str, "MAC:\n");
+	rb_str_concat(rb_str, rb_format_mac(datum->mac));
+	rb_str_cat2(rb_str, "Payload:\n");
+	rb_str_concat(rb_str, rb_hexdump(
+		(uint8_t*) ((char*) datum + sizeof(datum_aes_ccm_t)),
+		datum->header.datum_size - sizeof(datum_aes_ccm_t)
+	));
+
+	return rb_str;
+}
+
+VALUE rb_datum_tpmenc_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_tpm_enc_t* datum = (datum_tpm_enc_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	rb_str_catf(rb_str, "Unknown: %#x\n", datum->unknown);
+	rb_str_cat2(rb_str, "Payload:\n");
+	rb_str_concat(rb_str, rb_hexdump(
+		(uint8_t*) ((char*) datum + sizeof(datum_tpm_enc_t)),
+		datum->header.datum_size - sizeof(datum_tpm_enc_t)
+	));
+
+	return rb_str;
+}
+
+VALUE rb_datum_vmk_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_vmk_t* datum = (datum_vmk_t*) rb_datum->datum;
+	char extkey_id[37];
+	int computed_size = 0;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	format_guid(datum->guid, extkey_id);
+
+	rb_str_catf(rb_str, "Recovery Key GUID: '%.39s'\n", extkey_id);
+	rb_str_cat2(rb_str, "Nonce: \n");
+	rb_str_concat(rb_str, rb_format_nonce(datum->nonce));
+
+	computed_size = sizeof(datum_vmk_t);
+
+	/* This datum's payload seems to be another datum, so print it */
+	while(computed_size < datum->header.datum_size)
+	{
+		rb_str_cat2(rb_str, "   ------ Nested datum(s) ------\n");
+		rb_datum->datum = (datum_generic_type_t*) datum + computed_size;
+		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
+
+		datum_header_safe_t header;
+		memset(&header, 0, sizeof(datum_header_safe_t));
+
+		get_header_safe((char*) datum + computed_size, &header);
+
+		computed_size += header.datum_size;
+		rb_str_cat2(rb_str, "   ------------------------------\n");
+	}
+
+	rb_datum->datum = (datum_generic_type_t*) datum;
+
+	return rb_str;
+}
+
+VALUE rb_datum_external_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_external_t* datum = (datum_external_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	char extkey_id[37];
+	time_t ts;
+	char* date = NULL;
+	int computed_size = 0;
+
+	format_guid(datum->guid, extkey_id);
+	ntfs2utc(datum->timestamp, &ts);
+	date = strdup(asctime(gmtime(&ts)));
+	chomp(date);
+
+	rb_str_catf(rb_str, "Recovery Key GUID: '%.39s'\n", extkey_id);
+	rb_str_catf(
+		rb_str,
+		"Epoch Timestamp: %u sec, being %s\n",
+		(unsigned int) ts,
+		date
+	);
+
+	computed_size = sizeof(datum_external_t);
+
+	/* This datum's payload seems to be another datum, so print it */
+	while(computed_size < datum->header.datum_size)
+	{
+		rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
+		rb_datum->datum = (datum_generic_type_t*) datum + computed_size;
+		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
+
+		datum_header_safe_t header;
+		memset(&header, 0, sizeof(datum_header_safe_t));
+
+		get_header_safe((char*) datum + computed_size, &header);
+
+		computed_size += header.datum_size;
+		rb_str_cat2(rb_str, "   ---------------------------\n");
+	}
+
+	free(date);
+
+	rb_datum->datum = (datum_generic_type_t*) datum;
+
+	return rb_str;
+}
+
+VALUE rb_datum_virtualization_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_virtualization_t* datum = (datum_virtualization_t*) rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(datum == NULL)
+		return rb_str;
+
+	uint16_t value_type = datum->header.value_type;
+
+	rb_str_catf(
+		rb_str,
+		"NTFS boot sectors address:  %#" PRIx64 "\n",
+		datum->ntfs_boot_sectors
+	);
+	rb_str_catf(
+		rb_str,
+		"Number of backuped bytes: %1$#" PRIx64 " (%1$" PRIu64 ")\n",
+		datum->nb_bytes
+	);
+
+	/* For Windows 8 encrypted volumes */
+	size_t win7_size   = datum_value_types_prop[value_type].size_header;
+	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
+	if(actual_size > win7_size)
+	{
+		rb_str_concat(
+			rb_str,
+			rb_datum_virtualization_extinfo_to_s(&datum->xinfo)
+		);
+	}
+
+	return rb_str;
+}
+
+typedef VALUE (*rb_datum_to_s_f)(VALUE self);
+static const rb_datum_to_s_f rb_datum_to_s_tab[NB_DATUMS_VALUE_TYPES] =
+{
+	rb_datum_erased_to_s,
+	rb_datum_key_to_s,
+	rb_datum_unicode_to_s,
+	rb_datum_stretch_key_to_s,
+	rb_datum_use_key_to_s,
+	rb_datum_aes_ccm_to_s,
+	rb_datum_tpmenc_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_vmk_to_s,
+	rb_datum_external_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_virtualization_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+	rb_datum_generic_to_s,
+};
+
+VALUE rb_cDislockerMetadataDatumPayload_to_s(VALUE self)
+{
+	rb_dis_datum_t rb_datum = DATA_PTR(self);
+	datum_generic_type_t* gt = rb_datum->datum;
+
+	VALUE rb_str = rb_str_new("", 0);
+
+	if(gt == NULL)
+		return rb_str;
+
+	if(gt->header.value_type < NB_DATUMS_VALUE_TYPES)
+		return rb_datum_to_s_tab[gt->header.value_type](self);
+
+	return rb_str;
+}
+
+static VALUE rb_cDislockerMetadataDatum_to_s(VALUE self)
+{
+	VALUE rb_str = rb_cDislockerMetadataDatumHeader_to_s(self);
+
+	rb_str_concat(rb_str, rb_cDislockerMetadataDatumPayload_to_s(self));
 
 	return rb_str;
 }
@@ -962,4 +1372,4 @@ void Init_datum(VALUE rb_cDislockerMetadata)
 		0
 	);
 }
-#endif
+#endif /* _HAVE_RUBY */

@@ -419,4 +419,4 @@ void Init_accesses(VALUE rb_mDislocker)
 		-1
 	);
 }
-#endif
+#endif /* _HAVE_RUBY */

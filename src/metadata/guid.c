@@ -133,4 +133,4 @@ void Init_guid(VALUE rb_cDislockerMetadata)
 	rb_define_const(rb_mDisMetadataGuid, "INFORMATION_OFFSETS", offset_guids);
 	rb_define_singleton_method(rb_mDisMetadataGuid, "pretty", rb_format_guid, 1);
 }
-#endif
+#endif /* _HAVE_RUBY */

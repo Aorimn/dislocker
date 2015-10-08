@@ -1394,4 +1394,4 @@ void Init_metadata(VALUE rb_mDislocker)
 	Init_datum(rb_cDislockerMetadata);
 	Init_guid(rb_cDislockerMetadata);
 }
-#endif
+#endif /* _HAVE_RUBY */

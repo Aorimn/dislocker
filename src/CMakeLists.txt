@@ -83,6 +83,9 @@ else()
 	# Useless warnings when used within Darwin
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")
 	set (FUSE_LIB fuse)
+	if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+		link_directories ( ${LINK_DIRECTORIES} /usr/local/lib )
+	endif()
 endif()
 
 if(${CMAKE_COMPILER_IS_GNUCC})

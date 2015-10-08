@@ -496,12 +496,12 @@ void print_datum_virtualization(DIS_LOGS level, void* vdatum)
 
 	dis_printf(
 		level,
-		"NTFS boot sectors address:  %#llx\n",
+		"NTFS boot sectors address:  %#" PRIx64 "\n",
 		datum->ntfs_boot_sectors
 	);
 	dis_printf(
 		level,
-		"Number of backuped bytes: %1$#llx (%1$llu)\n",
+		"Number of backuped bytes: %1$#" PRIx64 " (%1$" PRIu64 ")\n",
 		datum->nb_bytes
 	);
 

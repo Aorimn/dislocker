@@ -37,7 +37,7 @@ void print_extended_info(DIS_LOGS level, extended_info_t* xinfo)
 	dis_printf(level, "Size: 0x%1$04x (%1$hu)\n", xinfo->size);
 	dis_printf(level, "Unknown:\n");
 	hexdump(level, (uint8_t*)&xinfo->unknown2, 4);
-	dis_printf(level, "Flags: 0x%1$"  PRIx64 " (%1$llu)\n", xinfo->flags);
+	dis_printf(level, "Flags: 0x%1$" PRIx64 " (%1$" PRIu64 ")\n", xinfo->flags);
 	dis_printf(level, "Convert Log offset: 0x%016"  PRIx64 "\n", xinfo->convertlog_addr);
 	dis_printf(level, "Convert Log size:   0x%1$08x (%1$u)\n",    xinfo->convertlog_size);
 	dis_printf(level, "Sector size (1): 0x%1$x (%1$d)\n", xinfo->sector_size1);

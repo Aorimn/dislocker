@@ -26,6 +26,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -111,7 +112,7 @@ static int file_main(char* ntfs_file, dis_context_t dis_ctx)
 	long long int percent = 0;
 	off_t decrypting_size = (off_t)dis_inouts_volume_size(dis_ctx);
 
-	dis_printf(L_INFO, "File size: %llu bytes\n", decrypting_size);
+	dis_printf(L_INFO, "File size: %" PRIu64 " bytes\n", decrypting_size);
 
 	/* Read all sectors and decrypt them if necessary */
 	dis_printf(L_INFO, "\rDecrypting... 0%%");

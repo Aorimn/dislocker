@@ -490,18 +490,32 @@ static int begin_compute_regions(volume_header_t* vh,
 		}
 
 		/* And when encrypted with W$ Vista: */
-		dis_printf(L_DEBUG,
-			"MetadataLcn = %llu | SectorsPerCluster = %llu | SectorSize = %llu\n",
-			vh->metadata_lcn, vh->sectors_per_cluster, vh->sector_size
+		dis_printf(
+			L_DEBUG,
+			"MetadataLcn = %" PRIu64
+			" | SectorsPerCluster = %" PRIu64
+			" | SectorSize = %" PRIu64 "\n",
+			vh->metadata_lcn,
+			vh->sectors_per_cluster,
+			vh->sector_size
 		);
 
 		uint64_t new_offset = vh->metadata_lcn * vh->sectors_per_cluster * vh->sector_size;
-		dis_printf(L_DEBUG, "Changing first metadata offset from %#llx to %#llx\n", vh->information_off[0], new_offset);
+		dis_printf(
+			L_DEBUG,
+			"Changing first metadata offset from %#" PRIx64
+			" to %#" PRIx64 "\n",
+			vh->information_off[0],
+			new_offset
+		);
 		regions[0].addr = new_offset;
 
 		/* Now that we have the first offset, go get the others */
 		bitlocker_information_t* information = NULL;
-		if(!get_metadata((off_t)new_offset + disk_offset, (void**)&information, fd))
+		if(!get_metadata(
+				(off_t) new_offset + disk_offset,
+				(void**) &information, fd
+			))
 			return FALSE;
 
 		regions[1].addr = information->information_off[1];
@@ -895,8 +909,11 @@ static int get_metadata_lazy_checked(
 
 		validations_offset = (off_t)regions[current].addr + metadata_size;
 
-		dis_printf(L_DEBUG, "Reading validations data at offset %#llx.\n",
-		        validations_offset);
+		dis_printf(
+			L_DEBUG,
+			"Reading validations data at offset %#" PRIx64 ".\n",
+			validations_offset
+		);
 
 
 		/* Go to the beginning of the BitLocker validation header */
@@ -1094,7 +1111,7 @@ void dis_metadata_vista_vbr_fve2ntfs(dis_metadata_t dis_meta, void* vbr)
 	dis_printf(
 		L_DEBUG,
 		"  Fixing sector (Vista): replacing signature "
-		"and MFTMirror field by: %#llx\n",
+		"and MFTMirror field by: %#" PRIx64 "\n",
 		dis_meta->volume_header->mft_mirror
 	);
 
@@ -1132,7 +1149,7 @@ void dis_metadata_vista_vbr_ntfs2fve(dis_metadata_t dis_meta, void* vbr)
 	dis_printf(
 		L_DEBUG,
 		"  Fixing sector (Vista): replacing signature "
-		"and MFTMirror field by: %#llx\n",
+		"and MFTMirror field by: %#" PRIx64 "\n",
 		volume_header->metadata_lcn
 	);
 }

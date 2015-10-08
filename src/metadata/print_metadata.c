@@ -71,9 +71,9 @@ void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 	dis_printf(level, "  Sectors per fat: 0x%1$04x (%1$hu) bytes\n", volume_header->sectors_per_fat);
 	dis_printf(level, "  Hidden sectors: 0x%1$08x (%1$u) bytes\n", volume_header->hidden_sectors);
 	dis_printf(level, "  Number of sectors (32 bits): 0x%1$08x (%1$u) bytes\n", volume_header->nb_sectors_32b);
-	dis_printf(level, "  Number of sectors (64 bits): 0x%1$016x (%1$llu) bytes\n", volume_header->nb_sectors_64b);
-	dis_printf(level, "  MFT start cluster: 0x%1$016x (%1$lu) bytes\n", volume_header->mft_start_cluster);
-	dis_printf(level, "  Metadata Lcn: 0x%1$016x (%1$lu) bytes\n", volume_header->metadata_lcn);
+	dis_printf(level, "  Number of sectors (64 bits): 0x%1$016" PRIx64 " (%1$" PRIu64 ") bytes\n", volume_header->nb_sectors_64b);
+	dis_printf(level, "  MFT start cluster: 0x%1$016" PRIx64 " (%1$" PRIu64 ") bytes\n", volume_header->mft_start_cluster);
+	dis_printf(level, "  Metadata Lcn: 0x%1$016" PRIx64 " (%1$" PRIu64 ") bytes\n", volume_header->metadata_lcn);
 
 	dis_printf(level, "  Volume GUID: '%.37s'\n", rec_id);
 
@@ -121,7 +121,7 @@ void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 	dis_printf(level, "  Version: %hu\n", information->version);
 	dis_printf(level, "  Current state: %s (%hu)\n", get_state_str(information->curr_state), information->curr_state);
 	dis_printf(level, "  Next state: %s (%hu)\n",    get_state_str(information->next_state), information->next_state);
-	dis_printf(level, "  Encrypted volume size: %1$llu bytes (%1$#llx), ~%2$llu MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
+	dis_printf(level, "  Encrypted volume size: %1$" PRIu64 " bytes (%1$#" PRIx64 "), ~%2$" PRIu64 " MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
 	dis_printf(level, "  Size of convertion region: %1$#x (%1$u)\n", information->convert_size);
 	dis_printf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);
 	dis_printf(level, "  First metadata header offset:  %#" PRIx64 "\n", information->information_off[0]);
@@ -243,7 +243,7 @@ void print_data(DIS_LOGS level, dis_metadata_t dis_meta)
 			break;
 
 		dis_printf(level, "\n");
-		dis_printf(level, "======[ Datum n°%d informations ]======\n", ++loop);
+		dis_printf(level, "=======[ Datum n°%d informations ]=======\n", ++loop);
 		print_one_datum(level, data);
 		dis_printf(level, "=========================================\n");
 

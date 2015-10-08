@@ -26,6 +26,7 @@
 /* Generic includes */
 #include "dislocker/xstd/xstdio.h"
 #include "dislocker/xstd/xstdlib.h"
+#include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
 

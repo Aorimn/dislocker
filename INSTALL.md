@@ -132,28 +132,27 @@ Whether it works or not, feel free to send comments and feedbacks to
 
 # NOTE
 
-Five binaries are built when compiling dislocker as described above:
+Five binaries are built when compiling dislocker as described in the `INSTALL.md`
+file:
+1. `dislocker-bek`: for disecting a .bek file and printing information about it
 
-- One for disecting a .bek file and printing information about it
-    - dislocker-bek
-- Another one for printing information about a BitLocker-encrypted volume
-    - dislocker-metadata
-- A third one is not a binary but a Ruby script which try to find BitLocker
+2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume
+
+3. `dislocker-find`: not a binary but a Ruby script which tries to find BitLocker
   encrypted partition among the plugged-in disks (only work if the library is
-  compiled with the ruby bindings)
-    - dislocker-find
-- Another one for decrypting a BitLocker encrypted partition into a flat file
-  formatted as an NTFS partition you can mount
-    - dislocker-file
-- A last one, which is the one you're using when calling `dislocker',
-  dynamically decrypts a BitLocker encrypted partition using FUSE
-    - dislocker-fuse
+  compiled with the Ruby bindings)
 
+4. `dislocker-file`: for decrypting a BitLocker encrypted partition into a flat file
+formatted as an NTFS partition you can mount
+
+5. `dislocker-fuse`: the one you're using when calling `dislocker',
+which dynamically decrypts a BitLocker encrypted partition using FUSE
 
 You can build each one independently providing it as the makefile target. For
 instance, if you want to compile dislocker-fuse only, you'd simply run:
+```bash
+$ cmake .
+$ make dislocker-fuse
 ```
-cmake .
-make dislocker-fuse
-```
+
 

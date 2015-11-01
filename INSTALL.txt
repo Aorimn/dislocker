@@ -22,7 +22,7 @@ another program - see the NOTE section below - will be available.
 For Debian-like:
   aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev
 For Fedora-like:
-  yum install gcc cmake make fuse-devel polarssl-devel ruby-devel
+  dnf install gcc cmake make fuse-devel polarssl-devel ruby-devel
 For FreeBSD:
   pkg install cmake gmake fusefs-libs polarssl
 For OSX: Follow the instructions in the next section.

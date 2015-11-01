@@ -36,7 +36,10 @@
 void dis_usage()
 {
 	fprintf(stderr,
-PROGNAME " by " AUTHOR ", v"VERSION " (compiled for " __OS "/" __ARCH ")\n"
+PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
+#ifdef VERSION_DBG
+"Compiled version: " VERSION_DBG "\n"
+#endif
 "\n"
 "Usage: " PROGNAME " [-hqrsv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
 "    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"

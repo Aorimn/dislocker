@@ -116,6 +116,9 @@ int main(int argc, char **argv)
 	dis_stdio_init(verbosity, NULL);
 
 	dis_printf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
+#ifdef VERSION_DBG
+	dis_printf(L_INFO, "Compiled version: " VERSION_DBG "\n");
+#endif
 
 	/* Open the volume as a (big) normal file */
 	dis_printf(L_DEBUG, "Trying to open '%s'...\n", volume_path);

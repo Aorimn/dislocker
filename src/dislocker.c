@@ -106,6 +106,9 @@ int dis_initialize(dis_context_t dis_ctx)
 	dis_stdio_init(dis_ctx->cfg.verbosity, dis_ctx->cfg.log_file);
 
 	dis_printf(L_INFO, PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n");
+#ifdef VERSION_DBG
+	dis_printf(L_INFO, "Compiled version: " VERSION_DBG "\n");
+#endif
 
 	if(dis_ctx->cfg.verbosity >= L_DEBUG)
 		dis_print_args(dis_ctx);

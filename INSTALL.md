@@ -80,7 +80,7 @@ cmake -D WARN_FLAGS:STRING="-Wall -Wextra" .
 See the [cmake documentation](http://www.cmake.org/documentation/) if you want
 to customize the build.
 
-Once installed, see dislocker(1) for details on how to use it.
+Once installed, see `dislocker(1)` for details on how to use it.
 
 # UNINSTALLING
 

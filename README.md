@@ -41,7 +41,7 @@ patches, Will Dyson for the patches, and all the people who give feedbacks.
 
 ## Installation and requirements
 
-See `INSTALL.txt` for things dealing with the install process.
+See `INSTALL.md` for things dealing with the install process.
 Once installed, see `dislocker(1)` for details on how to use it.
 
 
@@ -50,7 +50,7 @@ Once installed, see `dislocker(1)` for details on how to use it.
 
 There may be bugs, and I'll be happy to hear about it!
 
-Feel free to send comments and feedbacks to `dislocker __AT__ hsc __DOT__ fr`.
+Feel free to send comments and feedbacks to [dislocker __AT__ hsc __DOT__ fr]().
 
 
 
@@ -76,7 +76,7 @@ whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 
 ## Note
 
-Five binaries are built when compiling dislocker as described in the `INSTALL.txt`
+Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
 1. `dislocker-bek`: for disecting a .bek file and printing information about it
 

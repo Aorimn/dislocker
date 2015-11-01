@@ -65,7 +65,7 @@ execute_process(
 )
 
 if( "${POLARSSL_VERSION_STRING}" STREQUAL "2.0.0" AND NOT "${POLARSSL_USED_LIBRARY}" STREQUAL "mbedcrypto" )
-  message("*** WARNING *** Your mbedTLS version is 2.0.0, it's possible the `make' command doesn't work.\nPlease refer to the INSTALL.txt's \"mbedTLS 2.0.0\" section if you have any problem.\n")
+  message("*** WARNING *** Your mbedTLS version is 2.0.0, it's possible the `make' command doesn't work.\nPlease refer to the INSTALL.md's \"mbedTLS 2.0.0\" section if you have any problem.\n")
 endif()
 
 string(REPLACE "." ";" POLARSSL_VERSION_LIST ${POLARSSL_VERSION_STRING})

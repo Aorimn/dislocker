@@ -1,4 +1,4 @@
-# Dislocker [![Build Status](https://travis-ci.org/Aorimn/dislocker.svg?branch=cmake)](https://travis-ci.org/Aorimn/dislocker)
+# Dislocker [![Build Status](https://travis-ci.org/Aorimn/dislocker.svg?branch=develop)](https://travis-ci.org/Aorimn/dislocker)
 
 ## Introduction and explanations
 

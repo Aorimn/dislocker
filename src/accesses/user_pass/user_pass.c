@@ -213,17 +213,19 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 
 	/* Read the password. */
 	nread = getline(lineptr, &n, stream);
+
+#ifndef __CK_DOING_TESTS
+	/* Restore terminal. */
+	(void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
+	printf("\n");
+#endif /* __CK_DOING_TESTS */
+
 	dis_printf(
 		L_DEBUG,
 		"New memory allocation at %p (%#" F_SIZE_T " byte allocated)\n",
 		(void*) *lineptr,
 		n
 	);
-
-#ifndef __CK_DOING_TESTS
-	/* Restore terminal. */
-	(void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
-#endif /* __CK_DOING_TESTS */
 
 	return nread;
 }
@@ -311,7 +313,7 @@ int prompt_up(uint8_t** up)
 
 	*up = NULL;
 
-	ssize_t nb_read = my_getpass((char**)up, stdin);
+	ssize_t nb_read = my_getpass((char**) up, stdin);
 
 	if(nb_read <= 0)
 	{
@@ -323,7 +325,7 @@ int prompt_up(uint8_t** up)
 	}
 
 	// getline() gets the '\n' character, so we need to remove it
-	chomp((char*)*up);
+	chomp((char*) *up);
 
 	return TRUE;
 }

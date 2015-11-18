@@ -57,6 +57,21 @@ struct _dis_crypt {
 	dis_enc_flags_e flags;
 
 	uint16_t sector_size;
+
+	void (*decrypt_fn)(
+		dis_aes_contexts_t* ctx,
+		uint16_t sector_size,
+		uint8_t* sector,
+		off_t sector_address,
+		uint8_t* buffer
+	);
+	void (*encrypt_fn)(
+		dis_aes_contexts_t* ctx,
+		uint16_t sector_size,
+		uint8_t* sector,
+		off_t sector_address,
+		uint8_t* buffer
+	);
 };
 
 

@@ -25,6 +25,8 @@
 #include "dislocker/return_values.h"
 #include "dislocker/xstd/xstdio.h"
 #include "dislocker/xstd/xstdlib.h"
+#include "dislocker/encryption/encrypt.h"
+#include "dislocker/encryption/decrypt.h"
 #include "dislocker/encryption/encommon.priv.h"
 
 #include <string.h>
@@ -45,7 +47,16 @@ dis_crypt_t dis_crypt_new(uint16_t sector_size, cipher_t disk_cipher)
 	crypt->sector_size = sector_size;
 
 	if(disk_cipher == AES_128_DIFFUSER || disk_cipher == AES_256_DIFFUSER)
+	{
 		crypt->flags |= DIS_ENC_FLAG_USE_DIFFUSER;
+		crypt->encrypt_fn = encrypt_cbc_with_diffuser;
+		crypt->decrypt_fn = decrypt_cbc_with_diffuser;
+	}
+	else
+	{
+		crypt->encrypt_fn = encrypt_cbc_without_diffuser;
+		crypt->decrypt_fn = decrypt_cbc_without_diffuser;
+	}
 
 	return crypt;
 }

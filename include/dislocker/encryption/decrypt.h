@@ -45,6 +45,22 @@ int decrypt_key(
 	void** output
 );
 
+void decrypt_cbc_without_diffuser(
+	dis_aes_contexts_t* ctx,
+	uint16_t sector_size,
+	uint8_t* sector,
+	off_t sector_address,
+	uint8_t* buffer
+);
+
+void decrypt_cbc_with_diffuser(
+	dis_aes_contexts_t* ctx,
+	uint16_t sector_size,
+	uint8_t* sector,
+	off_t sector_address,
+	uint8_t* buffer
+);
+
 int decrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 

@@ -29,14 +29,6 @@
 
 
 
-/*
- * Below are some prototypes of functions used by decrypt_sector
- */
-void encrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
-void encrypt_with_diffuser   (dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
-
-
-
 /**
  * Interface to encrypt a sector
  *
@@ -52,22 +44,13 @@ int encrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uin
 	if(!crypt || !sector || !buffer)
 		return FALSE;
 
-	if(crypt->flags & DIS_ENC_FLAG_USE_DIFFUSER)
-		encrypt_with_diffuser(
-			&crypt->ctx,
-			crypt->sector_size,
-			sector,
-			sector_address,
-			buffer
-		);
-	else
-		encrypt_without_diffuser(
-			&crypt->ctx,
-			crypt->sector_size,
-			sector,
-			sector_address,
-			buffer
-		);
+	crypt->encrypt_fn(
+		&crypt->ctx,
+		crypt->sector_size,
+		sector,
+		sector_address,
+		buffer
+	);
 
 	return TRUE;
 }
@@ -82,7 +65,7 @@ int encrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uin
  * @param sector_address Address of the sector to encrypt
  * @param buffer The place where we have to put encrypted data
  */
-void encrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void encrypt_cbc_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 
@@ -110,7 +93,7 @@ void encrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uin
  * @param sector_address Address of the sector to encrypt
  * @param buffer The place where we have to put encrypted data
  */
-void encrypt_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void encrypt_cbc_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 
@@ -148,7 +131,7 @@ void encrypt_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_
 
 
 	/* And finally, actually encrypt the buffer */
-	encrypt_without_diffuser(ctx, sector_size, buffer, sector_address, buffer);
+	encrypt_cbc_without_diffuser(ctx, sector_size, buffer, sector_address, buffer);
 
 	memset(sector_key, 0, 32);
 }

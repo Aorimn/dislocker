@@ -381,15 +381,6 @@ static int aes_ccm_compute_unencrypted_tag(
 
 
 
-
-/*
- * Below are some prototypes of functions used by decrypt_sector
- */
-void decrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
-void decrypt_with_diffuser   (dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer);
-
-
-
 /**
  * Interface to decrypt a sector
  *
@@ -405,22 +396,13 @@ int decrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uin
 	if(!crypt || !sector || !buffer)
 		return FALSE;
 
-	if(crypt->flags & DIS_ENC_FLAG_USE_DIFFUSER)
-		decrypt_with_diffuser(
-			&crypt->ctx,
-			crypt->sector_size,
-			sector,
-			sector_address,
-			buffer
-		);
-	else
-		decrypt_without_diffuser(
-			&crypt->ctx,
-			crypt->sector_size,
-			sector,
-			sector_address,
-			buffer
-		);
+	crypt->decrypt_fn(
+		&crypt->ctx,
+		crypt->sector_size,
+		sector,
+		sector_address,
+		buffer
+	);
 
 	return TRUE;
 }
@@ -435,7 +417,7 @@ int decrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uin
  * @param sector_address Address of the sector to decrypt
  * @param buffer The place where we have to put decrypted data
  */
-void decrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void decrypt_cbc_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 	union {
@@ -463,7 +445,7 @@ void decrypt_without_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uin
  * @param sector_address Address of the sector to decrypt
  * @param buffer The place where we have to put decrypted data
  */
-void decrypt_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
+void decrypt_cbc_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_t* sector, off_t sector_address, uint8_t* buffer)
 {
 	/* Parameters are assumed to be correctly checked already */
 
@@ -488,7 +470,7 @@ void decrypt_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, uint8_
 
 
 	/* Then actually decrypt the buffer */
-	decrypt_without_diffuser(ctx, sector_size, sector, sector_address, buffer);
+	decrypt_cbc_without_diffuser(ctx, sector_size, sector, sector_address, buffer);
 
 
 	/* Call diffuser B */

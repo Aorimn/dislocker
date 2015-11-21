@@ -69,6 +69,7 @@ static void* thread_encrypt(void* args);
 static void fix_read_sector_seven(
 	dis_iodata_t* io_data,
 	off_t sector_address,
+	uint8_t *input,
 	uint8_t *output
 );
 static void fix_read_sector_vista(
@@ -359,6 +360,7 @@ static void* thread_decrypt(void* params)
 			fix_read_sector_seven(
 				io_data,
 				offset,
+				loop_input,
 				loop_output
 			);
 		}
@@ -504,8 +506,11 @@ static void* thread_encrypt(void* params)
  * @param sector_address Address of the sector to decrypt
  * @param output The buffer where to put fixed data
  */
-static void fix_read_sector_seven(dis_iodata_t* io_data,
-                                  off_t sector_address, uint8_t *output)
+static void fix_read_sector_seven(
+	dis_iodata_t* io_data,
+	off_t sector_address,
+	uint8_t* input,
+	uint8_t* output)
 {
 	// Check parameter
 	if(!output)
@@ -528,18 +533,17 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 
 	to += io_data->part_off;
 
-
-	uint8_t* input = malloc(io_data->sector_size);
-	memset(input, 0, io_data->sector_size);
-
 	/* Read the real sector we need, at the offset we need it */
 	read_size = pread(io_data->volume_fd, input, io_data->sector_size, to);
 
 	if(read_size <= 0)
 	{
-		free(input);
-		dis_printf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
-		                 "\n", io_data->sector_size, to);
+		dis_printf(
+			L_ERROR,
+			"Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T "\n",
+			io_data->sector_size,
+			to
+		);
 		return;
 	}
 
@@ -559,8 +563,6 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
 			output
 		);
 	}
-
-	free(input);
 }
 
 
@@ -573,7 +575,7 @@ static void fix_read_sector_seven(dis_iodata_t* io_data,
  * @param output The buffer where to put fixed data
  */
 static void fix_read_sector_vista(dis_iodata_t* io_data,
-                                  uint8_t* input, uint8_t *output)
+                                  uint8_t* input, uint8_t* output)
 {
 	// Check parameter
 	if(!input || !output)
@@ -597,7 +599,7 @@ static void fix_read_sector_vista(dis_iodata_t* io_data,
  * @param output The buffer where to put fixed data
  */
 static void fix_write_sector_vista(dis_iodata_t* io_data,
-                                   uint8_t* input, uint8_t *output)
+                                   uint8_t* input, uint8_t* output)
 {
 	// Check parameter
 	if(!input || !output)

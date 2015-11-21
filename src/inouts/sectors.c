@@ -42,21 +42,21 @@
  */
 #define NB_THREAD 2
 // Have a look at sysconf(_SC_NPROCESSORS_ONLN)
+// Note: 512*NB_THREAD shouldn't be more than 2^16 (due to used types)
 
 
 /* Struct we pass to a thread for buffer enc/decryption */
 typedef struct _thread_arg
 {
 	size_t   nb_loop;
+	uint16_t nb_threads;
+	unsigned int thread_begin;
 
 	uint16_t sector_size;
 	off_t    sector_start;
 
 	uint8_t* input;
 	uint8_t* output;
-
-	unsigned int modulo;
-	unsigned int modulo_result;
 
 	dis_iodata_t* io_data;
 } thread_arg_t;
@@ -123,8 +123,12 @@ int read_decrypt_sectors(
 	if(read_size <= 0)
 	{
 		free(input);
-		dis_printf(L_ERROR, "Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T
-		                 "\n", size, off);
+		dis_printf(
+			L_ERROR,
+			"Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T "\n",
+			size,
+			off
+		);
 		return FALSE;
 	}
 
@@ -133,7 +137,7 @@ int read_decrypt_sectors(
 	 * We are assuming that we always have a "sector size" multiple disk length
 	 * Can this assumption be wrong? I don't think so :)
 	 */
-	nb_loop = (size_t)read_size / sector_size;
+	nb_loop = (size_t) read_size / sector_size;
 
 
 	/* Run threads if compiled with */
@@ -147,18 +151,21 @@ int read_decrypt_sectors(
 		for(loop = 0; loop < NB_THREAD; ++loop)
 		{
 			args[loop].nb_loop       = nb_loop;
+			args[loop].nb_threads    = NB_THREAD;
+			args[loop].thread_begin  = loop;
 			args[loop].sector_size   = sector_size;
 			args[loop].sector_start  = sector_start;
 			args[loop].input         = input;
 			args[loop].output        = output;
 
-			args[loop].modulo        = NB_THREAD;
-			args[loop].modulo_result = loop;
-
 			args[loop].io_data       = io_data;
 
-			pthread_create( &thread[loop], NULL,
-			                thread_decrypt, (void*) &args[loop] );
+			pthread_create(
+				&thread[loop],
+				NULL,
+				thread_decrypt,
+				(void*) &args[loop]
+			);
 		}
 
 		/* Wait for threads to end */
@@ -169,13 +176,12 @@ int read_decrypt_sectors(
 	{
 		thread_arg_t arg;
 		arg.nb_loop       = nb_loop;
+		arg.nb_threads    = 1;
+		arg.thread_begin  = 0;
 		arg.sector_size   = sector_size;
 		arg.sector_start  = sector_start;
 		arg.input         = input;
 		arg.output        = output;
-
-		arg.modulo        = 0;
-		arg.modulo_result = 42;
 
 		arg.io_data       = io_data;
 
@@ -228,18 +234,21 @@ int encrypt_write_sectors(
 		for(loop = 0; loop < NB_THREAD; ++loop)
 		{
 			args[loop].nb_loop       = nb_write_sector;
+			args[loop].nb_threads    = NB_THREAD;
+			args[loop].thread_begin  = loop;
 			args[loop].sector_size   = sector_size;
 			args[loop].sector_start  = sector_start;
 			args[loop].input         = input;
 			args[loop].output        = output;
 
-			args[loop].modulo        = NB_THREAD;
-			args[loop].modulo_result = loop;
-
 			args[loop].io_data       = io_data;
 
-			pthread_create( &thread[loop], NULL,
-			                thread_encrypt, (void*) &args[loop] );
+			pthread_create(
+				&thread[loop],
+				NULL,
+				thread_encrypt,
+				(void*) &args[loop]
+			);
 		}
 
 		/* Wait for threads to end */
@@ -249,14 +258,13 @@ int encrypt_write_sectors(
 #else
 	{
 		thread_arg_t arg;
-		arg.nb_loop       = nb_loop;
+		arg.nb_loop       = nb_write_sector;
+		arg.nb_threads    = 1;
+		arg.thread_begin  = 0;
 		arg.sector_size   = sector_size;
 		arg.sector_start  = sector_start;
 		arg.input         = input;
 		arg.output        = output;
-
-		arg.modulo        = 0;
-		arg.modulo_result = 42;
 
 		arg.io_data       = io_data;
 
@@ -290,30 +298,28 @@ static void* thread_decrypt(void* params)
 	if(!params)
 		return NULL;
 
-	thread_arg_t* args    = (thread_arg_t*)params;
+	thread_arg_t* args    = (thread_arg_t*) params;
 	dis_iodata_t* io_data = args->io_data;
 
-	off_t loop               = 0;
-	off_t offset             = args->sector_start;
+	off_t    loop         = args->thread_begin;
+	uint16_t step_unit    = args->nb_threads;
 
-	uint8_t* loop_input      = args->input;
-	uint8_t* loop_output     = args->output;
+	int      hover        = 0;
+	uint16_t version      = dis_metadata_information_version(io_data->metadata);
+	uint16_t sector_size  = args->sector_size;
+	uint16_t step_size    = (uint16_t) (sector_size * step_unit);
 
-	int      hover           = 0;
-	uint16_t version         = dis_metadata_information_version(io_data->metadata);
-	uint16_t sector_size     = args->sector_size;
+	off_t    offset       = args->sector_start + sector_size * loop;
+	uint8_t* loop_input   = args->input + sector_size * loop;
+	uint8_t* loop_output  = args->output + sector_size * loop;
 
 
-	// TODO see to be more intelligent on these loops
-	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
-	                               offset      += sector_size,
-	                               loop_input  += sector_size,
-	                               loop_output += sector_size)
+	for( ; loop < (off_t)args->nb_loop;
+	       loop        += step_unit,
+	       offset      += step_size,
+	       loop_input  += step_size,
+	       loop_output += step_size)
 	{
-		if(args->modulo != 0 && args->modulo != 1
-			&& (loop % args->modulo) == args->modulo_result)
-			continue;
-
 		/*
 		 * For BitLocker-encrypted volume with W$ 7/8:
 		 *   - Don't decrypt the firsts sectors whatever might be the case, they
@@ -419,25 +425,24 @@ static void* thread_encrypt(void* params)
 	thread_arg_t* args    = (thread_arg_t*)params;
 	dis_iodata_t* io_data = args->io_data;
 
-	off_t   loop         = 0;
-	off_t offset         = args->sector_start;
-
-	uint8_t* loop_input  = args->input;
-	uint8_t* loop_output = args->output;
+	off_t    loop        = args->thread_begin;
+	uint16_t step_unit   = args->nb_threads;
 
 	uint16_t version     = dis_metadata_information_version(io_data->metadata);
 	uint16_t sector_size = args->sector_size;
+	uint16_t step_size   = (uint16_t) (sector_size * step_unit);
+
+	uint8_t* loop_input  = args->input + sector_size * loop;
+	uint8_t* loop_output = args->output + sector_size * loop;
+	off_t    offset      = args->sector_start + sector_size * loop;
 
 
-	for(loop = 0; loop < (off_t)args->nb_loop; ++loop,
-	                               offset      += sector_size,
-	                               loop_input  += sector_size,
-	                               loop_output += sector_size)
+	for( ; loop < (off_t)args->nb_loop;
+	       loop        += step_unit,
+	       offset      += step_size,
+	       loop_input  += step_size,
+	       loop_output += step_size)
 	{
-		if(args->modulo != 0 && args->modulo != 1
-			&& (loop % args->modulo) == args->modulo_result)
-			continue;
-
 		/*
 		 * Just encrypt this sector
 		 * Exception: don't encrypt it if the sector wasn't (as in the

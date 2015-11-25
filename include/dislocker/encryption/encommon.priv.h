@@ -29,8 +29,6 @@
 #include "dislocker/ssl_bindings.h"
 
 
-#define AES_CTX_LENGTH 256
-
 
 /**
  * AES contexts "used" during encryption/decryption

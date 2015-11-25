@@ -42,6 +42,7 @@ int decrypt_key(
 	unsigned char* mac,
 	unsigned char* nonce,
 	unsigned char* key,
+	unsigned int   keybits,
 	void** output
 );
 

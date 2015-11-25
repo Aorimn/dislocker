@@ -65,6 +65,7 @@ int decrypt_key(
 	unsigned char* mac,
 	unsigned char* nonce,
 	unsigned char* key,
+	unsigned int   keybits,
 	void** output)
 {
 	// Check parameters
@@ -94,7 +95,7 @@ int decrypt_key(
 	/*
 	 * Set key which is used to decrypt (already extracted from a datum_key_t structure)
 	 */
-	AES_SETENC_KEY(&ctx, key, AES_CTX_LENGTH);
+	AES_SETENC_KEY(&ctx, key, keybits);
 
 
 	/*

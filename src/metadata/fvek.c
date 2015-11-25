@@ -96,6 +96,16 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 	header_size = datum_value_types_prop[fvek->header.value_type].size_header;
 	fvek_size = fvek->header.datum_size - header_size;
 
+	if(vmk_key_size > (size_t) (UINT_MAX / 8))
+	{
+		dis_printf(
+			L_ERROR,
+			"VMK size too big, unsupported: %#" F_SIZE_T "\n",
+			vmk_key_size
+		);
+		return FALSE;
+	}
+
 	/* Finally decrypt the FVEK with the VMK */
 	if(!decrypt_key(
 			(unsigned char*) fvek + header_size,
@@ -103,6 +113,7 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 			fvek->mac,
 			fvek->nonce,
 			vmk_key,
+			(unsigned int)vmk_key_size * 8,
 			fvek_datum
 	))
 	{

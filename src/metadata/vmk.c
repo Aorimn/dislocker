@@ -158,12 +158,23 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size,
 	header_size = datum_value_types_prop[vmk_datum->header.value_type].size_header;
 	vmk_size = vmk_datum->header.datum_size - header_size;
 
+	if(key_size > (size_t) (UINT_MAX / 8))
+	{
+		dis_printf(
+			L_ERROR,
+			"Recovery key size too big, unsupported: %#" F_SIZE_T "\n",
+			key_size
+		);
+		return FALSE;
+	}
+
 	if(!decrypt_key(
 			(unsigned char*) vmk_datum + header_size,
 			vmk_size,
 			vmk_datum->mac,
 			vmk_datum->nonce,
 			recovery_key,
+			(unsigned int)key_size * 8,
 			(void**) vmk
 	))
 	{

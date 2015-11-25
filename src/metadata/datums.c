@@ -135,6 +135,15 @@ char* cipherstr(cipher_t enc)
 		case AES_256_NO_DIFFUSER :
 			value = "AES-256-NODIFFUSER";
 			break;
+
+		case AES_XTS_128:
+			value = "AES-XTS-128";
+			break;
+
+		case AES_XTS_256:
+			value = "AES-XTS-256";
+			break;
+
 		default:
 			value = "UNKNOWN CIPHER!";
 			break;

@@ -261,6 +261,7 @@ int dis_initialize(dis_context_t dis_ctx)
 		!check_state(dis_ctx->metadata))
 	{
 		dis_ctx->io_data.volume_state = FALSE;
+		ret = DIS_RET_ERROR_VOLUME_STATE_NOT_SAFE;
 	}
 
 	/* Clean everything before returning if there's an error */

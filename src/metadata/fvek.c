@@ -71,7 +71,7 @@ int get_fvek(bitlocker_dataset_t* dataset, void* vmk_datum, void** fvek_datum)
 	}
 	
 	/* Finally decrypt the FVEK with the VMK */
-	if(!decrypt_key((datum_aes_ccm_t*)*fvek_datum, vmk_key, fvek_datum, &fvek_size))
+	if(!decrypt_key((datum_mbedtls_aes_ccm_t*)*fvek_datum, vmk_key, fvek_datum, &fvek_size))
 	{
 		if(*fvek_datum)
 		{

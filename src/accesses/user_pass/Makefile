@@ -17,7 +17,7 @@ CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE -Wl,-z,relro -Wl,-z,now
 WFLAGS		=	-Wall -Werror -Wextra
 CFLAGS		=	$(WFLAGS) $(DEFINES) $(INC) $(CHARDEN)
-override LDFLAGS    +=	$(LIB) $(LHARDEN) -lpolarssl
+override LDFLAGS    +=	$(LIB) $(LHARDEN) -lmbedtls
 MAIN_OBJECT	=	
 SOURCES		=	user_pass.c ../stretch_key.c
 OBJECTS		=	$(SOURCES:.c=.o) ../stretch_key.o \

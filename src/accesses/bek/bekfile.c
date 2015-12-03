@@ -176,7 +176,7 @@ int get_vmk_from_bekfile(bitlocker_dataset_t* dataset, dis_config_t* cfg, void**
 	
 	xprintf(L_INFO, "Key datum found and payload extracted!\n");
 	
-	result = get_vmk((datum_aes_ccm_t*)*vmk_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
+	result = get_vmk((datum_mbedtls_aes_ccm_t*)*vmk_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
 	
 	xfree(recovery_key);
 	

@@ -31,7 +31,7 @@
 /*
  * Two functions used by decrypt_key
  */
-static int aes_ccm_encrypt_decrypt(
+static int mbedtls_aes_ccm_encrypt_decrypt(
 					AES_CONTEXT* ctx,
 					unsigned char* iv, unsigned char iv_length,
 					unsigned char* input, unsigned int input_length,
@@ -39,7 +39,7 @@ static int aes_ccm_encrypt_decrypt(
 					unsigned char* output
 						   );
 
-static int aes_ccm_compute_unencrypted_tag(
+static int mbedtls_aes_ccm_compute_unencrypted_tag(
 									AES_CONTEXT* ctx,
 									unsigned char* iv, unsigned char iv_length,
 									unsigned char* buffer, unsigned int buffer_length,
@@ -58,7 +58,7 @@ static int aes_ccm_compute_unencrypted_tag(
  * @param output_size The size of the decrypted result
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size)
+int decrypt_key(datum_mbedtls_aes_ccm_t* input, unsigned char* key, void** output, unsigned int* output_size)
 {
 	// Check parameters
 	if(!input || !key || !output || !output_size)
@@ -67,7 +67,7 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
 	
 	AES_CONTEXT ctx;
 	unsigned int header_size = 0;
-	unsigned char* aes_input_buffer = NULL;
+	unsigned char* mbedtls_aes_input_buffer = NULL;
 	unsigned int input_size = 0;
 	
 	uint8_t mac_first [AUTHENTICATOR_LENGTH];
@@ -88,8 +88,8 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
 	/*
 	 * The aes input buffer is data to decrypt
 	 */
-	aes_input_buffer = xmalloc(*output_size);
-	memcpy(aes_input_buffer, (unsigned char*)input + header_size, *output_size);  
+	mbedtls_aes_input_buffer = xmalloc(*output_size);
+	memcpy(mbedtls_aes_input_buffer, (unsigned char*)input + header_size, *output_size);  
 	
 	/*
 	 * Get the MAC
@@ -108,18 +108,18 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
 	 * Decrypt the input buffer now
 	 * NOTE: The 0xc is the nonce length (hardcoded)
 	 */
-	xprintf(L_DEBUG, "}--------[ Data passed to aes_ccm_encrypt_decrypt ]--------{\n");
+	xprintf(L_DEBUG, "}--------[ Data passed to mbedtls_aes_ccm_encrypt_decrypt ]--------{\n");
 	xprintf(L_DEBUG, "-- Nonce:\n");
 	hexdump(L_DEBUG, input->nonce, 0xc);
 	xprintf(L_DEBUG, "-- Input buffer:\n");
-	hexdump(L_DEBUG, aes_input_buffer, input_size);
+	hexdump(L_DEBUG, mbedtls_aes_input_buffer, input_size);
 	xprintf(L_DEBUG, "-- MAC:\n");
 	hexdump(L_DEBUG, mac_first, AUTHENTICATOR_LENGTH);
 	xprintf(L_DEBUG, "}----------------------------------------------------------{\n");
 	
-	aes_ccm_encrypt_decrypt(&ctx, input->nonce, 0xc, aes_input_buffer, input_size, mac_first, AUTHENTICATOR_LENGTH, (unsigned char*) *output);
+	mbedtls_aes_ccm_encrypt_decrypt(&ctx, input->nonce, 0xc, mbedtls_aes_input_buffer, input_size, mac_first, AUTHENTICATOR_LENGTH, (unsigned char*) *output);
 	
-	xfree(aes_input_buffer);
+	xfree(mbedtls_aes_input_buffer);
 	
 	
 	
@@ -127,7 +127,7 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
 	 * Compute to check decryption
 	 */
 	memset(mac_second, 0, AUTHENTICATOR_LENGTH);
-	aes_ccm_compute_unencrypted_tag(&ctx, input->nonce, 0xc, (unsigned char*) *output, *output_size, mac_second);
+	mbedtls_aes_ccm_compute_unencrypted_tag(&ctx, input->nonce, 0xc, (unsigned char*) *output, *output_size, mac_second);
 	
 	
 	memset(&ctx, 0, sizeof(AES_CONTEXT));
@@ -171,7 +171,7 @@ int decrypt_key(datum_aes_ccm_t* input, unsigned char* key, void** output, unsig
  * @param output Decrypted result
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-static int aes_ccm_encrypt_decrypt(
+static int mbedtls_aes_ccm_encrypt_decrypt(
 					 AES_CONTEXT* ctx,
 					 unsigned char* nonce, unsigned char nonce_length,
 					 unsigned char* input, unsigned int  input_length,
@@ -182,7 +182,7 @@ static int aes_ccm_encrypt_decrypt(
 	if(!ctx || !input || !mac || !output)
 		return FALSE;
 	
-	xprintf(L_INFO, "Entering aes_ccm_encrypt_decrypt...\n");
+	xprintf(L_INFO, "Entering mbedtls_aes_ccm_encrypt_decrypt...\n");
 	
 	unsigned char iv[16];
 	unsigned int loop = 0;
@@ -277,7 +277,7 @@ static int aes_ccm_encrypt_decrypt(
 	memset(iv, 0, sizeof(iv));
 	memset(tmp_buf, 0, sizeof(tmp_buf));
 	
-	xprintf(L_INFO, "Ending aes_ccm_encrypt_decrypt successfully!\n");
+	xprintf(L_INFO, "Ending mbedtls_aes_ccm_encrypt_decrypt successfully!\n");
 	
 	return TRUE;
 }
@@ -294,7 +294,7 @@ static int aes_ccm_encrypt_decrypt(
  * @param mac MAC result to use to validate decryption
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-static int aes_ccm_compute_unencrypted_tag(
+static int mbedtls_aes_ccm_compute_unencrypted_tag(
 									AES_CONTEXT* ctx,
 									unsigned char* nonce, unsigned char nonce_length,
 									unsigned char* buffer, unsigned int buffer_length,
@@ -304,7 +304,7 @@ static int aes_ccm_compute_unencrypted_tag(
 	if(!ctx || !buffer || !mac || nonce_length > 0xe)
 		return FALSE;
 	
-	xprintf(L_INFO, "Entering aes_ccm_compute_unencrypted_tag...\n");
+	xprintf(L_INFO, "Entering mbedtls_aes_ccm_compute_unencrypted_tag...\n");
 	
 	unsigned char iv[AUTHENTICATOR_LENGTH];
 	unsigned int loop = 0;
@@ -365,7 +365,7 @@ static int aes_ccm_compute_unencrypted_tag(
 	
 	memset(iv, 0, AUTHENTICATOR_LENGTH);
 	
-	xprintf(L_INFO, "Ending aes_ccm_compute_unencrypted_tag successfully!\n");
+	xprintf(L_INFO, "Ending mbedtls_aes_ccm_compute_unencrypted_tag successfully!\n");
 	
 	return TRUE;
 }

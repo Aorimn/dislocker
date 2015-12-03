@@ -122,7 +122,7 @@ int get_vmk_from_rp(bitlocker_dataset_t* dataset, dis_config_t* cfg, void** vmk_
 	cfg->recovery_password = NULL;
 	
 	/* As the computed key length is always the same, use a direct value */
-	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, 32, (datum_key_t**)vmk_datum);
+	result = get_vmk((datum_mbedtls_aes_ccm_t*)aesccm_datum, recovery_key, 32, (datum_key_t**)vmk_datum);
 	
 	xfree(recovery_key);
 	

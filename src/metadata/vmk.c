@@ -93,7 +93,7 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
 	}
 	
 	/* Run the decryption */
-	result = get_vmk((datum_aes_ccm_t*)aesccm_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
+	result = get_vmk((datum_mbedtls_aes_ccm_t*)aesccm_datum, recovery_key, rk_size, (datum_key_t**)vmk_datum);
 	
 	xfree(recovery_key);
 	
@@ -111,7 +111,7 @@ int get_vmk_from_clearkey(bitlocker_dataset_t* dataset, void** vmk_datum)
  * @param vmk The found datum_key_t containing the decrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
-int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, datum_key_t** vmk)
+int get_vmk(datum_mbedtls_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, datum_key_t** vmk)
 {
 	// Check parameters
 	if(!vmk_datum || !recovery_key || key_size == 0)
@@ -126,7 +126,7 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size, 
 	hexdump(L_DEBUG, recovery_key, key_size);
 	xprintf(L_DEBUG, "==========================================================\n");
 	
-	if(!decrypt_key((datum_aes_ccm_t*)vmk_datum, recovery_key, (void**)vmk, &vmk_size))
+	if(!decrypt_key((datum_mbedtls_aes_ccm_t*)vmk_datum, recovery_key, (void**)vmk, &vmk_size))
 	{
 		if(*vmk)
 		{

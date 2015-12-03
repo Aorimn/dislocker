@@ -39,7 +39,7 @@ int get_vmk_datum_from_guid(void* dataset, guid_t guid, void** vmk_datum);
 
 int get_vmk_datum_from_range(void* dataset, uint16_t min_range, uint16_t max_range, void** vmk_datum);
 
-int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
+int get_vmk(datum_mbedtls_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
             size_t key_size, datum_key_t** vmk);
 
 

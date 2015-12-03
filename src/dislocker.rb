@@ -10,7 +10,7 @@ class Dislocker < Formula
   sha1 "d05858bd9d5d5fc0f21fef3ed6fa32bea13be762"
   version "0.4.0"
 
-  depends_on "polarssl"
+  depends_on "mbedtls"
   depends_on "osxfuse"
 
   def install

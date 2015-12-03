@@ -31,7 +31,7 @@
 #include "metadata/extended_info.h"
 
 
-#include "polarssl/aes.h"
+#include "mbedtls/aes.h"
 #include "ssl_bindings.h"
 
 
@@ -43,7 +43,7 @@
  * @see encryption/decrypt.c
  * @see encryption/encrypt.c
  */
-typedef struct _aes_contexts {
+typedef struct _mbedtls_aes_contexts {
 	AES_CONTEXT FVEK_E_ctx;
 	AES_CONTEXT FVEK_D_ctx;
 	

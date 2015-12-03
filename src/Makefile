@@ -18,7 +18,7 @@ DEFINES		=	-DPROGNAME=\"$(PROGNAME)\" -DVERSION=\"$(VERSION)\" -D_FILE_OFFSET_BI
 DEFINES		+=	-DAUTHOR="$(AUTHOR)" -D__OS=\"$(OS)\" -D__ARCH=\"$(ARCH)\"
 DEFINES		+=	-D__ARCH_$(shell echo $(ARCH) | tr a-z A-Z) -D__$(shell echo $(OS) | tr a-z A-Z)
 INC		=	-I. -I/usr/local/include
-LIB		=	-lpthread -lpolarssl -L. -L/usr/local/lib
+LIB		=	-lpthread -lmbedtls -L. -L/usr/local/lib
 CHARDEN		=	-fstack-protector -fPIC -D_FORTIFY_SOURCE=2 -O1
 LHARDEN		=	-pie -fPIE
 WFLAGS		=	-Wall -Werror -Wextra
@@ -186,10 +186,10 @@ clean:
 travis-install:
 	if [ "$$TRAVIS_OS_NAME" = "linux" ]; then                     \
 		sudo apt-get update -qq;                              \
-		sudo apt-get install -qq libfuse-dev libpolarssl-dev; \
+		sudo apt-get install -qq libfuse-dev libmbedtls-dev; \
 	elif [ "$$TRAVIS_OS_NAME" = "osx" ]; then                     \
 		brew update;                                          \
-		brew install polarssl;                                \
+		brew install mbedtls;                                \
 		brew install osxfuse;                                 \
 	fi
 	make CC=$(CC)

@@ -365,17 +365,17 @@ void print_datum_use_key(LEVELS level, void* vdatum)
 	xprintf(level, "   ---------------------------\n");
 }
 
-void print_datum_aes_ccm(LEVELS level, void* vdatum)
+void print_datum_mbedtls_aes_ccm(LEVELS level, void* vdatum)
 {
-	datum_aes_ccm_t* datum = (datum_aes_ccm_t*) vdatum;
+	datum_mbedtls_aes_ccm_t* datum = (datum_mbedtls_aes_ccm_t*) vdatum;
 	
 	xprintf(level, "Nonce: \n");
 	print_nonce(level, datum->nonce);
 	xprintf(level, "MAC: \n");
 	print_mac(level, datum->mac);
 	xprintf(level, "Payload:\n");
-	hexdump(level, (void*)((char*)datum + sizeof(datum_aes_ccm_t)),
-			datum->header.datum_size - sizeof(datum_aes_ccm_t));
+	hexdump(level, (void*)((char*)datum + sizeof(datum_mbedtls_aes_ccm_t)),
+			datum->header.datum_size - sizeof(datum_mbedtls_aes_ccm_t));
 }
 
 void print_datum_tpmenc(LEVELS level, void* vdatum)

@@ -24,22 +24,19 @@
 #define SSL_BINDINGS_H
 
 /*
- * Here stand the bindings for polarssl SHA256/SHA2/SHA-2 function for dislocker
+ * Here stand the bindings for mbedtls SHA256/SHA2/SHA-2 function for dislocker
  */
-#include "polarssl/config.h"
-#if defined(POLARSSL_SHA256_C)
-#define SHA256(input, len, output)       sha256(input, len, output, 0)
-#else
-#define SHA256(input, len, output)       sha2(input, len, output, 0)
-#endif
+#define SHA256(input, len, output)       mbedtls_sha256(input, len, output, 0)
 
 /* Here stand the bindings for AES functions and contexts */
-#define AES_CONTEXT                      aes_context
-#define AES_SETENC_KEY(ctx, key, size)   aes_setkey_enc(ctx, key, size)
-#define AES_SETDEC_KEY(ctx, key, size)   aes_setkey_dec(ctx, key, size)
-#define AES_ECB_ENC(ctx, mode, in, out)  aes_crypt_ecb(ctx, mode, in, out)
+#define AES_ENCRYPT                      MBEDTLS_AES_ENCRYPT
+#define AES_DECRYPT                      MBEDTLS_AES_DECRYPT
+#define AES_CONTEXT                      mbedtls_aes_context
+#define AES_SETENC_KEY(ctx, key, size)   mbedtls_aes_setkey_enc(ctx, key, size)
+#define AES_SETDEC_KEY(ctx, key, size)   mbedtls_aes_setkey_dec(ctx, key, size)
+#define AES_ECB_ENC(ctx, mode, in, out)  mbedtls_aes_crypt_ecb(ctx, mode, in, out)
 #define AES_CBC(ctx, mode, size, iv, in, out) \
-                                         aes_crypt_cbc(ctx, mode, size, iv, in, out);
+                                         mbedtls_aes_crypt_cbc(ctx, mode, size, iv, in, out);
 
 
 

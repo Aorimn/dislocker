@@ -26,12 +26,8 @@
 
 #include "common.h"
 
-#include "polarssl/config.h"
-#if defined(POLARSSL_SHA256_C)
-#include "polarssl/sha256.h"
-#else
-#include "polarssl/sha2.h"
-#endif
+#include "mbedtls/config.h"
+#include "mbedtls/sha256.h"
 
 #include "ssl_bindings.h"
 

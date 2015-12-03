@@ -165,12 +165,12 @@ typedef struct _datum_use_key
 
 
 /* Datum type = 5 */
-typedef struct _datum_aes_ccm
+typedef struct _datum_mbedtls_aes_ccm
 {
 	datum_header_safe_t header;
 	uint8_t nonce[12];
 	uint8_t mac[16];
-} datum_aes_ccm_t;
+} datum_mbedtls_aes_ccm_t;
 
 
 /* Datum type = 6 */
@@ -319,7 +319,7 @@ void print_datum_key(LEVELS level, void* vdatum);
 void print_datum_unicode(LEVELS level, void* vdatum);
 void print_datum_stretch_key(LEVELS level, void* vdatum);
 void print_datum_use_key(LEVELS level, void* vdatum);
-void print_datum_aes_ccm(LEVELS level, void* vdatum);
+void print_datum_mbedtls_aes_ccm(LEVELS level, void* vdatum);
 void print_datum_tpmenc(LEVELS level, void* vdatum);
 void print_datum_vmk(LEVELS level, void* vdatum);
 void print_datum_external(LEVELS level, void* vdatum);
@@ -346,7 +346,7 @@ static const print_datum_f print_datum_tab[NB_DATUM_TYPES] =
 	print_datum_unicode,
 	print_datum_stretch_key,
 	print_datum_use_key,
-	print_datum_aes_ccm,
+	print_datum_mbedtls_aes_ccm,
 	print_datum_tpmenc,
 	print_datum_generic,
 	print_datum_vmk,

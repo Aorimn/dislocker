@@ -130,7 +130,7 @@ int get_vmk_from_user_pass(bitlocker_dataset_t* dataset, dis_config_t* cfg, void
 	cfg->user_password = NULL;
 	
 	/* As the computed key length is always the same, use a direct value */
-	return get_vmk((datum_aes_ccm_t*)aesccm_datum, user_hash, 32, (datum_key_t**)vmk_datum);;
+	return get_vmk((datum_mbedtls_aes_ccm_t*)aesccm_datum, user_hash, 32, (datum_key_t**)vmk_datum);;
 }
 
 

@@ -1,3 +1,17 @@
+# v0.5
+- Bugfixes:
+    - Support for old and new versions of PolarSSL (now called mbedTLS);
+    - Various crashes have been fixed.
+
+- Features improvement:
+    - Read/write on FAT-formatted volumes encrypted by BitLocker;
+    - Some Ruby bindings have been added to the library;
+    - A Ruby script has thus been added to look for BitLocker-encrypted volumes.
+
+- Notable changes:
+    - Compilation/installation now goes through [cmake](https://cmake.org/), be
+    sure to review the INSTALL.md file.
+
 # v0.4.1
 This version is only used to update dislocker's brew file for OSX users
 to be able to download v0.4. If you're not an OSX user, you can use either v0.4

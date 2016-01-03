@@ -41,17 +41,19 @@ Each OS type has its own section below, beware to follow yours:
 
 Just install Homebrew (http://brew.sh/) and run the following command:
 ```
+brew update
 brew install src/dislocker.rb
 ```
 This will install dislocker.
 
-For OSX users, it's highly possible that you have to follow the 'mbedTLS 2.0.0'
-section below. If so, you will have to install OSXfuse through Homebrew:
+You may have to follow the 'mbedTLS 2.0.0' section below. If so, you will have
+to install OSXfuse and cmake through Homebrew first:
 ```
-brew install osxfuse
+brew install osxfuse cmake
 ```
 And once you have followed the 'mbedTLS 2.0.0' section's instructions, you can
-follow the steps below, in the 'If you aren't on MacOSX...' point.
+follow the steps below, in the 'If you are NOT on MacOSX...' point (even if you
+are on MacOSX).
 
 ## If you're on FreeBSD...
 
@@ -89,13 +91,13 @@ type `make uninstall` as super-user.
 
 # mbedTLS 2.0.0
 
-Since the version 2.0.0 of mbedTLS, the build separate "crypto" functions such
+Since the version 2.0.0 of mbedTLS, the build moves "crypto" functions such
 as AES and SHA256 into a separate, libmbedcrypto, library. However, a typo
 didn't installed this library, resulting in some packagers not providing this
 library, thus breaking the dislocker compilation.
 If you have this problem, it's recommended to run the following commands (they
 have been put in the src/mbed_install.sh script, if you don't want to
-copy/paste):
+copy/paste from here):
 ```
 git clone https://github.com/ARMmbed/mbedtls.git
 cd mbedtls

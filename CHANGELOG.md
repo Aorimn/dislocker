@@ -1,3 +1,8 @@
+# v0.5.1
+This version is only used to update dislocker's brew file for OSX users
+to be able to download v0.5. If you're not an OSX user, you can use either v0.5
+or v0.5.1, this won't make any difference.
+
 # v0.5
 - Bugfixes:
     - Support for old and new versions of PolarSSL (now called mbedTLS);

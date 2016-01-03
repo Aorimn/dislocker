@@ -2,25 +2,21 @@
 # this brew file *must* be called 'dislocker.rb' to match the Formula
 #
 
-require "formula"
+require 'formula'
 
 class Dislocker < Formula
-    homepage "https://github.com/Aorimn/dislocker"
-    url "https://github.com/Aorimn/dislocker/archive/cd9d8e2e760fb94826e073112421442fdd287776.zip"
-    sha256 "d319695711ae2bf0dbef67d686cf90081056ab1795671a4ea993d63035350d86"
-    version "0.4.2"
+    homepage 'https://github.com/Aorimn/dislocker'
+    url 'https://github.com/Aorimn/dislocker/archive/v0.5.zip'
+    sha256 '20116021d6438c7551033f4a321bdc0659dba39227a9fd14c674f120cfd7c4aa'
+    version '0.5.0'
 
-    depends_on "polarssl"
+    depends_on 'polarssl'
+    depends_on 'cmake'
     depends_on :osxfuse
 
     def install
-        # This is a bit hackish, but is there another way?
-        ssl_libname='mbedtls'
-        if File.exists?("#{lib}/polarssl.a") && !File.exists?("/usr/local/Cellar/polarssl/1.3.10/mbedtls.a") # for some reason this returns false on my machine... I was fed up with it so I swapped the legacy support crap
-            ssl_libname='polarssl'
-        end
-
-        system "make -C src SSLIB=#{ssl_libname}"
-        system "make -C src install prefix=#{prefix}/"
+        system 'cmake', *std_cmake_args
+        system 'make'
+        system 'make', 'install'
     end
 end

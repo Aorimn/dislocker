@@ -32,6 +32,11 @@
 #include "dislocker/ntfs/encoding.h"
 #include "dislocker/encryption/encommon.h"
 
+#include <assert.h>
+
+#ifndef static_assert
+#define static_assert(x, s) extern int static_assertion[2*!!(x)-1]
+#endif
 
 
 /**
@@ -102,7 +107,7 @@ typedef struct _header_safe
 	uint16_t error_status;
 } datum_header_safe_t;
 
-_Static_assert(
+static_assert(
 	sizeof(struct _header_safe) == 8,
 	"Datum header structure's size isn't equal to 8"
 );

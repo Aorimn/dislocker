@@ -40,6 +40,12 @@
 		}                                                                   \
 	} while(0);
 
+#include <assert.h>
+
+#ifndef static_assert
+#define static_assert(x, s) extern int static_assertion[2*!!(x)-1]
+#endif
+
 
 
 #pragma pack (1)
@@ -100,7 +106,7 @@ typedef struct _volume_header
 	uint16_t boot_partition_identifier; // = 0xaa55                                 -- offset 0x1fe
 } volume_header_t; // Size = 512
 
-_Static_assert(
+static_assert(
 	sizeof(struct _volume_header) == 512,
 	"Volume header structure's size isn't equal to 512"
 );
@@ -123,7 +129,7 @@ typedef struct _bitlocker_dataset
 	ntfs_time_t timestamp; //                      -- offset 0x28
 } bitlocker_dataset_t; // Size = 0x30
 
-_Static_assert(
+static_assert(
 	sizeof(struct _bitlocker_dataset) == 0x30,
 	"BitLocker dataset structure's size isn't equal to 0x30"
 );
@@ -176,7 +182,7 @@ typedef struct _bitlocker_information
 	struct _bitlocker_dataset dataset; // See above                                         -- offset 0x40
 } bitlocker_information_t; // Size = 0x40 + 0x30
 
-_Static_assert(
+static_assert(
 	sizeof(struct _bitlocker_information) == (0x40 + 0x30),
 	"BitLocker information structure's size isn't equal to 0x70"
 );
@@ -199,7 +205,7 @@ typedef struct _bitlocker_validations
 	uint32_t  crc32;
 } bitlocker_validations_t; // Size = 8
 
-_Static_assert(
+static_assert(
 	sizeof(struct _bitlocker_validations) == 8,
 	"BitLocker validations structure's size isn't equal to 8"
 );
@@ -227,7 +233,7 @@ typedef struct _bitlocker_eow_infos
 	uint64_t disk_offsets[2]; //                                                -- offset 0x28
 } bitlocker_eow_infos_t; // Size = 0x38
 
-_Static_assert(
+static_assert(
 	sizeof(struct _bitlocker_eow_infos) == 0x38,
 	"BitLocker EOW information structure's size isn't equal to 0x38"
 );

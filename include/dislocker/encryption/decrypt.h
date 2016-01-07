@@ -27,6 +27,7 @@
 #define AUTHENTICATOR_LENGTH 16
 
 
+#include <sys/types.h>
 #include "dislocker/xstd/xstdio.h" // Only for off_t
 #include "dislocker/encryption/encommon.h"
 

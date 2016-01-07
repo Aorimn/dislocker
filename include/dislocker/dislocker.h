@@ -24,6 +24,7 @@
 #define DISLOCKER_MAIN_H
 
 #include <stdint.h>
+#include <sys/types.h>
 #include "dislocker/xstd/xstdio.h" // Only for off_t
 
 

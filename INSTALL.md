@@ -30,7 +30,7 @@ already existing RPM packages in Fedora could be a clever idea.
 
 For RHEL-like (including CentOS Scientific Linux):
 
-- yum install gcc cmake make fuse-devel mbedtls-devel ruby-devel ruby
+- yum install gcc cmake make fuse-devel mbedtls-devel ruby-devel /usr/bin/ruby
 
 Alternatively, running "yum install dislocker fuse-dislocker" to use the
 already existing RPM packages in EPEL could be a clever idea.

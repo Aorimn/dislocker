@@ -1,3 +1,6 @@
+# v0.5.2
+Minor fixes for downstream packaging and larger distribution coverage.
+
 # v0.5.1
 This version is only used to update dislocker's brew file for OSX users
 to be able to download v0.5. If you're not an OSX user, you can use either v0.5

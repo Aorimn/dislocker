@@ -86,6 +86,20 @@ int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey)
 			AES_SETDEC_KEY(&crypt->ctx.FVEK_D_ctx, fvekey, 256);
 			return DIS_RET_SUCCESS;
 
+		case AES_XTS_128:
+			AES_SETENC_KEY(&crypt->ctx.FVEK_E_ctx, fvekey, 128);
+			AES_SETDEC_KEY(&crypt->ctx.FVEK_D_ctx, fvekey, 128);
+			AES_SETENC_KEY(&crypt->ctx.TWEAK_E_ctx, fvekey + 0x10, 128);
+			AES_SETDEC_KEY(&crypt->ctx.TWEAK_D_ctx, fvekey + 0x10, 128);
+			return DIS_RET_SUCCESS;
+
+		case AES_XTS_256:
+			AES_SETENC_KEY(&crypt->ctx.FVEK_E_ctx, fvekey, 256);
+			AES_SETDEC_KEY(&crypt->ctx.FVEK_D_ctx, fvekey, 256);
+			AES_SETENC_KEY(&crypt->ctx.TWEAK_E_ctx, fvekey + 0x20, 256);
+			AES_SETDEC_KEY(&crypt->ctx.TWEAK_D_ctx, fvekey + 0x20, 256);
+			return DIS_RET_SUCCESS;
+
 		default:
 			dis_printf(L_WARNING, "Algo not supported: %#hx\n", algorithm);
 			break;

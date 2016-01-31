@@ -44,6 +44,9 @@ enum cipher_types
 	AES_256_NO_DIFFUSER = 0x8003,
 	AES_XTS_128         = 0x8004,
 	AES_XTS_256         = 0x8005,
+
+	DIS_CIPHER_LOWEST_SUPPORTED  = 0x8000,
+	DIS_CIPHER_HIGHEST_SUPPORTED = 0x8005,
 };
 typedef uint16_t cipher_t;
 

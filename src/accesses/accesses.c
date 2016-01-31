@@ -178,8 +178,8 @@ int dis_get_access(dis_context_t dis_ctx)
 	fvek_typed_datum = (datum_key_t*) fvek_datum;
 	fvek_typed_datum->algo &= 0xffff;
 
-	if(fvek_typed_datum->algo < AES_128_DIFFUSER ||
-	   fvek_typed_datum->algo > AES_256_NO_DIFFUSER)
+	if(fvek_typed_datum->algo < DIS_CIPHER_LOWEST_SUPPORTED ||
+	   fvek_typed_datum->algo > DIS_CIPHER_HIGHEST_SUPPORTED)
 	{
 		dis_printf(
 			L_CRITICAL,

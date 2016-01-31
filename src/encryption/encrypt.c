@@ -163,7 +163,7 @@ void encrypt_xts(
 	memset(iv.multi, 0, 16);
 	iv.single = sector_address / sector_size;
 
-	mbedtls_aes_crypt_xex(
+	AES_XEX(
 		&ctx->FVEK_E_ctx,
 		&ctx->TWEAK_E_ctx,
 		AES_ENCRYPT,

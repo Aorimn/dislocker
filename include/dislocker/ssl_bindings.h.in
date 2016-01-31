@@ -33,7 +33,7 @@
 // Function's name changed
 #if defined(MBEDTLS_SHA256_C)
 #  include "mbedtls/sha256.h"
-#  define SHA256(input, len, output)       mbedtls_sha256(input, len, output, 0)
+#  define SHA256(input, len, output)         mbedtls_sha256(input, len, output, 0)
 #else /* defined(MBEDTLS_SHA256_C) */
 
 #  if defined(POLARSSL_SHA256_C)
@@ -71,6 +71,16 @@
 #  define AES_CBC(ctx, mode, size, iv, in, out) \
                                           aes_crypt_cbc(ctx, mode, size, iv, in, out);
 #endif /* defined(MBEDTLS_AES_H) */
+
+
+#include "dislocker/encryption/aes-xts.h"
+#if defined(MBEDTLS_CIPHER_MODE_XEX)
+#  define AES_XEX(ctx1, ctx2, mode, size, iv, in, out) \
+                                          mbedtls_aes_crypt_xex(ctx1, ctx2, mode, size, iv, in, out)
+#else
+#  define AES_XEX(ctx1, ctx2, mode, size, iv, in, out) \
+                                          dis_aes_crypt_xex(ctx1, ctx2, mode, size, iv, in, out)
+#endif /* defined(MBEDTLS_CIPHER_MODE_XEX) */
 
 
 #endif /* SSL_BINDINGS_H */

@@ -48,7 +48,7 @@ set (SOURCES
 		accesses/rp/recovery_password.c
 		accesses/user_pass/user_pass.c accesses/bek/bekfile.c
 		encryption/encommon.c encryption/decrypt.c encryption/encrypt.c
-		encryption/diffuser.c encryption/crc32.c
+		encryption/diffuser.c encryption/crc32.c encryption/aes-xts.c
 		ntfs/clock.c ntfs/encoding.c
 		inouts/inouts.c inouts/prepare.c inouts/sectors.c
 	)

@@ -9,9 +9,7 @@ src/dislocker-file
 src/dislocker-find
 src/dislocker-fuse
 src/dislocker-metadata
-src/libdislocker.so
-src/libdislocker.so.0.4
-src/libdislocker.so.0.4.1
+src/libdislocker.so*
 
 # Configured files
 include/dislocker/ssl_bindings.h

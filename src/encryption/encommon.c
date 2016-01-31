@@ -52,6 +52,11 @@ dis_crypt_t dis_crypt_new(uint16_t sector_size, cipher_t disk_cipher)
 		crypt->encrypt_fn = encrypt_cbc_with_diffuser;
 		crypt->decrypt_fn = decrypt_cbc_with_diffuser;
 	}
+	else if(disk_cipher == AES_XTS_128 || disk_cipher == AES_XTS_256)
+	{
+		crypt->encrypt_fn = encrypt_xts;
+		crypt->decrypt_fn = decrypt_xts;
+	}
 	else
 	{
 		crypt->encrypt_fn = encrypt_cbc_without_diffuser;

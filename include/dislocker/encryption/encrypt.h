@@ -48,6 +48,14 @@ void encrypt_cbc_with_diffuser(
 	uint8_t* buffer
 );
 
+void encrypt_xts(
+	dis_aes_contexts_t* ctx,
+	uint16_t sector_size,
+	uint8_t* sector,
+	off_t sector_address,
+	uint8_t* buffer
+);
+
 int encrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uint8_t* buffer);
 
 

@@ -137,4 +137,42 @@ void encrypt_cbc_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, ui
 }
 
 
+/**
+ * Encrypt a sector when the diffuser is enabled
+ *
+ * @param ctx AES's contexts
+ * @param sector_size Size of a sector (in bytes)
+ * @param sector The sector to encrypt
+ * @param sector_address Address of the sector to encrypt
+ * @param buffer The place where we have to put encrypted data
+ */
+void encrypt_xts(
+	dis_aes_contexts_t* ctx,
+	uint16_t sector_size,
+	uint8_t* sector,
+	off_t sector_address,
+	uint8_t* buffer)
+{
+	/* Parameters are assumed to be correctly checked already */
+	union {
+		unsigned char multi[16];
+		off_t single;
+	} iv;
+
+	/* Create the iv */
+	memset(iv.multi, 0, 16);
+	iv.single = sector_address / sector_size;
+
+	mbedtls_aes_crypt_xex(
+		&ctx->FVEK_E_ctx,
+		&ctx->TWEAK_E_ctx,
+		AES_ENCRYPT,
+		sector_size,
+		iv.multi,
+		sector,
+		buffer
+	);
+}
+
+
 

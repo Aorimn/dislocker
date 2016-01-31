@@ -490,4 +490,39 @@ void decrypt_cbc_with_diffuser(dis_aes_contexts_t* ctx, uint16_t sector_size, ui
 }
 
 
+/**
+ * Decrypt a sector which was encrypted with AES-XTS
+ *
+ * @param ctx AES's contexts
+ * @param sector_size Size of a sector (in bytes)
+ * @param sector The sector to decrypt
+ * @param sector_address Address of the sector to decrypt
+ * @param buffer The place where we have to put decrypted data
+ */
+void decrypt_xts(
+	dis_aes_contexts_t* ctx,
+	uint16_t sector_size,
+	uint8_t* sector,
+	off_t sector_address,
+	uint8_t* buffer)
+{
+	/* Parameters are assumed to be correctly checked already */
+	union {
+		unsigned char multi[16];
+		off_t single;
+	} iv;
 
+	/* Create the iv */
+	memset(iv.multi, 0, 16);
+	iv.single = sector_address / sector_size;
+
+	mbedtls_aes_crypt_xex(
+		&ctx->FVEK_D_ctx,
+		&ctx->TWEAK_E_ctx,
+		AES_DECRYPT,
+		sector_size,
+		iv.multi,
+		sector,
+		buffer
+	);
+}

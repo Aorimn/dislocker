@@ -38,5 +38,14 @@ int dis_aes_crypt_xex(
 	const unsigned char *input,
 	unsigned char *output
 );
+int dis_aes_crypt_xts(
+	AES_CONTEXT *crypt_ctx,
+	AES_CONTEXT *tweak_ctx,
+	int mode,
+	size_t length,
+	unsigned char *iv,
+	const unsigned char *input,
+	unsigned char *output
+);
 
 #endif /* DIS_AES_XTS_H */

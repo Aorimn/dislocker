@@ -1,3 +1,7 @@
+# v0.6
+- Features improvement:
+    - Read/write on Windows 10 (v1511) encrypted volumes.
+
 # v0.5.2
 Minor fixes for downstream packaging and larger distribution coverage.
 

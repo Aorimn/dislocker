@@ -81,6 +81,8 @@
 #  define AES_XEX(ctx1, ctx2, mode, size, iv, in, out) \
                                           dis_aes_crypt_xex(ctx1, ctx2, mode, size, iv, in, out)
 #endif /* defined(MBEDTLS_CIPHER_MODE_XEX) */
+#  define AES_XTS(ctx1, ctx2, mode, size, iv, in, out) \
+                                          dis_aes_crypt_xts(ctx1, ctx2, mode, size, iv, in, out)
 
 
 #endif /* SSL_BINDINGS_H */

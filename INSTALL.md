@@ -19,25 +19,25 @@ another program - see the NOTE section below - will be available.
 
 For Debian-like:
 
-- aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev
+- `aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev`
 
 For Fedora-like:
 
-- dnf install gcc cmake make fuse-devel mbedtls-devel ruby-devel rubypick
+- `dnf install gcc cmake make fuse-devel mbedtls-devel ruby-devel rubypick`
 
-Alternatively, running "dnf install dislocker fuse-dislocker" to use the
+Alternatively, running `dnf install dislocker fuse-dislocker` to use the
 already existing RPM packages in Fedora could be a clever idea.
 
 For RHEL-like (including CentOS Scientific Linux):
 
-- yum install gcc cmake make fuse-devel mbedtls-devel ruby-devel /usr/bin/ruby
+- `yum install gcc cmake make fuse-devel mbedtls-devel ruby-devel /usr/bin/ruby`
 
-Alternatively, running "yum install dislocker fuse-dislocker" to use the
+Alternatively, running `yum install dislocker fuse-dislocker` to use the
 already existing RPM packages in EPEL could be a clever idea.
 
 For FreeBSD:
 
-- pkg install cmake gmake fusefs-libs polarssl
+- `pkg install cmake gmake fusefs-libs polarssl`
 
 For OSX: Follow the instructions in the next section.
 
@@ -146,6 +146,7 @@ Whether it works or not, feel free to send comments and feedbacks to
 
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
+
 1. `dislocker-bek`: for disecting a .bek file and printing information about it
 
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume

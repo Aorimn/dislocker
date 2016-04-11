@@ -262,6 +262,101 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 }
 
 
+/**
+ * Get dislocker's option
+ *
+ * @param dis_ctx Dislocker's context
+ * @param opt_name The option's name to get
+ * @param opt_value The retrieved value of the option. This is stored in
+ *opt_value.
+ */
+int dis_getopt(dis_context_t dis_ctx, dis_opt_e opt_name, void** opt_value)
+{
+	if (!dis_ctx || !opt_value)
+		return FALSE;
+
+	dis_config_t* cfg = &dis_ctx->cfg;
+
+	switch(opt_name)
+	{
+		case DIS_OPT_VOLUME_PATH:
+			*opt_value = cfg->volume_path;
+			break;
+		case DIS_OPT_USE_CLEAR_KEY:
+			if(cfg->decryption_mean & DIS_USE_CLEAR_KEY)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_USE_BEK_FILE:
+			if(cfg->decryption_mean & DIS_USE_BEKFILE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_BEK_FILE_PATH:
+			*opt_value = cfg->bek_file;
+			break;
+		case DIS_OPT_USE_RECOVERY_PASSWORD:
+			if(cfg->decryption_mean & DIS_USE_RECOVERY_PASSWORD)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_RECOVERY_PASSWORD:
+			*opt_value = cfg->recovery_password;
+			break;
+		case DIS_OPT_USE_USER_PASSWORD:
+			if(cfg->decryption_mean & DIS_USE_USER_PASSWORD)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_USER_PASSWORD:
+			*opt_value = cfg->user_password;
+			break;
+		case DIS_OPT_USE_FVEK_FILE:
+			if(cfg->decryption_mean & DIS_USE_FVEKFILE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_FVEK_FILE_PATH:
+			*opt_value = cfg->fvek_file;
+			break;
+		case DIS_OPT_VERBOSITY:
+			*opt_value = (void*) cfg->verbosity;
+			break;
+		case DIS_OPT_LOG_FILE_PATH:
+			*opt_value = cfg->log_file;
+			break;
+		case DIS_OPT_FORCE_BLOCK:
+			*opt_value = (void*) ((long) cfg->force_block);
+			break;
+		case DIS_OPT_VOLUME_OFFSET:
+			*opt_value = (void*) cfg->offset;
+			break;
+		case DIS_OPT_READ_ONLY:
+			if(cfg->flags & DIS_FLAG_READ_ONLY)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_DONT_CHECK_VOLUME_STATE:
+			if(cfg->flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_INITIALIZE_STATE:
+			*opt_value = (void*) cfg->init_stop_at;
+			break;
+	}
+
+	return TRUE;
+}
+
+
 static void set_decryption_mean(dis_config_t* cfg, int set, unsigned value)
 {
 	if(set == TRUE)
@@ -274,7 +369,7 @@ static void set_decryption_mean(dis_config_t* cfg, int set, unsigned value)
 /**
  * Modify dislocker's options one-by-one
  *
- * @param cfg Dislocker's config
+ * @param dis_ctx Dislocker's context
  * @param opt_name The option's name to change
  * @param opt_value The new value of the option. Note that this is a pointer. If
  * NULL, the default value -which is not necessarily usable- will be set.

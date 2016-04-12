@@ -1032,6 +1032,9 @@ static int get_eow_check_valid(
 		}
 	}
 
+	if(current == 2)
+		return FALSE;
+
 	return TRUE;
 }
 

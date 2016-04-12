@@ -4,7 +4,7 @@
 .SH NAME
 Dislocker fuse - Read/write BitLocker encrypted volumes under Linux, OSX and FreeBSD.
 .SH SYNOPSIS
-dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
+dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
 
 Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
 .SH DESCRIPTION
@@ -36,7 +36,7 @@ See the FVEK FILE section below to understand what is to be put into this \fIFVE
 .B -l, --logfile \fILOG_FILE\fR
 put messages into this file (stdout by default)
 .TP
-.B -o, --offset \fIOFFSET\fR
+.B -O, --offset \fIOFFSET\fR
 BitLocker partition offset in base 10 (default is 0).
 Protip: in your shell, you probably can pass \fB-o $((\fI0xdeadbeef\fB))\fR if you have a 16-based number and are too lazy to convert it in another way.
 .TP

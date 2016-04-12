@@ -53,7 +53,7 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
 "    -k, --fvek FVEK_FILE  decrypt volume using the FVEK directly\n"
 "    -l, --logfile LOG_FILE\n"
 "                          put messages into this file (stdout by default)\n"
-"    -o, --offset OFFSET   BitLocker partition offset (default is 0)\n"
+"    -O, --offset OFFSET   BitLocker partition offset (default is 0)\n"
 "    -p, --recovery-password=[RECOVERY_PASSWORD]\n"
 "                          decrypt volume using the recovery password method\n"
 "    -q, --quiet           do NOT display anything\n"
@@ -117,7 +117,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	};
 
 	/* Options which could be passed as argument */
-	const char          short_opts[] = "cf:F::hk:l:o:p::qrsu::vV:";
+	const char          short_opts[] = "cf:F::hk:l:O:p::qrsu::vV:";
 	const struct option long_opts[] = {
 		{"clearkey",          NO_OPT,   NULL, 'c'},
 		{"bekfile",           NEED_OPT, NULL, 'f'},
@@ -125,7 +125,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		{"help",              NO_OPT,   NULL, 'h'},
 		{"fvek",              NEED_OPT, NULL, 'k'},
 		{"logfile",           NEED_OPT, NULL, 'l'},
-		{"offset",            NEED_OPT, NULL, 'o'},
+		{"offset",            NEED_OPT, NULL, 'O'},
 		{"recovery-password", MAY_OPT,  NULL, 'p'},
 		{"quiet",             NO_OPT,   NULL, 'q'},
 		{"readonly",          NO_OPT,   NULL, 'r'},
@@ -185,7 +185,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 				dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
 				break;
 			}
-			case 'o':
+			case 'O':
 			{
 				off_t offset = (off_t) strtoll(optarg, NULL, 10);
 				dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);

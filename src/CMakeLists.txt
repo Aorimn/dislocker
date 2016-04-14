@@ -17,6 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+if("${CMAKE_SOURCE_DIR}" MATCHES "src/?$")
+	message(FATAL_ERROR "\nPlease execute cmake from the directory above, not the src/ directory.")
+	return()
+endif()
 
 add_definitions (-DPROGNAME="${PROJECT_NAME}")
 add_definitions (-DAUTHOR="${AUTHOR}")

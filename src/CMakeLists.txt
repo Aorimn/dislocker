@@ -149,7 +149,7 @@ if(NOT DEFINED bindir)
 endif()
 
 string (TOLOWER "${CMAKE_SYSTEM_NAME}" SYSNAME)
-set (DIS_MAN ../man/${SYSNAME})
+set (DIS_MAN ${PROJECT_SOURCE_DIR}/man/${SYSNAME})
 
 # RPATH handling
 if(POLICY CMP0042)

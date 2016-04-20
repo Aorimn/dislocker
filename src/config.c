@@ -22,11 +22,135 @@
  */
 
 
+#include <string.h>
 #include <getopt.h>
 
 #include "dislocker/common.h"
 #include "dislocker/config.priv.h"
 #include "dislocker/dislocker.priv.h"
+
+
+
+
+
+/**
+ * Hide a commandline option, replacing the actual optarg by 'X's.
+ *
+ * @param opt The option to hide
+ */
+static void hide_opt(char* opt)
+{
+	if(!opt)
+		return;
+
+	size_t len = strlen(opt);
+
+	while(len)
+	{
+		opt[--len] = 'X';
+	}
+}
+
+
+/* These functions are wrappers around the appropriate dis_setopt call */
+static void setclearkey(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &true);
+}
+static void setbekfile(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_BEK_FILE_PATH, optarg);
+}
+static void setforceblock(dis_context_t dis_ctx, char* optarg)
+{
+	off_t force;
+	if(optarg)
+		force = (unsigned char) strtol(optarg, NULL, 10);
+	else
+		force = 1;
+	dis_setopt(dis_ctx, DIS_OPT_FORCE_BLOCK, &force);
+}
+static void setfvek(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
+}
+static void setlogfile(dis_context_t dis_ctx, char* optarg)
+{
+	dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
+}
+static void setoffset(dis_context_t dis_ctx, char* optarg)
+{
+	off_t offset = (off_t) strtoll(optarg, NULL, 10);
+	dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
+}
+static void setrecoverypwd(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_RECOVERY_PASSWORD, optarg);
+	hide_opt(optarg);
+}
+static void setquiet(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	DIS_LOGS l = L_QUIET;
+	dis_setopt(dis_ctx, DIS_OPT_VERBOSITY, &l);
+}
+static void setro(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &true);
+}
+static void setstateok(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &true);
+}
+static void setuserpassword(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_USER_PASSWORD, optarg);
+	hide_opt(optarg);
+}
+static void setverbosity(dis_context_t dis_ctx, char* optarg)
+{
+	dis_ctx->cfg.verbosity = strtol(optarg, NULL, 10);
+}
+
+
+/* Structure used to define dislocker's options */
+struct _dis_options {
+	struct option opt;
+	void (*fn)(dis_context_t dis_ctx, char* optarg);
+};
+
+static struct _dis_options dis_opt[] = {
+	{ {"clearkey",          no_argument,       NULL, 'c'}, setclearkey },
+	{ {"bekfile",           required_argument, NULL, 'f'}, setbekfile },
+	{ {"force-block",       optional_argument, NULL, 'F'}, setforceblock },
+	{ {"help",              no_argument,       NULL, 'h'}, NULL },
+	{ {"fvek",              required_argument, NULL, 'k'}, setfvek },
+	{ {"logfile",           required_argument, NULL, 'l'}, setlogfile },
+	{ {"offset",            required_argument, NULL, 'O'}, setoffset },
+	{ {"options",           required_argument, NULL, 'o'}, NULL },
+	{ {"recovery-password", optional_argument, NULL, 'p'}, setrecoverypwd },
+	{ {"quiet",             no_argument,       NULL, 'q'}, setquiet },
+	{ {"readonly",          no_argument,       NULL, 'r'}, setro },
+	{ {"ro",                no_argument,       NULL, 'r'}, setro },
+	{ {"stateok",           no_argument,       NULL, 's'}, setstateok },
+	{ {"user-password",     optional_argument, NULL, 'u'}, setuserpassword },
+	{ {"verbosity",         no_argument,       NULL, 'v'}, setverbosity },
+	{ {"volume",            required_argument, NULL, 'V'}, NULL }
+};
 
 
 
@@ -74,20 +198,34 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
 
 
 /**
- * Hide a commandline option, replacing the actual optarg by 'X's.
+ * Parse the --options parameter's value
  *
- * @param opt The option to hide
+ * @param dis_ctx Dislocker's context
+ * @param optstr The value passed with the --options parameter
  */
-static void hide_opt(char* opt)
+static void parse_options(dis_context_t dis_ctx, char* optstr)
 {
-	if(!opt)
-		return;
+	char* tok = NULL;
+	size_t nb_options = sizeof(dis_opt)/sizeof(struct _dis_options);
+	size_t i;
+	size_t opt_len;
 
-	size_t len = strlen(opt);
-
-	while(len)
+	tok = strtok(optstr, ",");
+	while(tok != NULL)
 	{
-		opt[--len] = 'X';
+		for(i = 0; i < nb_options; i++)
+		{
+			opt_len = strlen(dis_opt[i].opt.name);
+			if(strncmp(dis_opt[i].opt.name, tok, opt_len) == 0)
+			{
+				if(tok[opt_len] == '=' && tok[opt_len] != '\0')
+					dis_opt[i].fn(dis_ctx, &tok[opt_len + 1]);
+				else
+					dis_opt[i].fn(dis_ctx, NULL);
+			}
+		}
+
+		tok = strtok(NULL, ",");
 	}
 }
 
@@ -98,7 +236,7 @@ static void hide_opt(char* opt)
  * @warning If -h/--help is encountered, the help is printed and the program
  * exits (using exit(EXIT_SUCCESS)).
  *
- * @param cfg The config pointer to dis_config_t structure
+ * @param dis_ctx Dislocker's context
  * @param argc Number of arguments given to the program
  * @param argv Arguments given to the program
  * @return Return the number of arguments which are still waiting to be studied.
@@ -109,32 +247,12 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	/** See man getopt_long(3) */
 	extern int optind;
 	int optchar = 0;
+	size_t nb_options = sizeof(dis_opt)/sizeof(struct _dis_options);
 
-	enum {
-		NO_OPT,   /* No option for this argument */
-		NEED_OPT, /* Need an option for this one */
-		MAY_OPT   /* User may provide an option  */
-	};
 
 	/* Options which could be passed as argument */
-	const char          short_opts[] = "cf:F::hk:l:O:p::qrsu::vV:";
-	const struct option long_opts[] = {
-		{"clearkey",          NO_OPT,   NULL, 'c'},
-		{"bekfile",           NEED_OPT, NULL, 'f'},
-		{"force-block",       MAY_OPT,  NULL, 'F'},
-		{"help",              NO_OPT,   NULL, 'h'},
-		{"fvek",              NEED_OPT, NULL, 'k'},
-		{"logfile",           NEED_OPT, NULL, 'l'},
-		{"offset",            NEED_OPT, NULL, 'O'},
-		{"recovery-password", MAY_OPT,  NULL, 'p'},
-		{"quiet",             NO_OPT,   NULL, 'q'},
-		{"readonly",          NO_OPT,   NULL, 'r'},
-		{"stateok",           NO_OPT,   NULL, 's'},
-		{"user-password",     MAY_OPT,  NULL, 'u'},
-		{"verbosity",         NO_OPT,   NULL, 'v'},
-		{"volume",            NEED_OPT, NULL, 'V'},
-		{0, 0, 0, 0}
-	};
+	const char short_opts[] = "cf:F::hk:l:O:o:p::qrsu::vV:";
+	struct option* long_opts;
 
 	if(!dis_ctx || !argv)
 		return -1;
@@ -143,7 +261,17 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	int true = TRUE;
 
 
-	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
+	long_opts = malloc(nb_options * sizeof(struct option));
+	while(nb_options--)
+	{
+		long_opts[nb_options].name    = dis_opt[nb_options].opt.name;
+		long_opts[nb_options].has_arg = dis_opt[nb_options].opt.has_arg;
+		long_opts[nb_options].flag    = dis_opt[nb_options].opt.flag;
+		long_opts[nb_options].val     = dis_opt[nb_options].opt.val;
+	}
+
+
+	while((optchar = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
 	{
 		switch(optchar)
 		{
@@ -191,6 +319,11 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 				dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
 				break;
 			}
+			case 'o':
+			{
+				parse_options(dis_ctx, optarg);
+				break;
+			}
 			case 'p':
 			{
 				dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &true);
@@ -236,6 +369,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			default:
 			{
 				dis_usage();
+				free(long_opts);
 				dis_free_args(dis_ctx);
 				return -1;
 			}
@@ -257,6 +391,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	   cfg->force_block != 3)
 		cfg->force_block = 0;
 
+	free(long_opts);
 
 	return optind;
 }
@@ -376,7 +511,7 @@ static void set_decryption_mean(dis_config_t* cfg, int set, unsigned value)
  */
 int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 {
-	if (!dis_ctx || !opt_value)
+	if (!dis_ctx)
 		return FALSE;
 
 	dis_config_t* cfg = &dis_ctx->cfg;

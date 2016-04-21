@@ -74,6 +74,17 @@ whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 
 
 
+## A note on fstab
+
+BitLocker partitions can be mount-ed using the /etc/fstab file and dislocker's
+long options.
+The line below is an example line which has to be adapted:
+```
+/dev/sda2 /mnt/dislocker fuse.dislocker user-password=blah,nofail 0 0
+```
+
+
+
 ## Note
 
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`

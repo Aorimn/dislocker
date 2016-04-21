@@ -123,7 +123,7 @@ static void setuserpassword(dis_context_t dis_ctx, char* optarg)
 }
 static void setverbosity(dis_context_t dis_ctx, char* optarg)
 {
-	dis_ctx->cfg.verbosity = strtol(optarg, NULL, 10);
+	dis_ctx->cfg.verbosity = (DIS_LOGS)strtol(optarg, NULL, 10);
 }
 
 
@@ -380,6 +380,8 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	/* Check verbosity */
 	if(cfg->verbosity > L_DEBUG)
 		cfg->verbosity = L_DEBUG;
+	if(cfg->verbosity < L_CRITICAL)
+		cfg->verbosity = L_CRITICAL;
 
 	/* Check decryption method */
 	if(!cfg->decryption_mean)

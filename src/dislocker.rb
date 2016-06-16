@@ -10,7 +10,7 @@ class Dislocker < Formula
     sha256 '9738fdaa224de5669fe98dbd2a2edfbb1f2d0021e63045140d693c401e673ce4'
     version '0.6.0'
 
-    depends_on 'polarssl'
+    depends_on 'mbedtls'
     depends_on 'cmake'
     depends_on :osxfuse
 

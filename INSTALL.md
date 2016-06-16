@@ -10,7 +10,7 @@ You need:
 - cmake (at least version 2.6);
 - make (or gmake, for FreeBSD);
 - Headers for FUSE;
-- Headers for PolarSSL/mbedTLS;
+- Headers for mbedTLS (previously known as PolarSSL);
 - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
 

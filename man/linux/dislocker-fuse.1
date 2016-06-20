@@ -81,13 +81,13 @@ The FVEK file option expects a specific format from the file. The file is split 
 The file is therefore 66 bytes long, not more nor less.
 Note that you may have to deal with endianness.
 .SH EXAMPLES
-These are exemples you can run directly.
+These are examples you can run directly.
 First, you may want to copy the BitLocker volume:
 .IP
 .B % dd if=/dev/sda2 of=encrypted.bitlocker
 .IP
 This will copy the entire volume located into \fB/dev/sda2\fR to \fBencrypted.bitlocker\fR.
-You're not forced to do this step, but this will ensure no write whatesoever is performed on the BitLocker volume.
+You're not forced to do this step, but this will ensure no write whatsoever is performed on the BitLocker volume.
 .P
 Then dislock it:
 .IP

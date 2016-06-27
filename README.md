@@ -30,7 +30,7 @@ create that file, depending on the size of the encrypted partition. But
 afterward, once the partition is decrypted, the access to the NTFS partition
 will be faster. Another thing to think about is the size on your disk this
 binary needs: the same size as the volume you're trying to decrypt.
-Nethertheless, once the partition is decrypted, you can mount your file as any
+Nevertheless, once the partition is decrypted, you can mount your file as any
 NTFS partition.
 
 
@@ -90,7 +90,7 @@ The line below is an example line which has to be adapted:
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
 
-1. `dislocker-bek`: for disecting a .bek file and printing information about it
+1. `dislocker-bek`: for dissecting a .bek file and printing information about it
 
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume
 

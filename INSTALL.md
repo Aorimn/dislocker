@@ -132,7 +132,7 @@ You can then resume the installation where you have left it.
 
 # PORTABILITY
 
-Globally, this was successfuly tested on Linux x86/x86_64, MacOSX and FreeBSD.
+Globally, this was successfully tested on Linux x86/x86_64, MacOSX and FreeBSD.
 It won't work on Windows and may not work on other BSDs (not tested).
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
@@ -151,7 +151,7 @@ Whether it works or not, feel free to send comments and feedbacks to
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
 
-1. `dislocker-bek`: for disecting a .bek file and printing information about it
+1. `dislocker-bek`: for dissecting a .bek file and printing information about it
 
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume
 

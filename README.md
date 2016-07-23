@@ -78,6 +78,7 @@ whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
+
 1. `dislocker-bek`: for disecting a .bek file and printing information about it
 
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume

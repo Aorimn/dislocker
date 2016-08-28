@@ -127,6 +127,12 @@ if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARIES)
 	set (SOURCES ${SOURCES} ruby.c)
 endif()
 
+find_package (FUSE)
+if(FUSE_FOUND  AND  FUSE_INCLUDE_DIRS  AND  FUSE_LIBRARIES)
+	include_directories (${FUSE_INCLUDE_DIRS})
+	set (LIB "${LIB} ${FUSE_LIBRARIES}")
+endif()
+
 # Places
 if(NOT DEFINED sharedir)
   set(sharedir ${CMAKE_INSTALL_PREFIX}/share)

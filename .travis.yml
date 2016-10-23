@@ -8,6 +8,10 @@ os:
     - linux
     - osx
 
+env:
+    global:
+        - PATH="/usr/bin:/usr/local/bin:$PATH"
+
 before_install:
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq; fi
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -qq libfuse-dev libpolarssl-dev ruby-dev; fi

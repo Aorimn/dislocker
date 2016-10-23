@@ -58,7 +58,7 @@ set (SOURCES
 	)
 
 if(NOT DEFINED WARN_FLAGS)
-	set (WARN_FLAGS "-Wall -Werror -Wextra" CACHE STRING "" FORCE)
+	set (WARN_FLAGS "-Wall -Wextra" CACHE STRING "" FORCE)
 endif()
 if(NOT DEFINED HARDEN_FLAGS)
 	set (HARDEN_FLAGS "-fstack-protector -fstrict-aliasing -D_FORTIFY_SOURCE=2 -O1" CACHE STRING "" FORCE)

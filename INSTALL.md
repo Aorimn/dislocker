@@ -41,7 +41,7 @@ already existing RPM packages in EPEL could be a clever idea.
 
 For FreeBSD:
 
-- `pkg install cmake gmake fusefs-libs polarssl`
+- `pkg install cmake gmake fusefs-libs mbedtls`
 
 For OSX: Follow the instructions in the next section.
 

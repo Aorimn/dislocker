@@ -12,7 +12,8 @@ class Dislocker < Formula
 
     depends_on 'mbedtls'
     depends_on 'cmake'
-    depends_on :osxfuse
+#    This dependency is seperately installed, as a cask
+#    depends_on :osxfuse
 
     def install
         system 'cmake', *std_cmake_args

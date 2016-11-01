@@ -56,18 +56,11 @@ Each OS type has its own section below, beware to follow yours:
 Just install Homebrew (http://brew.sh/) and run the following command:
 ```
 brew update
+brew install Caskroom/cask/osxfuse
 brew install src/dislocker.rb
 ```
 This will install dislocker.
 
-You may have to follow the 'mbedTLS 2.0.0' section below. If so, you will have
-to install OSXfuse and cmake through Homebrew first:
-```
-brew install osxfuse cmake
-```
-And once you have followed the 'mbedTLS 2.0.0' section's instructions, you can
-follow the steps below, in the 'If you are NOT on MacOSX...' point (even if you
-are on MacOSX).
 
 ## If you're on FreeBSD...
 

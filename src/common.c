@@ -125,11 +125,54 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 
 	dis_printf(L_DEBUG, "Reading %# " F_SIZE_T " bytes from #%d into %p\n", count, fd, buf);
 
+#ifdef __FREEBSD
+	/*
+	 * FreeBSD's devices are character devices which are to be accessed one
+	 * block at a time. Exactly what one block is remains a mystery atm, so we
+	 * assume it's a sector, and that a sector is 512-bytes long.
+	 * So we count the number of sectors the requested read is on, read them all
+	 * and copy to the user only the requested data.
+	 */
+	size_t sector_size = 512;
+	off_t read_offset = lseek(fd, 0, SEEK_CUR);
+	off_t sector_to_add = 0;
+	off_t new_offset = -1;
+	size_t old_count = count;
+	void* old_buf = buf;
+
+	if((offset % sector_size) != 0)
+		sector_to_add += 1;
+	if(((offset + (off_t)count) % sector_size) != 0)
+		sector_to_add += 1;
+
+	new_offset = (offset / sector_size) * sector_size;
+	count = ((count / sector_size) + sector_to_add) * sector_size;
+
+	if(lseek(fd, new_offset, SEEK_SET) != new_offset)
+	{
+		errno = EIO;
+		return -1;
+	}
+
+	buf = xmalloc(count * sizeof(char));
+	if(buf == NULL)
+	{
+		errno = EIO;
+		return -1;
+	}
+#endif
+
 	if((res = read(fd, buf, count)) < 0)
 	{
 		dis_errno = errno;
 		dis_printf(L_ERROR, DIS_XREAD_FAIL_STR " #%d: %s\n", fd, strerror(errno));
 	}
+
+#ifdef __FREEBSD
+	/* What is remaining is just to copy actual data */
+	memcpy(old_buf, buf + (offset - new_offset) / sizeof(void), old_count);
+	xfree(buf);
+#endif
 
 	return res;
 }

@@ -133,9 +133,9 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 	 * So we count the number of sectors the requested read is on, read them all
 	 * and copy to the user only the requested data.
 	 */
-	size_t sector_size = 512;
-	off_t read_offset = lseek(fd, 0, SEEK_CUR);
-	off_t sector_to_add = 0;
+	uint16_t sector_size = 512;
+	off_t offset = lseek(fd, 0, SEEK_CUR);
+	unsigned int sector_to_add = 0;
 	off_t new_offset = -1;
 	size_t old_count = count;
 	void* old_buf = buf;
@@ -150,13 +150,23 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 
 	if(lseek(fd, new_offset, SEEK_SET) != new_offset)
 	{
+		dis_printf(
+			L_ERROR,
+			"Cannot lseek(2) to boundary %#" F_OFF_T "\n",
+			new_offset
+		);
 		errno = EIO;
 		return -1;
 	}
 
-	buf = xmalloc(count * sizeof(char));
+	buf = dis_malloc(count * sizeof(char));
 	if(buf == NULL)
 	{
+		dis_printf(
+			L_ERROR,
+			"Cannot malloc %" F_SIZE_T " bytes\n",
+			count * sizeof(char)
+		);
 		errno = EIO;
 		return -1;
 	}
@@ -170,8 +180,22 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 
 #ifdef __FREEBSD
 	/* What is remaining is just to copy actual data */
-	memcpy(old_buf, buf + (offset - new_offset) / sizeof(void), old_count);
-	xfree(buf);
+	memcpy(old_buf, (char*) buf + (offset - new_offset), old_count);
+	dis_free(buf);
+
+	if(lseek(fd, offset + (off_t)old_count, SEEK_SET) == -1)
+	{
+		dis_printf(
+			L_ERROR,
+			"Cannot lseek(2) for restore to %#" F_OFF_T "\n",
+			offset + (off_t)old_count
+		);
+		errno = EIO;
+		return -1;
+	}
+
+	/* Fake the return value */
+	res = (ssize_t) old_count;
 #endif
 
 	return res;

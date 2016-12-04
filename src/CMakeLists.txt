@@ -38,7 +38,9 @@ else()
 	add_definitions (-D__ARCH_X86)
 endif()
 
-include_directories (SYSTEM /usr/local/include)
+if( NOT CMAKE_CROSSCOMPILING )
+	include_directories (SYSTEM /usr/local/include)
+endif()
 include_directories (${PROJECT_SOURCE_DIR}/include)
 
 set (LIB pthread)
@@ -159,7 +161,7 @@ if(NOT DEFINED bindir)
 endif()
 
 string (TOLOWER "${CMAKE_SYSTEM_NAME}" SYSNAME)
-set (DIS_MAN ../man/${SYSNAME})
+set (DIS_MAN ${PROJECT_SOURCE_DIR}/man/${SYSNAME})
 
 # RPATH handling
 if(POLICY CMP0042)

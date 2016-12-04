@@ -4,11 +4,9 @@
 
 
 This software has been designed to read BitLocker encrypted partitions under a
-Linux system. The driver used to only read volumes encrypted under a Windows 7
-system but see now its capabilities extended to:
+Linux system. The driver has the capability to read/write on:
  - Windows Vista, 7, 8, 8.1 and 10 encrypted partitions;
- - BitLocker-To-Go encrypted partitions - that's USB/FAT32 partitions;
- - be able to write on the above partitions.
+ - BitLocker-To-Go encrypted partitions - that's USB/FAT32 partitions.
 
 The core driver is composed of a library, with multiple binaries (see the NOTES
 section below) using this library. Two binaries are of interest when wanting to

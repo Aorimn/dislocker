@@ -22,6 +22,7 @@
  */
 
 
+#include <string.h>
 #include <getopt.h>
 
 #include "dislocker/common.h"
@@ -30,47 +31,6 @@
 
 
 
-/**
- * Print program's usage
- */
-void dis_usage()
-{
-	fprintf(stderr,
-PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
-#ifdef VERSION_DBG
-"Compiled version: " VERSION_DBG "\n"
-#endif
-"\n"
-"Usage: " PROGNAME " [-hqrsv] [-l LOG_FILE] [-o OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
-"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"
-"\n"
-"Options:\n"
-"    -c, --clearkey        decrypt volume using a clear key (default)\n"
-"    -f, --bekfile BEKFILE\n"
-"                          decrypt volume using the bek file (on USB key)\n"
-"    -F, --force-block=[N] force use of metadata block number N (1, 2 or 3)\n"
-"    -h, --help            print this help and exit\n"
-"    -k, --fvek FVEK_FILE  decrypt volume using the FVEK directly\n"
-"    -l, --logfile LOG_FILE\n"
-"                          put messages into this file (stdout by default)\n"
-"    -o, --offset OFFSET   BitLocker partition offset (default is 0)\n"
-"    -p, --recovery-password=[RECOVERY_PASSWORD]\n"
-"                          decrypt volume using the recovery password method\n"
-"    -q, --quiet           do NOT display anything\n"
-"    -r, --readonly        do not allow to write on the BitLocker volume\n"
-"    -s, --stateok         do not check the volume's state, assume it's ok to mount it\n"
-"    -u, --user-password=[USER_PASSWORD]\n"
-"                          decrypt volume using the user password method\n"
-"    -v, --verbosity       increase verbosity (CRITICAL errors are displayed by default)\n"
-"    -V, --volume VOLUME   volume to get metadata and keys from\n"
-"\n"
-"    --                    end of program options, beginning of FUSE's ones\n"
-"\n"
-"  ARGS are any arguments you want to pass to FUSE. You need to pass at least\n"
-"the mount-point.\n"
-"\n"
-	);
-}
 
 
 /**
@@ -92,13 +52,191 @@ static void hide_opt(char* opt)
 }
 
 
+/* These functions are wrappers around the appropriate dis_setopt call */
+static void setclearkey(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &true);
+}
+static void setbekfile(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_BEK_FILE_PATH, optarg);
+}
+static void setforceblock(dis_context_t dis_ctx, char* optarg)
+{
+	off_t force;
+	if(optarg)
+		force = (unsigned char) strtol(optarg, NULL, 10);
+	else
+		force = 1;
+	dis_setopt(dis_ctx, DIS_OPT_FORCE_BLOCK, &force);
+}
+static void setfvek(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
+}
+static void setlogfile(dis_context_t dis_ctx, char* optarg)
+{
+	dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
+}
+static void setoffset(dis_context_t dis_ctx, char* optarg)
+{
+	off_t offset = (off_t) strtoll(optarg, NULL, 10);
+	dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
+}
+static void setrecoverypwd(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_RECOVERY_PASSWORD, optarg);
+	hide_opt(optarg);
+}
+static void setquiet(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	DIS_LOGS l = L_QUIET;
+	dis_setopt(dis_ctx, DIS_OPT_VERBOSITY, &l);
+}
+static void setro(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &true);
+}
+static void setstateok(dis_context_t dis_ctx, char* optarg)
+{
+	(void) optarg;
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &true);
+}
+static void setuserpassword(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_USER_PASSWORD, optarg);
+	hide_opt(optarg);
+}
+static void setverbosity(dis_context_t dis_ctx, char* optarg)
+{
+	dis_ctx->cfg.verbosity = (DIS_LOGS)strtol(optarg, NULL, 10);
+}
+
+
+/* Structure used to define dislocker's options */
+struct _dis_options {
+	struct option opt;
+	void (*fn)(dis_context_t dis_ctx, char* optarg);
+};
+
+static struct _dis_options dis_opt[] = {
+	{ {"clearkey",          no_argument,       NULL, 'c'}, setclearkey },
+	{ {"bekfile",           required_argument, NULL, 'f'}, setbekfile },
+	{ {"force-block",       optional_argument, NULL, 'F'}, setforceblock },
+	{ {"help",              no_argument,       NULL, 'h'}, NULL },
+	{ {"fvek",              required_argument, NULL, 'k'}, setfvek },
+	{ {"logfile",           required_argument, NULL, 'l'}, setlogfile },
+	{ {"offset",            required_argument, NULL, 'O'}, setoffset },
+	{ {"options",           required_argument, NULL, 'o'}, NULL },
+	{ {"recovery-password", optional_argument, NULL, 'p'}, setrecoverypwd },
+	{ {"quiet",             no_argument,       NULL, 'q'}, setquiet },
+	{ {"readonly",          no_argument,       NULL, 'r'}, setro },
+	{ {"ro",                no_argument,       NULL, 'r'}, setro },
+	{ {"stateok",           no_argument,       NULL, 's'}, setstateok },
+	{ {"user-password",     optional_argument, NULL, 'u'}, setuserpassword },
+	{ {"verbosity",         no_argument,       NULL, 'v'}, setverbosity },
+	{ {"volume",            required_argument, NULL, 'V'}, NULL }
+};
+
+
+
+/**
+ * Print program's usage
+ */
+void dis_usage()
+{
+	fprintf(stderr,
+PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
+#ifdef VERSION_DBG
+"Compiled version: " VERSION_DBG "\n"
+#endif
+"\n"
+"Usage: " PROGNAME " [-hqrsv] [-l LOG_FILE] [-O OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
+"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"
+"\n"
+"Options:\n"
+"    -c, --clearkey        decrypt volume using a clear key (default)\n"
+"    -f, --bekfile BEKFILE\n"
+"                          decrypt volume using the bek file (on USB key)\n"
+"    -F, --force-block=[N] force use of metadata block number N (1, 2 or 3)\n"
+"    -h, --help            print this help and exit\n"
+"    -k, --fvek FVEK_FILE  decrypt volume using the FVEK directly\n"
+"    -l, --logfile LOG_FILE\n"
+"                          put messages into this file (stdout by default)\n"
+"    -O, --offset OFFSET   BitLocker partition offset, in bytes (default is 0)\n"
+"    -p, --recovery-password=[RECOVERY_PASSWORD]\n"
+"                          decrypt volume using the recovery password method\n"
+"    -q, --quiet           do NOT display anything\n"
+"    -r, --readonly        do not allow to write on the BitLocker volume\n"
+"    -s, --stateok         do not check the volume's state, assume it's ok to mount it\n"
+"    -u, --user-password=[USER_PASSWORD]\n"
+"                          decrypt volume using the user password method\n"
+"    -v, --verbosity       increase verbosity (CRITICAL errors are displayed by default)\n"
+"    -V, --volume VOLUME   volume to get metadata and keys from\n"
+"\n"
+"    --                    end of program options, beginning of FUSE's ones\n"
+"\n"
+"  ARGS are any arguments you want to pass to FUSE. You need to pass at least\n"
+"the mount-point.\n"
+"\n"
+	);
+}
+
+
+/**
+ * Parse the --options parameter's value
+ *
+ * @param dis_ctx Dislocker's context
+ * @param optstr The value passed with the --options parameter
+ */
+static void parse_options(dis_context_t dis_ctx, char* optstr)
+{
+	char* tok = NULL;
+	size_t nb_options = sizeof(dis_opt)/sizeof(struct _dis_options);
+	size_t i;
+	size_t opt_len;
+
+	tok = strtok(optstr, ",");
+	while(tok != NULL)
+	{
+		for(i = 0; i < nb_options; i++)
+		{
+			opt_len = strlen(dis_opt[i].opt.name);
+			if(strncmp(dis_opt[i].opt.name, tok, opt_len) == 0)
+			{
+				if(tok[opt_len] == '=' && tok[opt_len] != '\0')
+					dis_opt[i].fn(dis_ctx, &tok[opt_len + 1]);
+				else
+					dis_opt[i].fn(dis_ctx, NULL);
+			}
+		}
+
+		tok = strtok(NULL, ",");
+	}
+}
+
+
 /**
  * Parse arguments strings
  *
  * @warning If -h/--help is encountered, the help is printed and the program
  * exits (using exit(EXIT_SUCCESS)).
  *
- * @param cfg The config pointer to dis_config_t structure
+ * @param dis_ctx Dislocker's context
  * @param argc Number of arguments given to the program
  * @param argv Arguments given to the program
  * @return Return the number of arguments which are still waiting to be studied.
@@ -109,32 +247,12 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	/** See man getopt_long(3) */
 	extern int optind;
 	int optchar = 0;
+	size_t nb_options = sizeof(dis_opt)/sizeof(struct _dis_options);
 
-	enum {
-		NO_OPT,   /* No option for this argument */
-		NEED_OPT, /* Need an option for this one */
-		MAY_OPT   /* User may provide an option  */
-	};
 
 	/* Options which could be passed as argument */
-	const char          short_opts[] = "cf:F::hk:l:o:p::qrsu::vV:";
-	const struct option long_opts[] = {
-		{"clearkey",          NO_OPT,   NULL, 'c'},
-		{"bekfile",           NEED_OPT, NULL, 'f'},
-		{"force-block",       MAY_OPT,  NULL, 'F'},
-		{"help",              NO_OPT,   NULL, 'h'},
-		{"fvek",              NEED_OPT, NULL, 'k'},
-		{"logfile",           NEED_OPT, NULL, 'l'},
-		{"offset",            NEED_OPT, NULL, 'o'},
-		{"recovery-password", MAY_OPT,  NULL, 'p'},
-		{"quiet",             NO_OPT,   NULL, 'q'},
-		{"readonly",          NO_OPT,   NULL, 'r'},
-		{"stateok",           NO_OPT,   NULL, 's'},
-		{"user-password",     MAY_OPT,  NULL, 'u'},
-		{"verbosity",         NO_OPT,   NULL, 'v'},
-		{"volume",            NEED_OPT, NULL, 'V'},
-		{0, 0, 0, 0}
-	};
+	const char short_opts[] = "cf:F::hk:l:O:o:p::qrsu::vV:";
+	struct option* long_opts;
 
 	if(!dis_ctx || !argv)
 		return -1;
@@ -143,7 +261,17 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	int true = TRUE;
 
 
-	while((optchar=getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
+	long_opts = malloc(nb_options * sizeof(struct option));
+	while(nb_options--)
+	{
+		long_opts[nb_options].name    = dis_opt[nb_options].opt.name;
+		long_opts[nb_options].has_arg = dis_opt[nb_options].opt.has_arg;
+		long_opts[nb_options].flag    = dis_opt[nb_options].opt.flag;
+		long_opts[nb_options].val     = dis_opt[nb_options].opt.val;
+	}
+
+
+	while((optchar = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
 	{
 		switch(optchar)
 		{
@@ -185,10 +313,15 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 				dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
 				break;
 			}
-			case 'o':
+			case 'O':
 			{
 				off_t offset = (off_t) strtoll(optarg, NULL, 10);
 				dis_setopt(dis_ctx, DIS_OPT_VOLUME_OFFSET, &offset);
+				break;
+			}
+			case 'o':
+			{
+				parse_options(dis_ctx, optarg);
 				break;
 			}
 			case 'p':
@@ -236,6 +369,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			default:
 			{
 				dis_usage();
+				free(long_opts);
 				dis_free_args(dis_ctx);
 				return -1;
 			}
@@ -246,6 +380,8 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	/* Check verbosity */
 	if(cfg->verbosity > L_DEBUG)
 		cfg->verbosity = L_DEBUG;
+	if(cfg->verbosity < L_CRITICAL)
+		cfg->verbosity = L_CRITICAL;
 
 	/* Check decryption method */
 	if(!cfg->decryption_mean)
@@ -257,8 +393,104 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	   cfg->force_block != 3)
 		cfg->force_block = 0;
 
+	free(long_opts);
 
 	return optind;
+}
+
+
+/**
+ * Get dislocker's option
+ *
+ * @param dis_ctx Dislocker's context
+ * @param opt_name The option's name to get
+ * @param opt_value The retrieved value of the option. This is stored in
+ *opt_value.
+ */
+int dis_getopt(dis_context_t dis_ctx, dis_opt_e opt_name, void** opt_value)
+{
+	if (!dis_ctx || !opt_value)
+		return FALSE;
+
+	dis_config_t* cfg = &dis_ctx->cfg;
+
+	switch(opt_name)
+	{
+		case DIS_OPT_VOLUME_PATH:
+			*opt_value = cfg->volume_path;
+			break;
+		case DIS_OPT_USE_CLEAR_KEY:
+			if(cfg->decryption_mean & DIS_USE_CLEAR_KEY)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_USE_BEK_FILE:
+			if(cfg->decryption_mean & DIS_USE_BEKFILE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_BEK_FILE_PATH:
+			*opt_value = cfg->bek_file;
+			break;
+		case DIS_OPT_USE_RECOVERY_PASSWORD:
+			if(cfg->decryption_mean & DIS_USE_RECOVERY_PASSWORD)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_RECOVERY_PASSWORD:
+			*opt_value = cfg->recovery_password;
+			break;
+		case DIS_OPT_USE_USER_PASSWORD:
+			if(cfg->decryption_mean & DIS_USE_USER_PASSWORD)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_USER_PASSWORD:
+			*opt_value = cfg->user_password;
+			break;
+		case DIS_OPT_USE_FVEK_FILE:
+			if(cfg->decryption_mean & DIS_USE_FVEKFILE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_FVEK_FILE_PATH:
+			*opt_value = cfg->fvek_file;
+			break;
+		case DIS_OPT_VERBOSITY:
+			*opt_value = (void*) cfg->verbosity;
+			break;
+		case DIS_OPT_LOG_FILE_PATH:
+			*opt_value = cfg->log_file;
+			break;
+		case DIS_OPT_FORCE_BLOCK:
+			*opt_value = (void*) ((long) cfg->force_block);
+			break;
+		case DIS_OPT_VOLUME_OFFSET:
+			*opt_value = (void*) cfg->offset;
+			break;
+		case DIS_OPT_READ_ONLY:
+			if(cfg->flags & DIS_FLAG_READ_ONLY)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_DONT_CHECK_VOLUME_STATE:
+			if(cfg->flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_INITIALIZE_STATE:
+			*opt_value = (void*) cfg->init_stop_at;
+			break;
+	}
+
+	return TRUE;
 }
 
 
@@ -274,14 +506,14 @@ static void set_decryption_mean(dis_config_t* cfg, int set, unsigned value)
 /**
  * Modify dislocker's options one-by-one
  *
- * @param cfg Dislocker's config
+ * @param dis_ctx Dislocker's context
  * @param opt_name The option's name to change
  * @param opt_value The new value of the option. Note that this is a pointer. If
  * NULL, the default value -which is not necessarily usable- will be set.
  */
 int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 {
-	if (!dis_ctx || !opt_value)
+	if (!dis_ctx)
 		return FALSE;
 
 	dis_config_t* cfg = &dis_ctx->cfg;

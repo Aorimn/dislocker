@@ -77,6 +77,8 @@ typedef enum {
  */
 void dis_usage();
 int  dis_getopts(dis_context_t dis_ctx, int argc, char** argv);
+
+int  dis_getopt(dis_context_t dis_ctx, dis_opt_e opt_name, void** opt_value);
 int  dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value);
 void dis_free_args(dis_context_t dis_ctx);
 void dis_print_args(dis_context_t dis_ctx);

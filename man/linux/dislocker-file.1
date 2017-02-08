@@ -4,7 +4,7 @@
 .SH NAME
 Dislocker file - Read BitLocker encrypted volumes under Linux, OSX and FreeBSD.
 .SH SYNOPSIS
-dislocker-file [-hqrsv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [--] \fINTFS_FILE\fR
+dislocker-file [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [--] \fINTFS_FILE\fR
 
 Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
 .SH DESCRIPTION
@@ -20,7 +20,7 @@ For program's options description, see dislocker-fuse(1). The only change in the
 .B NTFS_FILE
 the newly created file where NTFS data will be put to, once decrypted from the BitLocker encrypted volume.
 .SH EXAMPLES
-These are exemples you can run directly.
+These are examples you can run directly.
 
 Dislock the BitLocker encrypted volume:
 .IP
@@ -40,6 +40,6 @@ You may have to unmount the NTFS partition before halting the system. In order t
 
 Note that these are \fBexamples\fR and, as such, you may need to modify the given command lines. For example, you may want to change the decryption method used in them.
 .SH AUTHOR
-This tool is developped by Romain Coltel on behalf of HSC (\fBhttp://www.hsc.fr/\fR)
+This tool is developed by Romain Coltel on behalf of HSC (\fBhttp://www.hsc.fr/\fR)
 .PP
 Feel free to send bugs report to <dislocker __AT__ hsc __DOT__ fr>

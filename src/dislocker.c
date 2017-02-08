@@ -493,16 +493,16 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		return -EFAULT;
 	}
 
-	if((size_t)offset + size >= (size_t)dis_ctx->io_data.volume_size)
+	if(offset + (off_t)size >= (off_t)dis_ctx->io_data.volume_size)
 	{
 		size_t nsize = (size_t)dis_ctx->io_data.volume_size
 		               - (size_t)offset;
 		dis_printf(
 			L_WARNING,
 			"Size modified as exceeding volume's end (offset=%#"
-			F_SIZE_T " + size=%#" F_SIZE_T " >= volume_size=%#"
-			F_SIZE_T ") ; new size: %#" F_SIZE_T "\n",
-			(size_t)offset, size, (size_t)dis_ctx->io_data.volume_size, nsize
+			F_OFF_T " + size=%#" F_OFF_T " >= volume_size=%#"
+			F_OFF_T ") ; new size: %#" F_SIZE_T "\n",
+			offset, (off_t)size, dis_ctx->io_data.volume_size, nsize
 		);
 		size = nsize;
 	}

@@ -17,6 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+if("${CMAKE_SOURCE_DIR}" MATCHES "src/?$")
+	message(FATAL_ERROR "\nPlease execute cmake from the directory above, not the src/ directory.")
+	return()
+endif()
 
 add_definitions (-DPROGNAME="${PROJECT_NAME}")
 add_definitions (-DAUTHOR="${AUTHOR}")
@@ -34,7 +38,9 @@ else()
 	add_definitions (-D__ARCH_X86)
 endif()
 
-include_directories (SYSTEM /usr/local/include)
+if( NOT CMAKE_CROSSCOMPILING )
+	include_directories (SYSTEM /usr/local/include)
+endif()
 include_directories (${PROJECT_SOURCE_DIR}/include)
 
 set (LIB pthread)
@@ -54,7 +60,7 @@ set (SOURCES
 	)
 
 if(NOT DEFINED WARN_FLAGS)
-	set (WARN_FLAGS "-Wall -Werror -Wextra" CACHE STRING "" FORCE)
+	set (WARN_FLAGS "-Wall -Wextra" CACHE STRING "" FORCE)
 endif()
 if(NOT DEFINED HARDEN_FLAGS)
 	set (HARDEN_FLAGS "-fstack-protector -fstrict-aliasing -D_FORTIFY_SOURCE=2 -O1" CACHE STRING "" FORCE)
@@ -123,6 +129,12 @@ if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARIES)
 	set (SOURCES ${SOURCES} ruby.c)
 endif()
 
+find_package (FUSE)
+if(FUSE_FOUND  AND  FUSE_INCLUDE_DIRS  AND  FUSE_LIBRARIES)
+	include_directories (${FUSE_INCLUDE_DIRS})
+	set (LIB "${LIB} ${FUSE_LIBRARIES}")
+endif()
+
 # Places
 if(NOT DEFINED sharedir)
   set(sharedir ${CMAKE_INSTALL_PREFIX}/share)
@@ -185,22 +197,24 @@ target_link_libraries (${BIN_FUSE} ${FUSE_LIB} ${PROJECT_NAME})
 set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=26)
 set_target_properties (${BIN_FUSE} PROPERTIES LINK_FLAGS "-pie -fPIE")
 add_custom_command (TARGET ${BIN_FUSE} POST_BUILD
-	COMMAND gzip -c ${DIS_MAN}/${BIN_FUSE}.1 > ${DIS_MAN}/${BIN_FUSE}.1.gz
+	COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/
+	COMMAND gzip -c ${CMAKE_CURRENT_SOURCE_DIR}/${DIS_MAN}/${BIN_FUSE}.1 > ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz
 )
-set (CLEAN_FILES ${CLEAN_FILES} ${DIS_MAN}/${BIN_FUSE}.1.gz)
+set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz)
 install (TARGETS ${BIN_FUSE} RUNTIME DESTINATION "${bindir}")
-install (FILES ${DIS_MAN}/${BIN_FUSE}.1.gz DESTINATION "${mandir}/man1")
+install (FILES ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz DESTINATION "${mandir}/man1")
 
 set (BIN_FILE ${PROJECT_NAME}-file)
 add_executable (${BIN_FILE} ${BIN_FILE}.c)
 target_link_libraries (${BIN_FILE} ${PROJECT_NAME})
 set_target_properties (${BIN_FILE} PROPERTIES LINK_FLAGS "-pie -fPIE")
 add_custom_command (TARGET ${BIN_FILE} POST_BUILD
-	COMMAND gzip -c ${DIS_MAN}/${BIN_FILE}.1 > ${DIS_MAN}/${BIN_FILE}.1.gz
+	COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/
+	COMMAND gzip -c ${CMAKE_CURRENT_SOURCE_DIR}/${DIS_MAN}/${BIN_FILE}.1 > ${CMAKE_BINARY_DIR}/man/${BIN_FILE}.1.gz
 )
-set (CLEAN_FILES ${CLEAN_FILES} ${DIS_MAN}/${BIN_FILE}.1.gz)
+set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_BINARY_DIR}/man/${BIN_FILE}.1.gz)
 install (TARGETS ${BIN_FILE} RUNTIME DESTINATION "${bindir}")
-install (FILES ${DIS_MAN}/${BIN_FILE}.1.gz DESTINATION "${mandir}/man1")
+install (FILES ${CMAKE_BINARY_DIR}/man/${BIN_FILE}.1.gz DESTINATION "${mandir}/man1")
 
 set (BIN_METADATA ${PROJECT_NAME}-metadata)
 add_executable (${BIN_METADATA} ${BIN_METADATA}.c)
@@ -224,11 +238,12 @@ if(RUBY_FOUND)
 	)
 	set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND})
 	add_custom_command (TARGET ${BIN_FIND} POST_BUILD
-		COMMAND gzip -c ${DIS_MAN}/${BIN_FIND}.1 > ${DIS_MAN}/${BIN_FIND}.1.gz
+		COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/
+		COMMAND gzip -c ${CMAKE_CURRENT_SOURCE_DIR}/${DIS_MAN}/${BIN_FIND}.1 > ${CMAKE_BINARY_DIR}/man/${BIN_FIND}.1.gz
 	)
-	set (CLEAN_FILES ${CLEAN_FILES} ${DIS_MAN}/${BIN_FIND}.1.gz)
+	set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_BINARY_DIR}/man/${BIN_FIND}.1.gz)
 	install (PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${BIN_FIND} DESTINATION "${bindir}")
-	install (FILES ${DIS_MAN}/${BIN_FIND}.1.gz DESTINATION "${mandir}/man1")
+	install (FILES ${CMAKE_BINARY_DIR}/man/${BIN_FIND}.1.gz DESTINATION "${mandir}/man1")
 else()
 	set (BIN_FIND true)
 endif()

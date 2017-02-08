@@ -1,3 +1,13 @@
+# v0.7
+- Feature improvement:
+    - dislocker can now be run from /etc/fstab. This also means that the `-o`
+    option for the offset had to be changed. It is now `-O`;
+    - dislocker on FreeBSD can now read devices, not just partition dumps.
+
+- Compatiblity improvement:
+    - OSX support and dependencies have been updated;
+    - Thanks to Eric Johnson, from Leidos, a BitBake recipe is now available.
+
 # v0.6.1
 This version is only used to update dislocker's brew file for OSX users
 to be able to download v0.6. If you're not an OSX user, you can use either v0.6
@@ -5,7 +15,7 @@ or v0.6.1, this won't make any difference.
 
 # v0.6
 - Features improvement:
-    - Read/write on Windows 10 (v1511) encrypted volumes.
+    - Read/write on Windows 10 (v1511) encrypted volumes - AES-XTS 128/256.
 
 # v0.5.2
 Minor fixes for downstream packaging and larger distribution coverage.

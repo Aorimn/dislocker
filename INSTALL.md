@@ -53,7 +53,7 @@ Each OS type has its own section below, beware to follow yours:
 
 ## If you are on MacOSX...
 
-Just install Homebrew (http://brew.sh/) and run the following command:
+Just install Homebrew (http://brew.sh/) and run the following commands:
 ```
 brew update
 brew install Caskroom/cask/osxfuse

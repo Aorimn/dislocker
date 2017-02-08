@@ -1,3 +1,9 @@
+# v0.7.1
+This version is only used to update dislocker's brew file and the BitBake recipe
+for OSX's and BitBake's users to be able to download v0.7. If you're not an OSX
+nor a BitBake user, you can use either v0.7 or v0.7.1, this won't make any
+difference.
+
 # v0.7
 - Feature improvement:
     - dislocker can now be run from /etc/fstab. This also means that the `-o`

@@ -950,6 +950,9 @@ static int get_metadata_lazy_checked(
 			dis_free(*metadata);
 	}
 
+	if(current >= 3)
+		return FALSE;
+
 	return TRUE;
 }
 

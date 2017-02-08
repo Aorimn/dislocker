@@ -242,7 +242,7 @@ off_t dis_lseek(int fd, off_t offset, int whence)
 {
 	off_t res = -1;
 
-	dis_printf(L_DEBUG, "Positionnong #%d at offset %lld from %d\n", fd, offset, whence);
+	dis_printf(L_DEBUG, "Positioning #%d at offset %lld from %d\n", fd, offset, whence);
 
 	if((res = lseek(fd, offset, whence)) < 0)
 	{

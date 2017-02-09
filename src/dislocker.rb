@@ -7,7 +7,7 @@ require 'formula'
 class Dislocker < Formula
     homepage 'https://github.com/Aorimn/dislocker'
     url 'https://github.com/Aorimn/dislocker/archive/v0.7.zip'
-    sha256 'ed5b0cb99de9fdbf7653f59e36bd31c84fdae2e40e13cefa688421cebb393cbd'
+    sha256 '807d7087e82b7ab5819a8ae1d5be6f074397c8f6a327b7b5798c1228e454424b'
     version '0.7.0'
 
     depends_on 'mbedtls'

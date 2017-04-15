@@ -49,20 +49,32 @@ if( ${POLARSSL_LIBRARIES-NOTFOUND} )
   return()
 endif()
 
-execute_process(
-  COMMAND echo "#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"
-  OUTPUT_FILE a.c
-)
-execute_process(
-  COMMAND ${CMAKE_C_COMPILER} a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES}
-)
-execute_process(
-  COMMAND ./a.out
-  OUTPUT_VARIABLE POLARSSL_VERSION_STRING
-)
-execute_process(
-  COMMAND ${CMAKE_COMMAND} -E remove a.c a.out
-)
+if( NOT CMAKE_CROSSCOMPILING )
+  execute_process(
+    COMMAND echo "#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"
+    OUTPUT_FILE a.c
+  )
+  execute_process(
+    COMMAND ${CMAKE_C_COMPILER} a.c -I${POLARSSL_INCLUDE_DIRS} ${POLARSSL_LIBRARIES}
+  )
+  execute_process(
+    COMMAND ./a.out
+    OUTPUT_VARIABLE POLARSSL_VERSION_STRING
+  )
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E remove a.c a.out
+  )
+else()
+  execute_process(
+    COMMAND grep -w "MBEDTLS_VERSION_STRING" ${POLARSSL_INCLUDE_DIRS}/${POLARSSL_INC_FOLDER}/version.h
+    COMMAND sed -e "s@\s\+@ @g"
+    COMMAND cut -d\  -f3
+    COMMAND sed -e "s@\"@@g"
+    OUTPUT_VARIABLE POLARSSL_VERSION_STRING
+  )
+endif()
+
+message("PolarSSL/mbedTLS version: " ${POLARSSL_VERSION_STRING})
 
 if( "${POLARSSL_VERSION_STRING}" STREQUAL "2.0.0" AND NOT "${POLARSSL_USED_LIBRARY}" STREQUAL "mbedcrypto" )
   message("*** WARNING *** Your mbedTLS version is 2.0.0, it's possible the `make' command doesn't work.\nPlease refer to the INSTALL.md's \"mbedTLS 2.0.0\" section if you have any problem.\n")

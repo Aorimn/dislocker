@@ -10,34 +10,38 @@ You need:
 - cmake (at least version 2.6);
 - make (or gmake, for FreeBSD);
 - Headers for FUSE;
-- Headers for PolarSSL/mbedTLS;
+- Headers for mbedTLS (previously known as PolarSSL);
 - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
 
 If you have Ruby headers, the library will compile with some Ruby bindings and
 another program - see the NOTE section below - will be available.
 
-For Debian-like:
+For Debian-like distos based on Debian Jessie or Ubuntu 14.04 or older:
 
-- aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev
+- `aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev`
+
+For Debian-like distos based on Debian Stretch or Ubuntu 16.04 or later:
+
+- `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev`
 
 For Fedora-like:
 
-- dnf install gcc cmake make fuse-devel mbedtls-devel ruby-devel rubypick
+- `dnf install gcc cmake make fuse-devel mbedtls-devel ruby-devel rubypick`
 
-Alternatively, running "dnf install dislocker fuse-dislocker" to use the
+Alternatively, running `dnf install dislocker fuse-dislocker` to use the
 already existing RPM packages in Fedora could be a clever idea.
 
 For RHEL-like (including CentOS Scientific Linux):
 
-- yum install gcc cmake make fuse-devel mbedtls-devel ruby-devel /usr/bin/ruby
+- `yum install gcc cmake make fuse-devel mbedtls-devel ruby-devel /usr/bin/ruby`
 
-Alternatively, running "yum install dislocker fuse-dislocker" to use the
+Alternatively, running `yum install dislocker fuse-dislocker` to use the
 already existing RPM packages in EPEL could be a clever idea.
 
 For FreeBSD:
 
-- pkg install cmake gmake fusefs-libs polarssl
+- `pkg install cmake gmake fusefs-libs mbedtls`
 
 For OSX: Follow the instructions in the next section.
 
@@ -49,21 +53,14 @@ Each OS type has its own section below, beware to follow yours:
 
 ## If you are on MacOSX...
 
-Just install Homebrew (http://brew.sh/) and run the following command:
+Just install Homebrew (http://brew.sh/) and run the following commands:
 ```
 brew update
+brew install Caskroom/cask/osxfuse
 brew install src/dislocker.rb
 ```
 This will install dislocker.
 
-You may have to follow the 'mbedTLS 2.0.0' section below. If so, you will have
-to install OSXfuse and cmake through Homebrew first:
-```
-brew install osxfuse cmake
-```
-And once you have followed the 'mbedTLS 2.0.0' section's instructions, you can
-follow the steps below, in the 'If you are NOT on MacOSX...' point (even if you
-are on MacOSX).
 
 ## If you're on FreeBSD...
 
@@ -128,7 +125,7 @@ You can then resume the installation where you have left it.
 
 # PORTABILITY
 
-Globally, this was successfuly tested on Linux x86/x86_64, MacOSX and FreeBSD.
+Globally, this was successfully tested on Linux x86/x86_64, MacOSX and FreeBSD.
 It won't work on Windows and may not work on other BSDs (not tested).
 
 For MacOSX, it has been tested against OSXFUSE 2.3.8 and 2.3.9.
@@ -146,7 +143,8 @@ Whether it works or not, feel free to send comments and feedbacks to
 
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
-1. `dislocker-bek`: for disecting a .bek file and printing information about it
+
+1. `dislocker-bek`: for dissecting a .bek file and printing information about it
 
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume
 

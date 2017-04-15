@@ -4,7 +4,7 @@
 .SH NAME
 Dislocker fuse - Read/write BitLocker encrypted volumes under Linux, OSX and FreeBSD.
 .SH SYNOPSIS
-dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-o \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
+dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
 
 Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
 .SH DESCRIPTION
@@ -36,9 +36,9 @@ See the FVEK FILE section below to understand what is to be put into this \fIFVE
 .B -l, --logfile \fILOG_FILE\fR
 put messages into this file (stdout by default)
 .TP
-.B -o, --offset \fIOFFSET\fR
-BitLocker partition offset in base 10 (default is 0).
-Protip: in your shell, you probably can pass \fB-o $((\fI0xdeadbeef\fB))\fR if you have a 16-based number and are too lazy to convert it in another way.
+.B -O, --offset \fIOFFSET\fR
+BitLocker partition offset, in bytes, in base 10 (default is 0).
+Protip: in your shell, you probably can pass \fB-O $((\fI0xdeadbeef\fB))\fR if you have a 16-based number and are too lazy to convert it in another way.
 .TP
 .B -p, --recovery-password=[\fIRECOVERY_PASSWORD\fB]\fR
 decrypt volume using the recovery password method.
@@ -81,13 +81,13 @@ The FVEK file option expects a specific format from the file. The file is split 
 The file is therefore 66 bytes long, not more nor less.
 Note that you may have to deal with endianness.
 .SH EXAMPLES
-These are exemples you can run directly.
+These are examples you can run directly.
 First, you may want to copy the BitLocker volume:
 .IP
 .B % dd if=/dev/sda2 of=encrypted.bitlocker
 .IP
 This will copy the entire volume located into \fB/dev/sda2\fR to \fBencrypted.bitlocker\fR.
-You're not forced to do this step, but this will ensure no write whatesoever is performed on the BitLocker volume.
+You're not forced to do this step, but this will ensure no write whatsoever is performed on the BitLocker volume.
 .P
 Then dislock it:
 .IP
@@ -107,6 +107,6 @@ It seems that you have to unmount the NTFS partition and the dislocker one befor
 .P
 Note that these are \fBexamples\fR and, as such, may need to be modified. For instance, you may want to change the decryption method used in them.
 .SH AUTHOR
-This tool is developped by Romain Coltel on behalf of HSC (\fBhttp://www.hsc.fr/\fR)
+This tool is developed by Romain Coltel on behalf of HSC (\fBhttp://www.hsc.fr/\fR)
 .PP
 Feel free to send bugs report to <dislocker __AT__ hsc __DOT__ fr>

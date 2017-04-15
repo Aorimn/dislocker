@@ -27,10 +27,12 @@ find_program (GIT_EXE NAMES git PATHS /usr/bin /usr/local/bin)
 if(GIT_EXE)
 	execute_process (
 		COMMAND ${GIT_EXE} rev-parse --abbrev-ref HEAD
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		OUTPUT_VARIABLE GIT_RELEASE_BRANCH
 	)
 	execute_process (
 		COMMAND ${GIT_EXE} log -n 1 --pretty=format:%t
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 		OUTPUT_VARIABLE GIT_RELEASE_COMMIT
 	)
 	string (STRIP "${GIT_RELEASE_BRANCH}" GIT_RELEASE_BRANCH)
@@ -40,7 +42,7 @@ endif()
 
 
 set (VERSION_MAJOR 0)
-set (VERSION_MINOR 6)
+set (VERSION_MINOR 7)
 set (VERSION_RELEASE 1)
 set (VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_RELEASE}")
 

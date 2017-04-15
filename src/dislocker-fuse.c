@@ -191,6 +191,8 @@ struct fuse_operations fs_oper = {
  */
 int main(int argc, char** argv)
 {
+	char* volume_path = NULL;
+
 	// Check parameters number
 	if(argc < 2)
 	{
@@ -201,10 +203,27 @@ int main(int argc, char** argv)
 	int param_idx = 0;
 	int ret       = EXIT_SUCCESS;
 
-
 	/* Get command line options */
 	dis_ctx = dis_new();
 	param_idx = dis_getopts(dis_ctx, argc, argv);
+
+	/*
+	 * Check we have a volume path given and if not, take the first non-argument
+	 * as the volume path
+	 */
+	dis_getopt(dis_ctx, DIS_OPT_VOLUME_PATH, (void**) &volume_path);
+	if(volume_path == NULL)
+	{
+		if(param_idx >= argc || param_idx <= 0)
+		{
+			dis_printf(L_CRITICAL, "Error, no volume path given. Abort.\n");
+			return EXIT_FAILURE;
+		}
+
+		dis_printf(L_DEBUG, "Setting the volume path to %s.\n", argv[param_idx]);
+		dis_setopt(dis_ctx, DIS_OPT_VOLUME_PATH, argv[param_idx]);
+		param_idx++;
+	}
 
 	/* Initialize dislocker */
 	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)

@@ -2,7 +2,7 @@
 
 MBEDTLS_FOLDER=mbedtls-for-dislocker
 
-if brew info polarssl |head -1 |grep -q 2.0.0
+if brew info mbedtls |head -1 |grep -q 2.0.0
 then
 	git clone https://github.com/ARMmbed/mbedtls.git ${MBEDTLS_FOLDER}
 	cd ${MBEDTLS_FOLDER}

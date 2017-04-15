@@ -6,13 +6,14 @@ require 'formula'
 
 class Dislocker < Formula
     homepage 'https://github.com/Aorimn/dislocker'
-    url 'https://github.com/Aorimn/dislocker/archive/v0.6.zip'
-    sha256 '9738fdaa224de5669fe98dbd2a2edfbb1f2d0021e63045140d693c401e673ce4'
-    version '0.6.0'
+    url 'https://github.com/Aorimn/dislocker/archive/v0.7.zip'
+    sha256 '807d7087e82b7ab5819a8ae1d5be6f074397c8f6a327b7b5798c1228e454424b'
+    version '0.7.0'
 
-    depends_on 'polarssl'
+    depends_on 'mbedtls'
     depends_on 'cmake'
-    depends_on :osxfuse
+#    This dependency is seperately installed, as a cask
+#    depends_on :osxfuse
 
     def install
         system 'cmake', *std_cmake_args

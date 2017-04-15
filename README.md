@@ -4,11 +4,11 @@
 
 
 This software has been designed to read BitLocker encrypted partitions under a
-Linux system. The driver used to only read volumes encrypted under a Windows 7
-system but see now its capabilities extended to:
- - Windows Vista, 7, 8, 8.1 and 10 encrypted partitions;
- - BitLocker-To-Go encrypted partitions - that's USB/FAT32 partitions;
- - be able to write on the above partitions.
+Linux system. The driver has the capability to read/write on:
+ - Windows Vista, 7, 8, 8.1 and 10 encrypted partitions - that's AES-CBC,
+   AES-XTS, 128 or 256 bits, with or without the Elephant diffuser, encrypted
+   partitions;
+ - BitLocker-To-Go encrypted partitions - that's USB/FAT32 partitions.
 
 The core driver is composed of a library, with multiple binaries (see the NOTES
 section below) using this library. Two binaries are of interest when wanting to
@@ -30,7 +30,7 @@ create that file, depending on the size of the encrypted partition. But
 afterward, once the partition is decrypted, the access to the NTFS partition
 will be faster. Another thing to think about is the size on your disk this
 binary needs: the same size as the volume you're trying to decrypt.
-Nethertheless, once the partition is decrypted, you can mount your file as any
+Nevertheless, once the partition is decrypted, you can mount your file as any
 NTFS partition.
 
 
@@ -50,7 +50,8 @@ Once installed, see `dislocker(1)` for details on how to use it.
 
 There may be bugs, and I'll be happy to hear about it!
 
-Feel free to send comments and feedbacks to [dislocker __AT__ hsc __DOT__ fr]().
+Feel free to send comments and feedbacks to [dislocker __AT__ hsc __DOT__ fr](),
+or to open an [issue](https://github.com/Aorimn/dislocker/issues).
 
 
 
@@ -74,11 +75,23 @@ whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 
 
 
+## A note on fstab
+
+BitLocker partitions can be mount-ed using the /etc/fstab file and dislocker's
+long options.
+The line below is an example line, which has to be adapted to each case:
+```
+/dev/sda2 /mnt/dislocker fuse.dislocker user-password=blah,nofail 0 0
+```
+
+
+
 ## Note
 
 Five binaries are built when compiling dislocker as described in the `INSTALL.md`
 file:
-1. `dislocker-bek`: for disecting a .bek file and printing information about it
+
+1. `dislocker-bek`: for dissecting a .bek file and printing information about it
 
 2. `dislocker-metadata`: for printing information about a BitLocker-encrypted volume
 

@@ -85,6 +85,8 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 	# binaries
 	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-bind_at_load")
 	set (FUSE_LIB osxfuse_i64)
+	# Library for libiconv
+	set (LIB ${LIB} iconv)
 else()
 	# Useless warnings when used within Darwin
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")

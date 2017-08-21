@@ -250,32 +250,55 @@ int user_key(const uint8_t *user_password,
 	}
 
 
-	uint16_t* utf16_password = NULL;
-	size_t    utf16_length   = 0;
-	uint8_t   user_hash[32]  = {0,};
+	void*     utf16_password    = NULL;
+	size_t    utf8_length       = 0;
+	size_t    utf16_length      = 0;
+	size_t    utf16_real_length = 0;
+	uint8_t   user_hash[32]     = {0,};
 
 	/*
 	 * We first get the SHA256(SHA256(to_UTF16(user_password)))
 	 */
-	utf16_length   = (strlen((char*) user_password)+1) * sizeof(uint16_t);
-	utf16_password = dis_malloc(utf16_length);
+	utf8_length    = strlen((char*) user_password);
+	dis_printf(L_DEBUG, "Length of string password: %d\n", utf8_length);
+	/* Expected length of UTF-16 string */
+	utf16_length   = (utf8_length+1) * 2;
+	dis_printf(L_DEBUG, "Expected length of UTF-16 string password: %d\n", utf16_length);
 
-	if(!asciitoutf16(user_password, utf16_password))
+	utf16_password = (uint8_t*)dis_malloc(utf16_length);
+	memset(utf16_password, 0, utf16_length);
+
+	if(!toutf16(user_password, (uint8_t*)utf16_password))
 	{
 		dis_printf(
 			L_ERROR,
-			"Can't convert user password to UTF-16, aborting.\n"
+			"Can't convert user password to UTF-16, now trying with the original way...\n"
 		);
-		memclean(utf16_password, utf16_length);
-		return FALSE;
+
+		memset(utf16_password, 0, utf16_length);
+
+		if(!asciitoutf16(user_password, (uint16_t*)utf16_password))
+		{
+			dis_printf(
+				L_ERROR,
+				"Can't convert user password to UTF-16, aborting.\n"
+			);
+			memclean(utf16_password, utf16_length);
+			return FALSE;
+		}
+
 	}
 
+	/* Final real length of the UTF-16 string (without the '\0\0' ending) */
+	utf16_real_length = strlen_utf16(utf16_password, utf16_length);
+	dis_printf(L_DEBUG, "Real length of UTF-16 string password: %d\n", utf16_real_length);
+
 	dis_printf(L_DEBUG, "UTF-16 user password:\n");
-	hexdump(L_DEBUG, (uint8_t*) utf16_password, utf16_length);
+	hexdump(L_DEBUG, (uint8_t*) utf16_password, utf16_real_length);
 
 	/* We're not taking the '\0\0' end of the UTF-16 string */
-	SHA256((unsigned char *) utf16_password, utf16_length-2, user_hash);
-	SHA256((unsigned char *) user_hash,      32,             user_hash);
+	SHA256((unsigned char *) utf16_password, utf16_real_length, user_hash);
+	SHA256((unsigned char *) user_hash,      32,                user_hash);
 
 	/*
 	 * We then pass it to the key stretching manipulation

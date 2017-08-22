@@ -1,3 +1,4 @@
+
 # Dislocker -- enables to read/write on BitLocker encrypted partitions under
 # Linux
 # Copyright (C) 2012-2013  Romain Coltel, Hervé Schauer Consultants
@@ -85,11 +86,12 @@ endif()
 
 set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D DEBUG=${DEBUG} -D__DIS_CORE_DUMPS")
 
-
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 	# Don't use `-read_only_relocs' here as it seems to only work for 32 bits
 	# binaries
 	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-bind_at_load")
+	# Library for libiconv
+	set (LIB ${LIB} iconv)
 else()
 	# Useless warnings when used within Darwin
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")

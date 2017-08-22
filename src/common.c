@@ -340,3 +340,29 @@ VALUE rb_hexdump(uint8_t* data, size_t data_len)
 }
 
 #endif /* _HAVE_RUBY */
+
+/**
+ * Counts the numbers of bytes that represent a string in a UTF-16 null-terminated string
+ *
+ * @param data A pointer to the string
+ * @return The number of bytes in the string
+ */
+size_t strlen_utf16(char *data, size_t max_length)
+{
+	size_t i = 0;
+	/* There should be at least 2 bytes (one character) */
+	if (!data || max_length < 2)
+		return 0;
+
+	while (i < (max_length - 1))
+	{
+		/* Taking 2 bytes at a time (one character)
+		 * If both values in current (even) index i and next (odd) index i are 0
+		 * then it is the end of the string
+		 */
+		if (data[i] == 0 && data[i+1] == 0) break;
+		i+=2;
+	}
+	return i;
+}
+

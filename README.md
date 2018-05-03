@@ -111,3 +111,9 @@ instance, if you want to compile dislocker-fuse only, you'd simply run:
 $ cmake .
 $ make dislocker-fuse
 ```
+## A note on Ubuntu 18.04 / Ruby 2.5
+
+By an unknown reason, one ruby incude file needs to be copied before running cmake and make:
+```bash
+sudo cp /usr/include/x86_64-linux-gnu/ruby-2.5.0/ruby/config.h /usr/include/ruby-2.5.0/ruby/
+```

@@ -1,37 +1,36 @@
 # Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
 # file Copyright.txt or https://cmake.org/licensing for details.
 
-#.rst:
-# FindRuby
-# --------
-#
-# Find Ruby
-#
-# This module finds if Ruby is installed and determines where the
-# include files and libraries are.  Ruby 1.8, 1.9, 2.0 and 2.1 are
-# supported.
-#
-# The minimum required version of Ruby can be specified using the
-# standard syntax, e.g.  find_package(Ruby 1.8)
-#
-# It also determines what the name of the library is.  This code sets
-# the following variables:
-#
-# ``RUBY_EXECUTABLE``
-#   full path to the ruby binary
-# ``RUBY_INCLUDE_DIRS``
-#   include dirs to be used when using the ruby library
-# ``RUBY_LIBRARY``
-#   full path to the ruby library
-# ``RUBY_VERSION``
-#   the version of ruby which was found, e.g. "1.8.7"
-# ``RUBY_FOUND``
-#   set to true if ruby ws found successfully
-#
-# Also:
-#
-# ``RUBY_INCLUDE_PATH``
-#   same as RUBY_INCLUDE_DIRS, only provided for compatibility reasons, don't use it
+#[[
+FindRuby
+--------
+
+This module finds if Ruby is installed and determines where the
+include files and libraries are.  Ruby 1.8, 1.9, 2.0 through 2.5 are
+supported.
+
+The minimum required version of Ruby can be specified using the
+standard syntax, e.g.  find_package(Ruby 1.8)
+
+It also determines what the name of the library is.  This code sets
+the following variables:
+
+RUBY_EXECUTABLE
+    full path to the ruby binary
+RUBY_INCLUDE_DIRS
+    include dirs to be used when using the ruby library
+RUBY_LIBRARY
+    full path to the ruby library
+RUBY_VERSION
+    the version of ruby which was found, e.g. "1.8.7"
+RUBY_FOUND
+    set to true if ruby ws found successfully
+
+Also:
+
+RUBY_INCLUDE_PATH
+    same as RUBY_INCLUDE_DIRS, only provided for compatibility reasons, don't use it
+#]]
 
 #   RUBY_ARCHDIR=`$RUBY -r rbconfig -e 'printf("%s",Config::CONFIG@<:@"archdir"@:>@)'`
 #   RUBY_SITEARCHDIR=`$RUBY -r rbconfig -e 'printf("%s",Config::CONFIG@<:@"sitearchdir"@:>@)'`
@@ -40,7 +39,7 @@
 #   RUBY_LIBRUBYARG=`$RUBY -r rbconfig -e 'printf("%s",Config::CONFIG@<:@"LIBRUBYARG_SHARED"@:>@)'`
 
 # uncomment the following line to get debug output for this file
-# set(_RUBY_DEBUG_OUTPUT TRUE)
+set(_RUBY_DEBUG_OUTPUT TRUE)
 
 # Determine the list of possible names of the ruby executable depending
 # on which version of ruby is required
@@ -59,6 +58,7 @@ else()
 endif()
 
 if(NOT Ruby_FIND_VERSION_EXACT)
+  list(APPEND _RUBY_POSSIBLE_EXECUTABLE_NAMES ruby2.5 ruby25)
   list(APPEND _RUBY_POSSIBLE_EXECUTABLE_NAMES ruby2.4 ruby24)
   list(APPEND _RUBY_POSSIBLE_EXECUTABLE_NAMES ruby2.3 ruby23)
   list(APPEND _RUBY_POSSIBLE_EXECUTABLE_NAMES ruby2.2 ruby22)
@@ -187,6 +187,10 @@ if(RUBY_EXECUTABLE AND NOT RUBY_VERSION_MAJOR)
    if(${RUBY_EXECUTABLE} MATCHES "ruby2\\.?4")
       set(RUBY_VERSION_MAJOR 2)
       set(RUBY_VERSION_MINOR 4)
+   endif()
+   if(${RUBY_EXECUTABLE} MATCHES "ruby2\\.?5")
+      set(RUBY_VERSION_MAJOR 2)
+      set(RUBY_VERSION_MINOR 5)
    endif()
 endif()
 

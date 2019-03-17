@@ -305,15 +305,33 @@ int prompt_up(uint8_t** up)
 	if(!up)
 		return FALSE;
 
-	/* There's no need for a prompt if we're doing tests */
-#ifndef __CK_DOING_TESTS
-	printf("Enter the user password: ");
-	fflush(NULL);
-#endif /* __CK_DOING_TESTS */
-
 	*up = NULL;
 
-	ssize_t nb_read = my_getpass((char**) up, stdin);
+	ssize_t nb_read;
+
+	const char* env_pass = getenv("DISLOCKER_PASSWORD");
+
+	if(env_pass)
+	{
+		#ifndef __CK_DOING_TESTS
+			printf("Reading user password from the environment\n");
+			fflush(NULL);
+		#endif /* __CK_DOING_TESTS */
+		nb_read = (ssize_t)strlen(env_pass);
+		uint8_t* tmp = malloc((size_t)nb_read+2);
+		memcpy(tmp, env_pass, (size_t)nb_read);
+		*(tmp + nb_read) = '\n';
+		*(tmp + nb_read + 1) = '\0';
+		*up = tmp;
+	}else{
+		/* There's no need for a prompt if we're doing tests */
+		#ifndef __CK_DOING_TESTS
+			printf("Enter the user password: ");
+			fflush(NULL);
+		#endif /* __CK_DOING_TESTS */
+
+		nb_read = my_getpass((char**) up, stdin);
+	}
 
 	if(nb_read <= 0)
 	{

@@ -29,7 +29,7 @@
 
 #include <termios.h>
 #include <stdio.h>
-
+#include <unistd.h>
 
 
 /**
@@ -201,22 +201,28 @@ static ssize_t my_getpass(char **lineptr, FILE *stream)
 #ifndef __CK_DOING_TESTS
 	struct termios old, new;
 
-	/* Turn echoing off and fail if we can't. */
-	if(tcgetattr(fileno(stream), &old) != 0)
-		return -1;
+	if(isatty(fileno(stream)))
+	{
+		/* Turn echoing off and fail if we can't. */
+		if(tcgetattr(fileno(stream), &old) != 0)
+			return -1;
 
-	new = old;
-	new.c_lflag &= (tcflag_t)~ECHO;
-	if(tcsetattr(fileno(stream), TCSAFLUSH, &new) != 0)
-		return -1;
+		new = old;
+		new.c_lflag &= (tcflag_t)~ECHO;
+		if(tcsetattr(fileno(stream), TCSAFLUSH, &new) != 0)
+			return -1;
+	}
 #endif /* __CK_DOING_TESTS */
 
 	/* Read the password. */
 	nread = getline(lineptr, &n, stream);
 
 #ifndef __CK_DOING_TESTS
-	/* Restore terminal. */
-	(void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
+	if(isatty(fileno(stream)))
+	{
+		/* Restore terminal. */
+		(void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
+	}
 	printf("\n");
 #endif /* __CK_DOING_TESTS */
 

@@ -80,6 +80,12 @@ static void setfvek(dis_context_t dis_ctx, char* optarg)
 	dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
 	dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
 }
+static void setvmk(dis_context_t dis_ctx, char* optarg)
+{
+	int true = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &true);
+	dis_setopt(dis_ctx, DIS_OPT_SET_VMK_FILE_PATH, optarg);
+}
 static void setlogfile(dis_context_t dis_ctx, char* optarg)
 {
 	dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
@@ -139,6 +145,7 @@ static struct _dis_options dis_opt[] = {
 	{ {"force-block",       optional_argument, NULL, 'F'}, setforceblock },
 	{ {"help",              no_argument,       NULL, 'h'}, NULL },
 	{ {"fvek",              required_argument, NULL, 'k'}, setfvek },
+	{ {"vmk",               required_argument, NULL, 'K'}, setvmk },
 	{ {"logfile",           required_argument, NULL, 'l'}, setlogfile },
 	{ {"offset",            required_argument, NULL, 'O'}, setoffset },
 	{ {"options",           required_argument, NULL, 'o'}, NULL },
@@ -166,7 +173,7 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
 #endif
 "\n"
 "Usage: " PROGNAME " [-hqrsv] [-l LOG_FILE] [-O OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
-"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-c\n"
+"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-K VMK_FILE|-c\n"
 "\n"
 "Options:\n"
 "    -c, --clearkey        decrypt volume using a clear key (default)\n"
@@ -175,6 +182,7 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
 "    -F, --force-block=[N] force use of metadata block number N (1, 2 or 3)\n"
 "    -h, --help            print this help and exit\n"
 "    -k, --fvek FVEK_FILE  decrypt volume using the FVEK directly\n"
+"    -K, --vmk VMK_FILE    decrypt volume using the VMK directly\n"
 "    -l, --logfile LOG_FILE\n"
 "                          put messages into this file (stdout by default)\n"
 "    -O, --offset OFFSET   BitLocker partition offset, in bytes (default is 0)\n"
@@ -251,7 +259,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 
 
 	/* Options which could be passed as argument */
-	const char short_opts[] = "cf:F::hk:l:O:o:p::qrsu::vV:";
+	const char short_opts[] = "cf:F::hkK:l:O:o:p::qrsu::vV:";
 	struct option* long_opts;
 
 	if(!dis_ctx || !argv)
@@ -306,6 +314,12 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			{
 				dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
 				dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
+				break;
+			}
+			case 'K':
+			{
+				dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_SET_VMK_FILE_PATH, optarg);
 				break;
 			}
 			case 'l':
@@ -461,6 +475,15 @@ int dis_getopt(dis_context_t dis_ctx, dis_opt_e opt_name, void** opt_value)
 		case DIS_OPT_SET_FVEK_FILE_PATH:
 			*opt_value = cfg->fvek_file;
 			break;
+		case DIS_OPT_USE_VMK_FILE:
+			if(cfg->decryption_mean & DIS_USE_VMKFILE)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_VMK_FILE_PATH:
+			*opt_value = cfg->vmk_file;
+			break;
 		case DIS_OPT_VERBOSITY:
 			*opt_value = (void*) cfg->verbosity;
 			break;
@@ -596,6 +619,20 @@ int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 			else
 				cfg->fvek_file = strdup((const char*) opt_value);
 			break;
+		case DIS_OPT_USE_VMK_FILE:
+			if(opt_value == NULL)
+				cfg->decryption_mean &= (unsigned) ~DIS_USE_VMKFILE;
+			else
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_VMKFILE);
+			break;
+		case DIS_OPT_SET_VMK_FILE_PATH:
+			if(cfg->vmk_file != NULL)
+				free(cfg->vmk_file);
+			if(opt_value == NULL)
+				cfg->vmk_file = NULL;
+			else
+				cfg->vmk_file = strdup((const char*) opt_value);
+			break;
 		case DIS_OPT_VERBOSITY:
 			if(opt_value == NULL)
 				cfg->verbosity = 0;
@@ -699,6 +736,9 @@ void dis_free_args(dis_context_t dis_ctx)
 	if(cfg->fvek_file)
 		memclean(cfg->fvek_file, strlen(cfg->fvek_file) + sizeof(char));
 
+	if(cfg->vmk_file)
+		memclean(cfg->vmk_file, strlen(cfg->vmk_file) + sizeof(char));
+
 	if(cfg->volume_path)
 		dis_free(cfg->volume_path);
 
@@ -742,6 +782,10 @@ void dis_print_args(dis_context_t dis_ctx)
 	else if(cfg->decryption_mean & DIS_USE_FVEKFILE)
 	{
 		dis_printf(L_DEBUG, "   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
+	}
+	else if(cfg->decryption_mean & DIS_USE_VMKFILE)
+	{
+		dis_printf(L_DEBUG, "   \tusing the VMK file at '%s'\n", cfg->vmk_file);
 	}
 	else
 	{

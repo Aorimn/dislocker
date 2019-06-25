@@ -26,7 +26,7 @@
 
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/guid.h"
-
+#include "dislocker/config.priv.h"
 
 
 /*
@@ -41,5 +41,5 @@ int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16
 int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
             size_t key_size, datum_key_t** vmk);
 
-
+int get_vmk_from_file(dis_config_t* cfg, void** vmk_datum);
 #endif /* VMK_H */

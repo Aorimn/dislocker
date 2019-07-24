@@ -259,7 +259,8 @@ void print_one_datum(DIS_LOGS level, void* datum)
 
 	dis_datums_value_type_t value_type = header->value_type;
 
-	print_datum_tab[value_type](level, datum);
+	if (value_type < NB_DATUMS_VALUE_TYPES)
+		print_datum_tab[value_type](level, datum);
 }
 
 

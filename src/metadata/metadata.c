@@ -27,6 +27,7 @@
 #include "dislocker/metadata/metadata_config.h"
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
+#include <sys/mount.h>
 
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables
@@ -159,6 +160,16 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 		);
 		return DIS_RET_ERROR_VOLUME_HEADER_READ;
 	}
+
+	//Windows 10 1903 exFAT
+	if (!dis_meta->volume_header->sector_size) {
+		uint64_t nSectorSize = 0;
+		ioctl(dis_meta_cfg->fve_fd, BLKSSZGET, &nSectorSize);
+		if(!nSectorSize)
+			nSectorSize = 512;
+		dis_meta->volume_header->sector_size = (uint16_t)nSectorSize;
+	}
+	//Windows 10 1903 exFAT
 
 	/* For debug purpose, print the volume header retrieved */
 	print_volume_header(L_DEBUG, dis_meta);

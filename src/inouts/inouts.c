@@ -84,6 +84,10 @@ static uint64_t get_volume_size(dis_context_t dis_ctx)
 
 		old_vbr = dis_metadata_set_volume_header(dis_ctx->metadata, input);
 		volume_size = dis_metadata_volume_size_from_vbr(dis_ctx->metadata);
+		//NTFS + 1 Sector
+		if (volume_size && memcmp(NTFS_SIGNATURE, dis_ctx->metadata->volume_header->signature, NTFS_SIGNATURE_SIZE) == 0)
+			volume_size += dis_ctx->metadata->volume_header->sector_size;
+		//NTFS + 1 Sector
 		dis_metadata_set_volume_header(dis_ctx->metadata, old_vbr);
 
 		dis_free(input);

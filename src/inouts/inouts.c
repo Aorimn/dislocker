@@ -25,7 +25,9 @@
 #include "dislocker/inouts/inouts.priv.h"
 #include "dislocker/dislocker.priv.h"
 #include "dislocker/config.priv.h"
-#include <sys/mount.h>
+
+#include <sys/ioctl.h>
+#include <linux/fs.h>
 
 
 /**

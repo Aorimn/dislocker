@@ -27,7 +27,9 @@
 #include "dislocker/metadata/metadata_config.h"
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
-#include <sys/mount.h>
+
+#include <sys/ioctl.h>
+#include <linux/fs.h>
 
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables

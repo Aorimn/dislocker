@@ -27,7 +27,8 @@
 #include "dislocker/config.priv.h"
 
 #include <sys/ioctl.h>
-#include <linux/fs.h>
+
+#define BLKGETSIZE64 _IOR(0x12,114,size_t)	/* return device size in bytes (u64 *arg) */
 
 
 /**

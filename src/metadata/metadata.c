@@ -29,7 +29,8 @@
 #include "dislocker/dislocker.priv.h"
 
 #include <sys/ioctl.h>
-#include <linux/fs.h>
+
+#define BLKSSZGET  _IO(0x12,104)/* get block device sector size */
 
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables

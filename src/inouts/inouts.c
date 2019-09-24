@@ -26,10 +26,6 @@
 #include "dislocker/dislocker.priv.h"
 #include "dislocker/config.priv.h"
 
-#include <sys/ioctl.h>
-
-#define BLKGETSIZE64 _IOR(0x12,114,size_t)	/* return device size in bytes (u64 *arg) */
-
 
 /**
  * Getting the real volume size is proving to be quite difficult.
@@ -87,23 +83,10 @@ static uint64_t get_volume_size(dis_context_t dis_ctx)
 
 		old_vbr = dis_metadata_set_volume_header(dis_ctx->metadata, input);
 		volume_size = dis_metadata_volume_size_from_vbr(dis_ctx->metadata);
-		//NTFS + 1 Sector
-		if (volume_size && memcmp(NTFS_SIGNATURE, dis_ctx->metadata->volume_header->signature, NTFS_SIGNATURE_SIZE) == 0)
-			volume_size += dis_ctx->metadata->volume_header->sector_size;
-		//NTFS + 1 Sector
 		dis_metadata_set_volume_header(dis_ctx->metadata, old_vbr);
 
 		dis_free(input);
 	}
-
-	//Windows 10 1903 exFAT
-	if (!volume_size) {
-		uint64_t blksize64 = 0;
-		if(!ioctl(dis_ctx->io_data.volume_fd, BLKGETSIZE64, &blksize64)) {
-			volume_size = blksize64;
-		}
-	}
-	//Windows 10 1903 exFAT
 
 	return volume_size;
 }

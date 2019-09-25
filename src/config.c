@@ -259,7 +259,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 
 
 	/* Options which could be passed as argument */
-	const char short_opts[] = "cf:F::hkK:l:O:o:p::qrsu::vV:";
+	const char short_opts[] = "cf:F::hk:K:l:O:o:p::qrsu::vV:";
 	struct option* long_opts;
 
 	if(!dis_ctx || !argv)

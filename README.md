@@ -44,7 +44,8 @@ patches, Will Dyson for the patches, and all the people who give feedbacks.
 See `INSTALL.md` for things dealing with the install process.
 Once installed, see `dislocker(1)` for details on how to use it.
 
-
+## Automatic dislocker
+See Raymo111's [gist](https://gist.github.com/Raymo111/964f8c5943a64919a324b5f92ac5874b) on a user-friendly script to automatically run dislocker on a connected bitlockered disk.
 
 ## Bugs
 

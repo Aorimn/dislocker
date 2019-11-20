@@ -132,6 +132,19 @@ int dis_get_access(dis_context_t dis_ctx)
 				break;
 			}
 		}
+		else if(dis_ctx->cfg.decryption_mean & DIS_USE_VMKFILE)
+		{
+			if(!get_vmk_from_file(&dis_ctx->cfg, &vmk_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_VMKFILE;
+			}
+			else
+			{
+				dis_printf(L_INFO, "Used VMK file decryption method\n");
+				dis_ctx->cfg.decryption_mean = DIS_USE_VMKFILE;
+				break;
+			}
+		}
 		else
 		{
 			dis_printf(L_CRITICAL, "Wtf!? Abort.\n");

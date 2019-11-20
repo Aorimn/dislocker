@@ -6,7 +6,7 @@ Dislocker fuse - Read/write BitLocker encrypted volumes under Linux, OSX and Fre
 .SH SYNOPSIS
 dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
 
-Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
+Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -K \fIVMK_FILE\fR | -c}
 .SH DESCRIPTION
 Given a decryption mean, the program is used to read or write BitLocker encrypted volumes. Technically, the program will create a virtual NTFS partition that you can mount as any other NTFS partition.
 .PP
@@ -32,6 +32,10 @@ print the help and exit
 .B -k, --fvek \fIFVEK_FILE\fR
 decrypt volume using the FVEK directly.
 See the FVEK FILE section below to understand what is to be put into this \fIFVEK_FILE\fR
+.TP
+.B -K, --vmk \fIVMK_FILE\fR
+decrypt volume using the VMK directly.
+See the VMK FILE section below to understand what is to be put into this \fIVMK_FILE\fR
 .TP
 .B -l, --logfile \fILOG_FILE\fR
 put messages into this file (stdout by default)

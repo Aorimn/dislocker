@@ -23,6 +23,9 @@
 
 
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "dislocker/encryption/decrypt.h"
 #include "dislocker/metadata/vmk.h"
 
@@ -289,3 +292,74 @@ int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range,
 	}
 }
 
+/**
+ * Retrieve the VMK using the VMK file.
+ *
+ * @param cfg The configuration structure, therefore having the VMK file
+ * @param vmk_datum The VMK datum
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_vmk_from_file(dis_config_t* cfg, void** vmk_datum)
+{
+	if(!cfg)
+		return FALSE;
+
+	off_t actual_size   = -1;
+	int   file_fd = -1;
+	datum_key_t* datum_key = NULL;
+	ssize_t rs;
+
+	char vmk_keys[32] = {0,};
+
+	off_t expected_size = sizeof(vmk_keys);
+
+
+	file_fd = dis_open(cfg->vmk_file, O_RDONLY);
+	if(file_fd == -1)
+	{
+		dis_printf(L_ERROR, "Cannot open VMK file (%s)\n", cfg->vmk_file);
+		return FALSE;
+	}
+
+	/* Check the file's size */
+	actual_size = dis_lseek(file_fd, 0, SEEK_END);
+
+	if(actual_size != expected_size)
+	{
+		dis_printf(
+			L_ERROR,
+			"Wrong VMK file size, expected %d but has %d\n",
+			expected_size,
+			actual_size
+		);
+		return FALSE;
+	}
+
+	/* Read everything */
+	dis_lseek(file_fd, 0, SEEK_SET);
+	rs = dis_read(file_fd, vmk_keys, sizeof(vmk_keys));
+	if(rs != sizeof(vmk_keys))
+	{
+		dis_printf(L_ERROR, "Cannot read whole VMK key in the VMK file\n");
+		return FALSE;
+	}
+
+
+	/* Create the VMK datum */
+	*vmk_datum = dis_malloc(sizeof(datum_key_t) + sizeof(vmk_keys));
+
+	/* ... create the header */
+	datum_key = *vmk_datum;
+	datum_key->header.datum_size = sizeof(datum_key_t) + sizeof(vmk_keys);
+	datum_key->header.entry_type = 3;
+	datum_key->header.value_type = DATUMS_VALUE_KEY;
+	datum_key->header.error_status = 1;
+
+	datum_key->algo = AES_256_DIFFUSER;
+	datum_key->padd = 0;
+
+	/* ... copy the keys */
+	memcpy((char*) *vmk_datum + sizeof(datum_key_t), vmk_keys, sizeof(vmk_keys));
+
+	return TRUE;
+}

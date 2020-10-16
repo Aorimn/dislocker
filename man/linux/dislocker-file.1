@@ -6,7 +6,7 @@ Dislocker file - Read BitLocker encrypted volumes under Linux, OSX and FreeBSD.
 .SH SYNOPSIS
 dislocker-file [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [--] \fINTFS_FILE\fR
 
-Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -c}
+Where DECRYPTMETHOD = {-p[\fIRECOVERY_PASSWORD\fR] | -f \fIBEK_FILE\fR | -u[\fIUSER_PASSWORD\fR] | -k \fIFVEK_FILE\fR | -K \fIVMK_FILE\fR | -c}
 .SH DESCRIPTION
 Given a decryption mean, the program is used to decrypt BitLocker encrypted volumes.
 

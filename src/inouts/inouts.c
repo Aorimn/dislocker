@@ -25,7 +25,6 @@
 #include "dislocker/inouts/inouts.priv.h"
 #include "dislocker/dislocker.priv.h"
 #include "dislocker/config.priv.h"
-#include <sys/mount.h>
 
 
 /**
@@ -88,15 +87,6 @@ static uint64_t get_volume_size(dis_context_t dis_ctx)
 
 		dis_free(input);
 	}
-
-	//Windows 10 1903 exFAT
-	if (!volume_size) {
-		uint64_t blksize64 = 0;
-		if(!ioctl(dis_ctx->io_data.volume_fd, BLKGETSIZE64, &blksize64)) {
-			volume_size = blksize64;
-		}
-	}
-	//Windows 10 1903 exFAT
 
 	return volume_size;
 }

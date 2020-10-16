@@ -27,7 +27,10 @@
 #include "dislocker/metadata/metadata_config.h"
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
-#include <sys/mount.h>
+
+#include <sys/ioctl.h>
+
+#define BLKSSZGET  _IO(0x12,104)/* get block device sector size */
 
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables

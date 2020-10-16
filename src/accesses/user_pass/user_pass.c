@@ -44,7 +44,7 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta,
                            dis_config_t* cfg,
                            void** vmk_datum)
 {
-	return get_vmk_from_user_pass2(dis_meta, cfg->user_password, vmk_datum);
+	return get_vmk_from_user_pass2(dis_meta, cfg, vmk_datum);
 }
 
 
@@ -52,12 +52,12 @@ int get_vmk_from_user_pass(dis_metadata_t dis_meta,
  * Get the VMK datum using a user password
  *
  * @param dataset The dataset of BitLocker's metadata on the volume
- * @param user_password The user password provided
+ * @param cfg The configuration structure
  * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
-                            uint8_t* user_password,
+                            dis_config_t* cfg,
                             void** vmk_datum)
 {
 	// Check parameters
@@ -68,8 +68,8 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 	uint8_t salt[16]      = {0,};
 
 	/* If the user password wasn't provide, ask for it */
-	if(!user_password)
-		if(!prompt_up(&user_password))
+	if(!cfg->user_password)
+		if(!prompt_up(&cfg->user_password))
 		{
 			dis_printf(L_ERROR, "Cannot get valid user password. Abort.\n");
 			return FALSE;
@@ -78,7 +78,7 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 	dis_printf(
 		L_DEBUG,
 		"Using the user password: '%s'.\n",
-		(char *) user_password
+		(char *) cfg->user_password
 	);
 
 
@@ -96,8 +96,8 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 			"Error, can't find a valid and matching VMK datum. Abort.\n"
 		);
 		*vmk_datum = NULL;
-		memclean((char*) user_password, strlen((char*) user_password));
-		user_password = NULL;
+		memclean((char*) cfg->user_password, strlen((char*) cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 
@@ -124,8 +124,8 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 		);
 		dis_free(type_str);
 		*vmk_datum = NULL;
-		memclean( (char*) user_password, strlen((char*) user_password));
-		user_password = NULL;
+		memclean( (char*) cfg->user_password, strlen((char*) cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 
@@ -149,8 +149,8 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 			"Internal failure, abort.\n"
 		);
 		*vmk_datum = NULL;
-		memclean((char*) user_password, strlen((char*) user_password));
-		user_password = NULL;
+		memclean((char*) cfg->user_password, strlen((char*) cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 
@@ -159,12 +159,12 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 	 * We have all the things we need to compute the intermediate key from
 	 * the user password, so do it!
 	 */
-	if(!user_key(user_password, salt, user_hash))
+	if(!user_key(cfg->user_password, salt, user_hash))
 	{
 		dis_printf(L_CRITICAL, "Can't stretch the user password, aborting.\n");
 		*vmk_datum = NULL;
-		memclean((char*) user_password, strlen((char*) user_password));
-		user_password = NULL;
+		memclean((char*) cfg->user_password, strlen((char*) cfg->user_password));
+		cfg->user_password = NULL;
 		return FALSE;
 	}
 

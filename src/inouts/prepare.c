@@ -113,10 +113,9 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 
 	/*
-	 * We need to grab the volume's size from the first sector, so we can
-	 * announce it on a getattr call
+	 * Get volume size directly from dis_metadata_t, which is more accurate.
 	 */
-	io_data->volume_size = dis_inouts_volume_size(dis_ctx);
+	io_data->volume_size = io_data->encrypted_volume_size;
 	if(io_data->volume_size == 0)
 	{
 		dis_printf(L_ERROR, "Can't initialize the volume's size\n");

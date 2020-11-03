@@ -907,8 +907,13 @@ static int get_metadata_lazy_checked(
 		/* Get the metadata */
 		if(!get_metadata((off_t)regions[current].addr + disk_offset, metadata, fd))
 		{
+			/*
 			dis_printf(L_ERROR, "Can't get metadata (n°%d)\n", current+1);
 			return FALSE;
+			*/
+			if (++current >= 3)			//Consider metadata corruption
+				return FALSE;
+			continue;
 		}
 
 
@@ -939,8 +944,13 @@ static int get_metadata_lazy_checked(
 		ssize_t nb_read = dis_read(fd, &validations, sizeof(bitlocker_validations_t));
 		if(nb_read != sizeof(bitlocker_validations_t))
 		{
+			/*
 			dis_printf(L_ERROR, "Error, can't read all validations data.\n");
 			return FALSE;
+			*/
+			if (++current >= 3)		//Consider bad sectors
+				return FALSE;
+			continue;
 		}
 
 		/* Check the validity */
@@ -964,7 +974,7 @@ static int get_metadata_lazy_checked(
 			dis_free(*metadata);
 	}
 
-	if(current >= 3)
+	if(current > 3)
 		return FALSE;
 
 	return TRUE;

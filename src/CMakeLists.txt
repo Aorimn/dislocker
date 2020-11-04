@@ -17,9 +17,17 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
+set(_Ruby_DEBUG_OUTPUT ON)
+
 if("${CMAKE_SOURCE_DIR}" MATCHES "src/?$")
 	message(FATAL_ERROR "\nPlease execute cmake from the directory above, not the src/ directory.")
 	return()
+endif()
+
+# On OSX, frameworks are found before installed libraries (cf. https://gitlab.kitware.com/cmake/cmake/-/issues/16427)
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+	set(CMAKE_FIND_FRAMEWORK Last)
+	message(STATUS "CMAKE_FIND_FRAMEWORK='${CMAKE_FIND_FRAMEWORK}'")
 endif()
 
 add_definitions (-DPROGNAME="${PROJECT_NAME}")

@@ -12,11 +12,8 @@ jobs:
       dist: xenial
     - os: osx
 
-env:
-    global:
-        - PATH="/usr/bin:/usr/local/bin:$PATH"
-
 before_install:
+    - echo $PATH
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq; fi
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -qq libfuse-dev ruby-dev libmbedtls-dev; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi

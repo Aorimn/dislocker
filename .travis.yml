@@ -19,6 +19,7 @@ before_install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install -v Caskroom/cask/osxfuse; fi
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./src/mbed_install.sh; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export PATH="/usr/bin:/usr/local/bin:$PATH"; fi
 
 install:
     - cmake .

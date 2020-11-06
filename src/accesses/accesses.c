@@ -263,7 +263,7 @@ static VALUE rb_get_vmk_from_userpass(VALUE self, VALUE rb_userpass)
 	userpass = (uint8_t*) StringValuePtr(rb_userpass);
 
 	/* Get the VMK */
-	if(!get_vmk_from_user_pass2(dis_accesses->metadata, userpass, &vmk_datum))
+	if(!get_vmk_from_user_pass2(dis_accesses->metadata, &userpass, &vmk_datum))
 		rb_raise(rb_eRuntimeError, "Couldn't retrieve the VMK");
 
 	/* Save it */

@@ -88,25 +88,25 @@ void dis_stdio_init(DIS_LOGS v, const char* file)
 	switch(v)
 	{
 		default:
-			verbosity       = L_DEBUG;
-			/* No break on purpose */
+			verbosity = L_DEBUG;
+			// fall through
 		case L_DEBUG:
-			fds[L_DEBUG]    = log;
-			/* No break on purpose */
+			fds[L_DEBUG] = log;
+			// fall through
 		case L_INFO:
-			fds[L_INFO]     = log;
-			/* No break on purpose */
+			fds[L_INFO] = log;
+			// fall through
 		case L_WARNING:
-			fds[L_WARNING]  = log;
-			/* No break on purpose */
+			fds[L_WARNING] = log;
+			// fall through
 		case L_ERROR:
-			fds[L_ERROR]    = log;
-			/* No break on purpose */
+			fds[L_ERROR] = log;
+			// fall through
 		case L_CRITICAL:
 			fds[L_CRITICAL] = log;
 			break;
 		case L_QUIET:
-			if(log != stdout)
+			if (log != stdout)
 				fclose(log);
 			break;
 	}

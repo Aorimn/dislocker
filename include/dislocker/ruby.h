@@ -30,6 +30,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma clang diagnostic ignored "-Wunknown-attributes"
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #endif /* defined(__clang__) */
 
 #include <ruby.h>

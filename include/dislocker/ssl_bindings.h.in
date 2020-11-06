@@ -33,7 +33,11 @@
 // Function's name changed
 #if defined(MBEDTLS_SHA256_C)
 #  include "mbedtls/sha256.h"
-#  define SHA256(input, len, output)         mbedtls_sha256(input, len, output, 0)
+#  if MBEDTLS_VERSION_NUMBER >= 0x02070000
+#    define SHA256(input, len, output)         mbedtls_sha256_ret(input, len, output, 0)
+#  else
+#    define SHA256(input, len, output)         mbedtls_sha256(input, len, output, 0)
+#  endif /* POLARSSL_VERSION_NUMBER >= 0x02070000 */
 #else /* defined(MBEDTLS_SHA256_C) */
 
 #  if defined(POLARSSL_SHA256_C)

@@ -1342,7 +1342,7 @@ void Init_datum(VALUE rb_cDislockerMetadata)
 		rb_cDislockerMetadataDatum,
 		"initialize",
 		rb_cDislockerMetadataDatum_init,
-		0
+		1
 	);
 
 	rb_define_method(

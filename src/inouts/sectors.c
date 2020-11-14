@@ -40,7 +40,7 @@
  * parallel. Use the environment variable FUSE_MAX_WORKERS to change the
  * FUSE's threads number.
  */
-#define NB_THREAD 2
+#define NB_THREAD 0
 // Have a look at sysconf(_SC_NPROCESSORS_ONLN)
 // Note: 512*NB_THREAD shouldn't be more than 2^16 (due to used types)
 

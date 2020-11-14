@@ -41,9 +41,8 @@
 
 
 /** NTFS virtual partition's name */
-#define NTFS_FILENAME "/dislocker-file"
-
-
+#define NTFS_FILENAME "dislocker-file"
+#define NTFS_FILERELATIVEPATH "/" NTFS_FILENAME
 
 #include "dislocker/inouts/inouts.h"
 #include "dislocker/dislocker.h"
@@ -73,7 +72,7 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFDIR | 0555;
 		stbuf->st_nlink = 2;
 	}
-	else if(strcmp(path, NTFS_FILENAME) == 0)
+	else if(strcmp(path, NTFS_FILERELATIVEPATH) == 0)
 	{
 		mode_t m = dis_is_read_only(dis_ctx) ? 0444 : 0666;
 		stbuf->st_mode = S_IFREG | m;
@@ -101,7 +100,7 @@ static int fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
-	filler(buf, NTFS_FILENAME + 1, NULL, 0);
+	filler(buf, NTFS_FILENAME, NULL, 0);
 
 	return 0;
 }
@@ -111,7 +110,7 @@ static int fs_open(const char *path, struct fuse_file_info *fi)
 	if(!path || !fi)
 		return -EINVAL;
 
-	if(strcmp(path, NTFS_FILENAME) != 0)
+	if (strcmp(path, NTFS_FILERELATIVEPATH) != 0)
 		return -ENOENT;
 
 
@@ -145,7 +144,7 @@ static int fs_read(
 	/*
 	 * Perform basic checks
 	 */
-	if(strcmp(path, NTFS_FILENAME) != 0)
+	if(strcmp(path, NTFS_FILERELATIVEPATH) != 0)
 	{
 		dis_printf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
 		return -ENOENT;
@@ -165,8 +164,7 @@ static int fs_write(
 	if(!path || !buf)
 		return -EINVAL;
 
-
-	if(strcmp(path, NTFS_FILENAME) != 0)
+	if(strcmp(path, NTFS_FILERELATIVEPATH) != 0)
 	{
 		dis_printf(L_DEBUG, "Unknown entry requested: \"%s\"\n", path);
 		return -ENOENT;

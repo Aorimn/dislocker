@@ -1,3 +1,9 @@
+# v0.7.3
+This version is only used to update dislocker's brew file and the BitBake recipe
+for OSX's and BitBake's users to be able to download v0.7.2. If you're not an OSX
+nor a BitBake user, you can use either v0.7.2 or v0.7.3, this won't make any
+difference.
+
 # v0.7.2
 - Bugfixes:
     - Fix compilation on OSX when ruby dependency is installed

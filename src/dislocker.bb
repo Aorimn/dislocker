@@ -20,8 +20,8 @@ SECTION = "e/utils"
 
 SRC_URI = "https://github.com/Aorimn/dislocker/archive/v${PV}.tar.gz"
 
-SRC_URI[md5sum] = "0683bd18472d5f9e13f718e4d80ed7c7"
-SRC_URI[sha256sum] = "9e36afb0b29714e325d1721332e913bbd357f089a53962fcb7ae62f2e3862d84"
+SRC_URI[md5sum] = "2685fba76693420677c2b9f8e3fd8c83"
+SRC_URI[sha256sum] = "c3173dab96545a7a9b210d11dd7317b63662025c4f78bf820d3fe41017f49f68"
 
 DEPENDS = "mbedtls fuse"
 RDEPENDS_${PN} += "mbedtls fuse"

@@ -6,9 +6,9 @@ require 'formula'
 
 class Dislocker < Formula
     homepage 'https://github.com/Aorimn/dislocker'
-    url 'https://github.com/Aorimn/dislocker/archive/v0.7.zip'
-    sha256 '807d7087e82b7ab5819a8ae1d5be6f074397c8f6a327b7b5798c1228e454424b'
-    version '0.7.0'
+    url 'https://github.com/Aorimn/dislocker/archive/v0.7.2.zip'
+    sha256 '9c7cbc44193f560bbe4c23bc2568485d8a77a9f598c86ba41465cd0eb0cf4441'
+    version '0.7.2'
 
     depends_on 'mbedtls'
     depends_on 'cmake'

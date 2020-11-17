@@ -1,3 +1,14 @@
+# v0.7.2
+- Bugfixes:
+    - Fix compilation on OSX when ruby dependency is installed
+
+- Feature improvement:
+    - Reported NTFS volume size is more accurate (thanks @haobinnan)
+    - Add ability to decrypt from a VMK file (thanks Seunghun Han)
+    - Add ability to read the user password from the envrironment variable `DISLOCKER_PASSWORD` (thanks @mhogomchungu)
+    - Add ability to read the user password from pipes (thanks @mhogomchungu)
+    - Decryption/encryption speed has been improved by disabling faulty threading
+
 # v0.7.1
 This version is only used to update dislocker's brew file and the BitBake recipe
 for OSX's and BitBake's users to be able to download v0.7. If you're not an OSX

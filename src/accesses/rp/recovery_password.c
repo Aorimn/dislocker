@@ -86,99 +86,99 @@ int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password,
 
 
 	while (!result) {
-	/*
-	 * We need a salt contained in the VMK datum associated to the recovery
-	 * password, so go get this salt and the VMK datum first
-	 * We use here the range which should be upper (or equal) than 0x800
-	 */
-	if(!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, (void**) vmk_datum, prev_vmk_datum))
-	{
-		dis_printf(
-			L_ERROR,
-			"Error, can't find a valid and matching VMK datum. Abort.\n"
+		/*
+		* We need a salt contained in the VMK datum associated to the recovery
+		* password, so go get this salt and the VMK datum first
+		* We use here the range which should be upper (or equal) than 0x800
+		*/
+		if(!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, (void**) vmk_datum, prev_vmk_datum))
+		{
+			dis_printf(
+				L_ERROR,
+				"Error, can't find a valid and matching VMK datum. Abort.\n"
+			);
+			*vmk_datum = NULL;
+			return FALSE;
+		}
+		prev_vmk_datum = *vmk_datum;
+
+
+		/*
+		* We have the datum containing other data, so get in there and take the
+		* nested one with type 3 (stretch key)
+		*/
+		void* stretch_datum = NULL;
+		if(!get_nested_datumvaluetype(
+				*vmk_datum,
+				DATUMS_VALUE_STRETCH_KEY,
+				&stretch_datum
+			) ||
+		!stretch_datum)
+		{
+			char* type_str = datumvaluetypestr(DATUMS_VALUE_STRETCH_KEY);
+			dis_printf(
+				L_ERROR,
+				"Error looking for the nested datum of type %hd (%s) in the VMK one"
+				". Internal failure, abort.\n",
+				DATUMS_VALUE_STRETCH_KEY,
+				type_str
+			);
+			dis_free(type_str);
+			*vmk_datum = NULL;
+			return FALSE;
+		}
+
+
+		/* The salt is in here, don't forget to keep it somewhere! */
+		memcpy(salt, ((datum_stretch_key_t*) stretch_datum)->salt, 16);
+
+
+		/* Get data which can be decrypted with this password */
+		void* aesccm_datum = NULL;
+		if(!get_nested_datumvaluetype(
+				*vmk_datum,
+				DATUMS_VALUE_AES_CCM,
+				&aesccm_datum
+			) ||
+		!aesccm_datum)
+		{
+			dis_printf(
+				L_ERROR,
+				"Error finding the AES_CCM datum including the VMK. "
+				"Internal failure, abort.\n"
+			);
+			*vmk_datum = NULL;
+			return FALSE;
+		}
+
+
+		/*
+		* We have all the things we need to compute the intermediate key from
+		* the recovery password, so do it!
+		*/
+		recovery_key = dis_malloc(32 * sizeof(uint8_t));
+
+		if(!intermediate_key(recovery_password, salt, recovery_key))
+		{
+			dis_printf(
+				L_ERROR,
+				"Error computing the recovery password to the recovery key. "
+				"Abort.\n"
+			);
+			*vmk_datum = NULL;
+			dis_free(recovery_key);
+			return FALSE;
+		}
+
+		/* As the computed key length is always the same, use a direct value */
+		result = get_vmk(
+			(datum_aes_ccm_t*) aesccm_datum,
+			recovery_key,
+			32,
+			(datum_key_t**) vmk_datum
 		);
-		*vmk_datum = NULL;
-		return FALSE;
-	}
-	prev_vmk_datum = *vmk_datum;
 
-
-	/*
-	 * We have the datum containing other data, so get in there and take the
-	 * nested one with type 3 (stretch key)
-	 */
-	void* stretch_datum = NULL;
-	if(!get_nested_datumvaluetype(
-			*vmk_datum,
-			DATUMS_VALUE_STRETCH_KEY,
-			&stretch_datum
-		) ||
-	   !stretch_datum)
-	{
-		char* type_str = datumvaluetypestr(DATUMS_VALUE_STRETCH_KEY);
-		dis_printf(
-			L_ERROR,
-			"Error looking for the nested datum of type %hd (%s) in the VMK one"
-			". Internal failure, abort.\n",
-			DATUMS_VALUE_STRETCH_KEY,
-			type_str
-		);
-		dis_free(type_str);
-		*vmk_datum = NULL;
-		return FALSE;
-	}
-
-
-	/* The salt is in here, don't forget to keep it somewhere! */
-	memcpy(salt, ((datum_stretch_key_t*) stretch_datum)->salt, 16);
-
-
-	/* Get data which can be decrypted with this password */
-	void* aesccm_datum = NULL;
-	if(!get_nested_datumvaluetype(
-			*vmk_datum,
-			DATUMS_VALUE_AES_CCM,
-			&aesccm_datum
-		) ||
-	   !aesccm_datum)
-	{
-		dis_printf(
-			L_ERROR,
-			"Error finding the AES_CCM datum including the VMK. "
-			"Internal failure, abort.\n"
-		);
-		*vmk_datum = NULL;
-		return FALSE;
-	}
-
-
-	/*
-	 * We have all the things we need to compute the intermediate key from
-	 * the recovery password, so do it!
-	 */
-	recovery_key = dis_malloc(32 * sizeof(uint8_t));
-
-	if(!intermediate_key(recovery_password, salt, recovery_key))
-	{
-		dis_printf(
-			L_ERROR,
-			"Error computing the recovery password to the recovery key. "
-			"Abort.\n"
-		);
-		*vmk_datum = NULL;
 		dis_free(recovery_key);
-		return FALSE;
-	}
-
-	/* As the computed key length is always the same, use a direct value */
-	result = get_vmk(
-		(datum_aes_ccm_t*) aesccm_datum,
-		recovery_key,
-		32,
-		(datum_key_t**) vmk_datum
-	);
-
-	dis_free(recovery_key);
 	}
 
 	return result;

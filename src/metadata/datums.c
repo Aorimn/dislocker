@@ -757,7 +757,7 @@ int dis_metadata_has_clear_key(dis_metadata_t dis_meta, void** vmk_datum)
 
 	dis_printf(L_DEBUG, "Entering has_clear_key. Returning result of get_vmk_datum_from_range with range between 0x00 and 0xff\n");
 
-	return get_vmk_datum_from_range(dis_meta, 0x00, 0xff, vmk_datum);
+	return get_vmk_datum_from_range(dis_meta, 0x00, 0xff, vmk_datum, NULL);
 }
 
 

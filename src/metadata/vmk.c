@@ -260,7 +260,7 @@ int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid,
  * @return TRUE if result can be trusted, FALSE otherwise
  */
 int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range,
-	uint16_t max_range, void** vmk_datum)
+	uint16_t max_range, void** vmk_datum, void* prev_vmk_datum)
 {
 	// Check parameters
 	if(!dis_meta)
@@ -268,7 +268,11 @@ int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range,
 
 	uint16_t datum_range = 0;
 
-	*vmk_datum = NULL;
+	if (prev_vmk_datum) {
+		*vmk_datum = prev_vmk_datum;
+	} else {
+		*vmk_datum = NULL;
+	}
 
 	while(1)
 	{

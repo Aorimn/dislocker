@@ -70,6 +70,7 @@ int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password,
 	uint8_t salt[16] = {0,};
 
 	int result = FALSE;
+	void* prev_vmk_datum = NULL;
 
 	/* If the recovery password wasn't provide, ask for it */
 	if(!recovery_password)
@@ -84,12 +85,13 @@ int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password,
 	                (char *)recovery_password);
 
 
+	while (!result) {
 	/*
 	 * We need a salt contained in the VMK datum associated to the recovery
 	 * password, so go get this salt and the VMK datum first
 	 * We use here the range which should be upper (or equal) than 0x800
 	 */
-	if(!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, (void**) vmk_datum))
+	if(!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, (void**) vmk_datum, prev_vmk_datum))
 	{
 		dis_printf(
 			L_ERROR,
@@ -98,6 +100,7 @@ int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password,
 		*vmk_datum = NULL;
 		return FALSE;
 	}
+	prev_vmk_datum = *vmk_datum;
 
 
 	/*
@@ -176,6 +179,7 @@ int get_vmk_from_rp2(dis_metadata_t dis_meta, uint8_t* recovery_password,
 	);
 
 	dis_free(recovery_key);
+	}
 
 	return result;
 }

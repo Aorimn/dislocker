@@ -89,7 +89,7 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 	 * There may be another mean to find the correct datum, but I don't see
 	 * another one here
 	 */
-	if(!get_vmk_datum_from_range(dis_meta, 0x2000, 0x2000, (void**) vmk_datum))
+	if(!get_vmk_datum_from_range(dis_meta, 0x2000, 0x2000, (void**) vmk_datum, NULL))
 	{
 		dis_printf(
 			L_ERROR,

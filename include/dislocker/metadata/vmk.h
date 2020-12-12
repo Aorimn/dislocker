@@ -36,7 +36,7 @@ int get_vmk_from_clearkey(dis_metadata_t dis_meta, void** vmk_datum);
 
 int get_vmk_datum_from_guid(dis_metadata_t dis_meta, guid_t guid, void** vmk_datum);
 
-int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16_t max_range, void** vmk_datum);
+int get_vmk_datum_from_range(dis_metadata_t dis_meta, uint16_t min_range, uint16_t max_range, void** vmk_datum, void* prev_vmk_datum);
 
 int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key,
             size_t key_size, datum_key_t** vmk);

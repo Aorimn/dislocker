@@ -56,13 +56,13 @@ static void hide_opt(char* opt)
 static void setclearkey(dis_context_t dis_ctx, char* optarg)
 {
 	(void) optarg;
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &trueval);
 }
 static void setbekfile(dis_context_t dis_ctx, char* optarg)
 {
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &trueval);
 	dis_setopt(dis_ctx, DIS_OPT_SET_BEK_FILE_PATH, optarg);
 }
 static void setforceblock(dis_context_t dis_ctx, char* optarg)
@@ -76,14 +76,14 @@ static void setforceblock(dis_context_t dis_ctx, char* optarg)
 }
 static void setfvek(dis_context_t dis_ctx, char* optarg)
 {
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &trueval);
 	dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
 }
 static void setvmk(dis_context_t dis_ctx, char* optarg)
 {
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &trueval);
 	dis_setopt(dis_ctx, DIS_OPT_SET_VMK_FILE_PATH, optarg);
 }
 static void setlogfile(dis_context_t dis_ctx, char* optarg)
@@ -97,8 +97,8 @@ static void setoffset(dis_context_t dis_ctx, char* optarg)
 }
 static void setrecoverypwd(dis_context_t dis_ctx, char* optarg)
 {
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &trueval);
 	dis_setopt(dis_ctx, DIS_OPT_SET_RECOVERY_PASSWORD, optarg);
 	hide_opt(optarg);
 }
@@ -111,19 +111,19 @@ static void setquiet(dis_context_t dis_ctx, char* optarg)
 static void setro(dis_context_t dis_ctx, char* optarg)
 {
 	(void) optarg;
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &trueval);
 }
 static void setstateok(dis_context_t dis_ctx, char* optarg)
 {
 	(void) optarg;
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &trueval);
 }
 static void setuserpassword(dis_context_t dis_ctx, char* optarg)
 {
-	int true = TRUE;
-	dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &true);
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &trueval);
 	dis_setopt(dis_ctx, DIS_OPT_SET_USER_PASSWORD, optarg);
 	hide_opt(optarg);
 }
@@ -266,7 +266,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		return -1;
 
 	dis_config_t* cfg = &dis_ctx->cfg;
-	int true = TRUE;
+	int trueval = TRUE;
 
 
 	long_opts = malloc(nb_options * sizeof(struct option));
@@ -285,12 +285,12 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		{
 			case 'c':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &true);
+				dis_setopt(dis_ctx, DIS_OPT_USE_CLEAR_KEY, &trueval);
 				break;
 			}
 			case 'f':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_USE_BEK_FILE, &trueval);
 				dis_setopt(dis_ctx, DIS_OPT_SET_BEK_FILE_PATH, optarg);
 				break;
 			}
@@ -312,13 +312,13 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 			case 'k':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_USE_FVEK_FILE, &trueval);
 				dis_setopt(dis_ctx, DIS_OPT_SET_FVEK_FILE_PATH, optarg);
 				break;
 			}
 			case 'K':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &trueval);
 				dis_setopt(dis_ctx, DIS_OPT_SET_VMK_FILE_PATH, optarg);
 				break;
 			}
@@ -340,7 +340,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 			case 'p':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &true);
+				dis_setopt(dis_ctx, DIS_OPT_USE_RECOVERY_PASSWORD, &trueval);
 				dis_setopt(dis_ctx, DIS_OPT_SET_RECOVERY_PASSWORD, optarg);
 				hide_opt(optarg);
 				break;
@@ -353,17 +353,17 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			}
 			case 'r':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &true);
+				dis_setopt(dis_ctx, DIS_OPT_READ_ONLY, &trueval);
 				break;
 			}
 			case 's':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &true);
+				dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &trueval);
 				break;
 			}
 			case 'u':
 			{
-				dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &true);
+				dis_setopt(dis_ctx, DIS_OPT_USE_USER_PASSWORD, &trueval);
 				dis_setopt(dis_ctx, DIS_OPT_SET_USER_PASSWORD, optarg);
 				hide_opt(optarg);
 				break;

@@ -17,8 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-set(_Ruby_DEBUG_OUTPUT ON)
-
 if("${CMAKE_SOURCE_DIR}" MATCHES "src/?$")
 	message(FATAL_ERROR "\nPlease execute cmake from the directory above, not the src/ directory.")
 	return()
@@ -127,12 +125,23 @@ else()
 	return ()
 endif()
 
-find_package (Ruby)
-if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARY)
-	include_directories (${RUBY_INCLUDE_DIRS})
-	set (LIB ${LIB} ${RUBY_LIBRARY})
-	add_definitions (-D_HAVE_RUBY=${RUBY_VERSION_STRING})
-	set (SOURCES ${SOURCES} ruby.c)
+# Ruby bindings
+set(WITH_RUBY "AUTO" CACHE STRING "Enable Ruby bindings. Valid values are ON, OFF, or AUTO")
+if (NOT "${WITH_RUBY}" STREQUAL "OFF")
+	set(_Ruby_DEBUG_OUTPUT ON)
+	find_package (Ruby)
+	if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARY)
+		include_directories(${RUBY_INCLUDE_DIRS})
+		set(LIB ${LIB} ${RUBY_LIBRARY})
+		add_definitions(-D_HAVE_RUBY=${RUBY_VERSION_STRING})
+		set(SOURCES ${SOURCES} ruby.c)
+	elseif("${WITH_RUBY}" STREQUAL "ON")
+		message(FATAL_ERROR "Ruby bindings requested, but Ruby could not found")
+	else()
+		message("Ruby not found, Ruby bindings will be disabled")
+	endif()
+else()
+	message("Ruby bindings disabled by user request")
 endif()
 
 find_package (FUSE)

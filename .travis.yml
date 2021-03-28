@@ -13,6 +13,7 @@ jobs:
     - os: linux
       dist: xenial
     - os: osx
+      osx_image: xcode11.6
 
 before_install:
     - echo $PATH
@@ -24,7 +25,8 @@ before_install:
     - if [ "$TRAVIS_OS_NAME" = "osx" ]; then export PATH="/usr/bin:/usr/local/bin:$PATH"; fi
 
 install:
-    - cmake .
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cmake .; fi
+    - if [ "$TRAVIS_OS_NAME" = "osx" ]; then cmake . -DCMAKE_C_COMPILER=/usr/bin/clang; fi
     - make VERBOSE=1
     - sudo make install
 

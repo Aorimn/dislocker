@@ -32,12 +32,7 @@
 #include "dislocker/dislocker.h"
 
 
-
-#ifdef __DARWIN
-# include <osxfuse/fuse.h>
-#else
 # include <fuse.h>
-#endif /* __DARWIN */
 
 
 /** NTFS virtual partition's name */

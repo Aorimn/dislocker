@@ -92,11 +92,9 @@ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 	# Don't use `-read_only_relocs' here as it seems to only work for 32 bits
 	# binaries
 	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-bind_at_load")
-	set (FUSE_LIB osxfuse_i64)
 else()
 	# Useless warnings when used within Darwin
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")
-	set (FUSE_LIB fuse)
 	if("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
 		link_directories ( ${LINK_DIRECTORIES} /usr/local/lib )
 	endif()
@@ -138,8 +136,9 @@ if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARY)
 endif()
 
 find_package (FUSE)
-if(FUSE_FOUND  AND  FUSE_INCLUDE_DIRS  AND  FUSE_LIBRARIES)
+if(FUSE_FOUND  AND  FUSE_INCLUDE_DIRS  AND  FUSE_LIBRARIES  AND  FUSE_LIBRARY_DIRS)
 	include_directories (${FUSE_INCLUDE_DIRS})
+	link_directories(${FUSE_LIBRARY_DIRS})
 	set (LIB ${LIB} ${FUSE_LIBRARIES})
 endif()
 
@@ -201,7 +200,7 @@ set (CLEAN_FILES "")
 
 set (BIN_FUSE ${PROJECT_NAME}-fuse)
 add_executable (${BIN_FUSE} ${BIN_FUSE}.c)
-target_link_libraries (${BIN_FUSE} ${FUSE_LIB} ${PROJECT_NAME})
+target_link_libraries (${BIN_FUSE} ${FUSE_LIBRARIES} ${PROJECT_NAME})
 set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=26)
 set_target_properties (${BIN_FUSE} PROPERTIES LINK_FLAGS "-pie -fPIE")
 add_custom_command (TARGET ${BIN_FUSE} POST_BUILD

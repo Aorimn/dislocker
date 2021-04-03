@@ -9,6 +9,7 @@ You need:
 - Compiler, gcc or clang;
 - cmake (at least version 2.6);
 - make (or gmake, for FreeBSD);
+- pkg-config;
 - Headers for FUSE;
 - Headers for mbedTLS (previously known as PolarSSL);
 - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
@@ -56,7 +57,7 @@ Each OS type has its own section below, beware to follow yours:
 Just install Homebrew (http://brew.sh/) and run the following commands:
 ```
 brew update
-brew install Caskroom/cask/osxfuse
+brew install Caskroom/cask/macfuse
 brew install src/dislocker.rb
 ```
 This will install dislocker.

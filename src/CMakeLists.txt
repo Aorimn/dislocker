@@ -17,8 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-set(_Ruby_DEBUG_OUTPUT ON)
-
 if("${CMAKE_SOURCE_DIR}" MATCHES "src/?$")
 	message(FATAL_ERROR "\nPlease execute cmake from the directory above, not the src/ directory.")
 	return()
@@ -127,19 +125,42 @@ else()
 	return ()
 endif()
 
-find_package (Ruby)
-if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARY)
-	include_directories (${RUBY_INCLUDE_DIRS})
-	set (LIB ${LIB} ${RUBY_LIBRARY})
-	add_definitions (-D_HAVE_RUBY=${RUBY_VERSION_STRING})
-	set (SOURCES ${SOURCES} ruby.c)
+# Ruby bindings
+set(WITH_RUBY "AUTO" CACHE STRING "Enable Ruby bindings. Valid values are ON, OFF, or AUTO")
+if (NOT "${WITH_RUBY}" STREQUAL "OFF")
+	set(_Ruby_DEBUG_OUTPUT ON)
+	find_package (Ruby)
+	if(RUBY_FOUND  AND  RUBY_INCLUDE_DIRS  AND  RUBY_LIBRARY)
+		include_directories(${RUBY_INCLUDE_DIRS})
+		set(LIB ${LIB} ${RUBY_LIBRARY})
+		add_definitions(-D_HAVE_RUBY=${RUBY_VERSION_STRING})
+		set(SOURCES ${SOURCES} ruby.c)
+	elseif("${WITH_RUBY}" STREQUAL "ON")
+		message(FATAL_ERROR "Ruby bindings requested, but Ruby could not found")
+	else()
+		message("Ruby not found, Ruby bindings will be disabled")
+	endif()
+else()
+	message("Ruby bindings disabled by user request")
 endif()
 
-find_package (FUSE)
-if(FUSE_FOUND  AND  FUSE_INCLUDE_DIRS  AND  FUSE_LIBRARIES  AND  FUSE_LIBRARY_DIRS)
-	include_directories (${FUSE_INCLUDE_DIRS})
-	link_directories(${FUSE_LIBRARY_DIRS})
-	set (LIB ${LIB} ${FUSE_LIBRARIES})
+# FUSE
+# Unlike Ruby which is largely optional, the primary use-case of Dislocker depends on FUSE,
+# so fail when its not found unless explicitly disabled by the user.
+option(WITH_FUSE "Enable FUSE support. Required for mounting BitLocker-encrypted volumes" ON)
+if(WITH_FUSE)
+	find_package (FUSE)
+	if(FUSE_FOUND  AND  FUSE_INCLUDE_DIRS  AND  FUSE_LIBRARIES)
+		include_directories (${FUSE_INCLUDE_DIRS})
+		if(FUSE_LIBRARY_DIRS)
+			link_directories(${FUSE_LIBRARY_DIRS})
+		endif()
+		set (LIB ${LIB} ${FUSE_LIBRARIES})
+	else()
+		message(FATAL_ERROR "FUSE not found. Please install FUSE, or configure Dislocker with -DWITH_FUSE=OFF")
+	endif()
+else()
+	message(WARNING "FUSE support is disabled, Dislocker will be unable to mount BitLocker-encrypted volumes!")
 endif()
 
 # Places
@@ -198,18 +219,22 @@ endif()
 
 set (CLEAN_FILES "")
 
-set (BIN_FUSE ${PROJECT_NAME}-fuse)
-add_executable (${BIN_FUSE} ${BIN_FUSE}.c)
-target_link_libraries (${BIN_FUSE} ${FUSE_LIBRARIES} ${PROJECT_NAME})
-set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=26)
-set_target_properties (${BIN_FUSE} PROPERTIES LINK_FLAGS "-pie -fPIE")
-add_custom_command (TARGET ${BIN_FUSE} POST_BUILD
-	COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/
-	COMMAND gzip -c ${DIS_MAN}/${BIN_FUSE}.1 > ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz
-)
-set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz)
-install (TARGETS ${BIN_FUSE} RUNTIME DESTINATION "${bindir}")
-install (FILES ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz DESTINATION "${mandir}/man1")
+if(FUSE_FOUND)
+	set (BIN_FUSE ${PROJECT_NAME}-fuse)
+	add_executable (${BIN_FUSE} ${BIN_FUSE}.c)
+	target_link_libraries (${BIN_FUSE} ${FUSE_LIBBRARIES} ${PROJECT_NAME})
+	set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=26)
+	set_target_properties (${BIN_FUSE} PROPERTIES LINK_FLAGS "-pie -fPIE")
+	add_custom_command (TARGET ${BIN_FUSE} POST_BUILD
+		COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/
+		COMMAND gzip -c ${DIS_MAN}/${BIN_FUSE}.1 > ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz
+	)
+	set (CLEAN_FILES ${CLEAN_FILES} ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz)
+	install (TARGETS ${BIN_FUSE} RUNTIME DESTINATION "${bindir}")
+	install (FILES ${CMAKE_BINARY_DIR}/man/${BIN_FUSE}.1.gz DESTINATION "${mandir}/man1")
+	install (CODE "execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${BIN_FUSE} \"\$ENV{DESTDIR}${bindir}/${PROJECT_NAME}\")")
+	install (CODE "execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${BIN_FUSE}.1.gz \"\$ENV{DESTDIR}${mandir}/man1/${PROJECT_NAME}.1.gz\")")
+endif()
 
 set (BIN_FILE ${PROJECT_NAME}-file)
 add_executable (${BIN_FILE} ${BIN_FILE}.c)
@@ -254,9 +279,6 @@ if(RUBY_FOUND)
 else()
 	set (BIN_FIND true)
 endif()
-
-install (CODE "execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${BIN_FUSE} \"\$ENV{DESTDIR}${bindir}/${PROJECT_NAME}\")")
-install (CODE "execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${BIN_FUSE}.1.gz \"\$ENV{DESTDIR}${mandir}/man1/${PROJECT_NAME}.1.gz\")")
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
 

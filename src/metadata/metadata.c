@@ -829,7 +829,7 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 		return FALSE;
 	}
 
-	size_t rest_size = size - sizeof(bitlocker_information_t);
+	size_t rest_size = size - sizeof(bitlocker_eow_infos_t);
 
 	*eow_infos = dis_malloc(size);
 
@@ -1006,6 +1006,8 @@ static int get_eow_check_valid(
 	off_t         curr_offset = 0;
 	int           payload_size = 0;
 
+	unsigned char* crc_temp_buffer;
+
 	while(current < 2)
 	{
 		/* Compute the on-disk offset */
@@ -1043,7 +1045,12 @@ static int get_eow_check_valid(
 
 		/* Check the crc32 validity */
 		eow_infos_size = eow_infos_hdr->infos_size;
-		computed_crc32 = crc32((unsigned char*)*eow_infos, eow_infos_size);
+
+		crc_temp_buffer = (unsigned char*)dis_malloc(eow_infos_size);
+		memcpy(crc_temp_buffer, *eow_infos, eow_infos_size);
+		((bitlocker_eow_infos_t*)crc_temp_buffer)->crc32 = 0;
+		computed_crc32 = crc32(crc_temp_buffer, eow_infos_size);
+		dis_free(crc_temp_buffer);
 
 		dis_printf(L_DEBUG, "Looking if %#x == %#x for EOW information validation\n",
 		        computed_crc32, eow_infos_hdr->crc32);

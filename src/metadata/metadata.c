@@ -454,8 +454,10 @@ static int check_volume_header(dis_metadata_t dis_meta, int volume_fd, off_t dis
 			        " failed\n", source);
 		}
 
-		dis_printf(L_ERROR, "EOW volume GUID not supported.\n");
-		return FALSE;
+		if (!dis_meta->cfg->readonly) {
+			dis_printf(L_ERROR, "EOW volume GUID not supported for writing.\n");
+			return FALSE;
+        }
 	}
 	else
 	{
@@ -1325,6 +1327,9 @@ uint32_t dis_metadata_backup_sectors_count(dis_metadata_t dis_meta)
 	return dis_meta->information->nb_backup_sectors;
 }
 
+int dis_metadata_is_decrypted_state(dis_metadata_t dis_meta) {
+	return dis_meta->information->curr_state == METADATA_STATE_DECRYPTED;
+}
 
 #ifdef _HAVE_RUBY
 #include <sys/types.h>

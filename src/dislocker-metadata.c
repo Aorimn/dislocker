@@ -131,6 +131,7 @@ int main(int argc, char **argv)
 	dis_meta_cfg = dis_metadata_config_new();
 	dis_meta_cfg->fve_fd       = fve_fd;
 	dis_meta_cfg->offset       = offset;
+	dis_meta_cfg->readonly     = 1;
 
 	dis_metadata = dis_metadata_new(dis_meta_cfg);
 	if(dis_metadata_initialize(dis_metadata) != DIS_RET_SUCCESS)

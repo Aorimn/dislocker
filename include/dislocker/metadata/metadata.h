@@ -92,5 +92,6 @@ uint64_t dis_metadata_mftmirror(dis_metadata_t dis_meta);
 
 uint32_t dis_metadata_backup_sectors_count(dis_metadata_t dis_meta);
 
+int dis_metadata_is_decrypted_state(dis_metadata_t dis_meta);
 
 #endif // METADATA_H

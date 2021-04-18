@@ -116,7 +116,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 	 * Get volume size directly from dis_metadata_t, which is more accurate.
 	 */
 	io_data->volume_size = io_data->encrypted_volume_size;
-	if(io_data->volume_size == 0)
+	if(io_data->volume_size == 0 && !dis_metadata_is_decrypted_state(io_data->metadata))
 	{
 		dis_printf(L_ERROR, "Can't initialize the volume's size\n");
 		return DIS_RET_ERROR_VOLUME_SIZE_NOT_FOUND;

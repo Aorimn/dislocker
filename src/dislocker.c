@@ -183,6 +183,8 @@ int dis_initialize(dis_context_t dis_ctx)
 		return DIS_RET_ERROR_ALLOC;
 	}
 
+	dis_ctx->metadata->cfg->readonly = (dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY) ? 1 : 0;
+
 	ret = dis_metadata_initialize(dis_ctx->metadata);
 	dis_ctx->curr_state = dis_meta_cfg->curr_state;
 	if(ret != DIS_RET_SUCCESS)
@@ -326,7 +328,7 @@ int dislock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 		return -EFAULT;
 	}
 
-	if(offset >= (off_t)dis_ctx->io_data.volume_size)
+	if((offset >= (off_t)dis_ctx->io_data.volume_size) && !dis_metadata_is_decrypted_state(dis_ctx->io_data.metadata))
 	{
 		dis_printf(
 			L_ERROR,

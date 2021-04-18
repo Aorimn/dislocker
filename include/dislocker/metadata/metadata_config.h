@@ -51,6 +51,9 @@ struct _dis_metadata_config {
 	/* States dislocker's metadata initialisation is at or will be stopped at */
 	dis_state_e   curr_state;
 	dis_state_e   init_stop_at;
+
+	/* Readonly mode for EOW support */
+	int readonly;
 };
 
 

@@ -23,6 +23,8 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <sys/mount.h>
+#include <sys/ioctl.h>
 
 #include "dislocker/inouts/prepare.h"
 #include "dislocker/inouts/sectors.h"
@@ -108,7 +110,14 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->sector_size    = dis_inouts_sector_size(dis_ctx);
 	io_data->decrypt_region = read_decrypt_sectors;
 	io_data->encrypt_region = encrypt_write_sectors;
-	io_data->encrypted_volume_size = dis_metadata_encrypted_volume_size(io_data->metadata);
+
+	// Do not trust the encrypted volume size in metadata. After shrinking the volume, metadata
+	// is not updated at least by Windows 10 1909
+	if (ioctl(dis_ctx->fve_fd, BLKGETSIZE64, &io_data->encrypted_volume_size) < 0)
+	{
+		io_data->encrypted_volume_size = dis_metadata_encrypted_volume_size(io_data->metadata);
+	}
+
 	io_data->backup_sectors_addr   = dis_metadata_ntfs_sectors_address(io_data->metadata);
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 

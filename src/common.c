@@ -340,4 +340,3 @@ VALUE rb_hexdump(uint8_t* data, size_t data_len)
 }
 
 #endif /* _HAVE_RUBY */
-

@@ -250,4 +250,3 @@ int dis_vprintf(DIS_LOGS level, const char* format, va_list ap)
 	fprintf(fds[level], "%s [%s] ", time2string, msg_tab[level]);
 	return vfprintf(fds[level], format, ap);
 }
-

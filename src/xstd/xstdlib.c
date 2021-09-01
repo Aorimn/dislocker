@@ -65,5 +65,3 @@ void dis_free(void *pointer)
 
 	free(pointer);
 }
-
-

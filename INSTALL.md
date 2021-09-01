@@ -62,7 +62,6 @@ brew install src/dislocker.rb
 ```
 This will install dislocker.
 
-
 ## If you're on FreeBSD...
 
 Follow the instructions below (next subsection) by replacing 'make' with 'gmake'.
@@ -165,5 +164,3 @@ instance, if you want to compile dislocker-fuse only, you'd simply run:
 $ cmake .
 $ make dislocker-fuse
 ```
-
-

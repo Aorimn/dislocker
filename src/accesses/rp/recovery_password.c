@@ -594,5 +594,3 @@ void print_intermediate_key(uint8_t *result_key)
 
 	dis_printf(L_INFO, "Intermediate recovery key:\n\t%s\n", s);
 }
-
-

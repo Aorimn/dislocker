@@ -250,4 +250,3 @@ void print_data(DIS_LOGS level, dis_metadata_t dis_meta)
 		data += header.datum_size;
 	}
 }
-

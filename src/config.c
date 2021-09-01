@@ -828,4 +828,3 @@ int dis_is_volume_state_checked(dis_context_t dis_ctx)
 		return -1;
 	return !(dis_ctx->cfg.flags & DIS_FLAG_DONT_CHECK_VOLUME_STATE);
 }
-

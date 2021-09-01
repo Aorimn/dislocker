@@ -612,4 +612,3 @@ static void fix_write_sector_vista(dis_iodata_t* io_data,
 
 	dis_metadata_vista_vbr_ntfs2fve(io_data->metadata, output);
 }
-

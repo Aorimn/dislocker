@@ -39,4 +39,3 @@ void ntfs2utc(ntfs_time_t t, time_t *ts)
 
 	*ts = (time_t) ((t - (uint64_t)(NTFS_TIME_OFFSET)) / (uint64_t)10000000 );
 }
-

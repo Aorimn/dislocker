@@ -177,5 +177,3 @@ void diffuserB_encrypt(uint8_t* sector, uint16_t sector_size, uint32_t* buffer)
 		Bcycles--;
 	}
 }
-
-

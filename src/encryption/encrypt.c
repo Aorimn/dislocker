@@ -173,6 +173,3 @@ void encrypt_xts(
 		buffer
 	);
 }
-
-
-

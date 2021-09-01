@@ -66,7 +66,7 @@
 
 
 
-/* Get low-level errors the library encoutered by looking at this variable */
+/* Get low-level errors the library encountered by looking at this variable */
 int dis_errno;
 
 

@@ -216,7 +216,7 @@ int dis_metadata_initialize(dis_metadata_t dis_meta)
 	{
 		dis_printf(
 			L_CRITICAL,
-			"A problem occured during the retrieving of metadata. Abort.\n"
+			"A problem occurred during the retrieving of metadata. Abort.\n"
 		);
 		return DIS_RET_ERROR_METADATA_CHECK;
 	}
@@ -732,7 +732,7 @@ static int get_metadata(off_t source, void **metadata, int fd)
 
 	*metadata = dis_malloc(size);
 
-	// Copy the header at the begining of the metadata
+	// Copy the header at the beginning of the metadata
 	memcpy(*metadata, &information, sizeof(bitlocker_information_t));
 
 	dis_printf(L_DEBUG, "Reading data...\n");
@@ -835,7 +835,7 @@ static int get_eow_information(off_t source, void** eow_infos, int fd)
 
 	*eow_infos = dis_malloc(size);
 
-	// Copy the header at the begining of the EOW information
+	// Copy the header at the beginning of the EOW information
 	memcpy(*eow_infos, &eow_infos_hdr, sizeof(bitlocker_eow_infos_t));
 
 	dis_printf(L_DEBUG, "Reading EOW information's payload...\n");

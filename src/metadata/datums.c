@@ -163,7 +163,7 @@ char* cipherstr(cipher_t enc)
  * string format
  * @warning This returned string has to be free()d
  *
- * @param value_type The datum's value type to tranform
+ * @param value_type The datum's value type to transform
  * @return The decoded string or NULL if there's no signification (index out of
  * bound)
  */
@@ -327,7 +327,7 @@ void print_datum_key(DIS_LOGS level, void* vdatum)
 	datum_key_t* datum = (datum_key_t*) vdatum;
 	char* cipher_str = cipherstr((cipher_t) datum->algo);
 
-	dis_printf(level, "Unkown: \n");
+	dis_printf(level, "Unknown: \n");
 	hexdump(level, (void*) &datum->padd, 2);
 	dis_printf(level, "Algo: %s (%#hx)\n", cipher_str, datum->algo);
 	dis_printf(level, "Key:\n");
@@ -368,7 +368,7 @@ void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 {
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) vdatum;
 
-	dis_printf(level, "Unkown: \n");
+	dis_printf(level, "Unknown: \n");
 	hexdump(level, (void*) &datum->padd, 2);
 	dis_printf(level, "Algo: %#x\n", datum->algo);
 	dis_printf(level, "Salt: \n");

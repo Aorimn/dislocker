@@ -57,7 +57,7 @@ int encrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uin
 
 
 /**
- * Encrypt a sector whithout the diffuser
+ * Encrypt a sector without the diffuser
  *
  * @param ctx AES's contexts
  * @param sector_size Size of a sector (in bytes)

@@ -18,11 +18,11 @@ You need:
 If you have Ruby headers, the library will compile with some Ruby bindings and
 another program - see the NOTE section below - will be available.
 
-For Debian-like distos based on Debian Jessie or Ubuntu 14.04 or older:
+For Debian-like distros based on Debian Jessie or Ubuntu 14.04 or older:
 
 - `aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev`
 
-For Debian-like distos based on Debian Stretch or Ubuntu 16.04 or later:
+For Debian-like distros based on Debian Stretch or Ubuntu 16.04 or later:
 
 - `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev`
 

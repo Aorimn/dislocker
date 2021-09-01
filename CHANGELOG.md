@@ -11,7 +11,7 @@ difference.
 - Feature improvement:
     - Reported NTFS volume size is more accurate (thanks @haobinnan)
     - Add ability to decrypt from a VMK file (thanks Seunghun Han)
-    - Add ability to read the user password from the envrironment variable `DISLOCKER_PASSWORD` (thanks @mhogomchungu)
+    - Add ability to read the user password from the environment variable `DISLOCKER_PASSWORD` (thanks @mhogomchungu)
     - Add ability to read the user password from pipes (thanks @mhogomchungu)
     - Decryption/encryption speed has been improved by disabling faulty threading
 
@@ -27,7 +27,7 @@ difference.
     option for the offset had to be changed. It is now `-O`;
     - dislocker on FreeBSD can now read devices, not just partition dumps.
 
-- Compatiblity improvement:
+- Compatibility improvement:
     - OSX support and dependencies have been updated;
     - Thanks to Eric Johnson, from Leidos, a BitBake recipe is now available.
 

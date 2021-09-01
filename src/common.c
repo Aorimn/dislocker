@@ -306,7 +306,7 @@ void xor_buffer(unsigned char* buf1, const unsigned char* buf2, unsigned char* o
 /**
  * Clean memory before freeing
  *
- * @param ptr A pointeur to the memory region
+ * @param ptr A pointer to the memory region
  * @param size The size of the region
  */
 void memclean(void* ptr, size_t size)

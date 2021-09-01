@@ -397,7 +397,7 @@ int intermediate_key(const uint8_t *recovery_password,
 
 	memclean(iresult, INTERMEDIATE_KEY_LENGTH * sizeof(uint8_t));
 
-	/* We successfuly retrieve the key! */
+	/* We successfully retrieve the key! */
 	return TRUE;
 } // End intermediate_key
 

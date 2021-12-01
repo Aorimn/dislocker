@@ -2,7 +2,6 @@
 
 ## Introduction and explanations
 
-
 This software has been designed to read BitLocker encrypted partitions under a
 Linux system. The driver has the capability to read/write on:
  - Windows Vista, 7, 8, 8.1 and 10 encrypted partitions - that's AES-CBC,
@@ -33,18 +32,13 @@ binary needs: the same size as the volume you're trying to decrypt.
 Nevertheless, once the partition is decrypted, you can mount your file as any
 NTFS partition.
 
-
 Thanks goes to Rogier Wolff for testing, hugsy for all the OSX support and
 patches, Will Dyson for the patches, and all the people who give feedbacks.
-
-
 
 ## Installation and requirements
 
 See `INSTALL.md` for things dealing with the install process.
 Once installed, see `dislocker(1)` for details on how to use it.
-
-
 
 ## Bugs
 
@@ -52,8 +46,6 @@ There may be bugs, and I'll be happy to hear about it!
 
 Feel free to send comments and feedbacks to [dislocker __AT__ hsc __DOT__ fr](),
 or to open an [issue](https://github.com/Aorimn/dislocker/issues).
-
-
 
 ## A note on Bitlocker-To-Go
 
@@ -73,8 +65,6 @@ So, to access a  BitLocker-To-Go encrypted media, the whole partition is the
 volume that dislocker works with. The use of dislocker is therefore the same
 whether the volume is a standard BitLocker partition or a BitLocker-To-Go one.
 
-
-
 ## A note on fstab
 
 BitLocker partitions can be mount-ed using the /etc/fstab file and dislocker's
@@ -83,8 +73,6 @@ The line below is an example line, which has to be adapted to each case:
 ```
 /dev/sda2 /mnt/dislocker fuse.dislocker user-password=blah,nofail 0 0
 ```
-
-
 
 ## Note
 

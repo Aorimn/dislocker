@@ -76,4 +76,3 @@ int decrypt_sector(dis_crypt_t crypt, uint8_t* sector, off_t sector_address, uin
 
 
 #endif /* DECRYPT_H */
-

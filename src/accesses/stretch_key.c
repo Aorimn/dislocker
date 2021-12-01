@@ -157,4 +157,3 @@ static int stretch_key(bitlocker_chain_hash_t* ch, uint8_t *result)
 
 	return TRUE;
 }
-

@@ -122,7 +122,7 @@ void print_information(DIS_LOGS level, dis_metadata_t dis_meta)
 	dis_printf(level, "  Current state: %s (%hu)\n", get_state_str(information->curr_state), information->curr_state);
 	dis_printf(level, "  Next state: %s (%hu)\n",    get_state_str(information->next_state), information->next_state);
 	dis_printf(level, "  Encrypted volume size: %1$" PRIu64 " bytes (%1$#" PRIx64 "), ~%2$" PRIu64 " MB\n", information->encrypted_volume_size, information->encrypted_volume_size / (1024*1024));
-	dis_printf(level, "  Size of convertion region: %1$#x (%1$u)\n", information->convert_size);
+	dis_printf(level, "  Size of conversion region: %1$#x (%1$u)\n", information->convert_size);
 	dis_printf(level, "  Number of boot sectors backuped: %1$u sectors (%1$#x)\n", information->nb_backup_sectors);
 	dis_printf(level, "  First metadata header offset:  %#" PRIx64 "\n", information->information_off[0]);
 	dis_printf(level, "  Second metadata header offset: %#" PRIx64 "\n", information->information_off[1]);
@@ -250,4 +250,3 @@ void print_data(DIS_LOGS level, dis_metadata_t dis_meta)
 		data += header.datum_size;
 	}
 }
-

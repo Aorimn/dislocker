@@ -136,4 +136,3 @@ int prepare_crypt(dis_context_t dis_ctx)
 
 	return DIS_RET_SUCCESS;
 }
-

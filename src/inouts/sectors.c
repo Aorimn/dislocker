@@ -448,7 +448,7 @@ static void* thread_encrypt(void* params)
 		/*
 		 * Just encrypt this sector
 		 * Exception: don't encrypt it if the sector wasn't (as in the
-		 * "BitLocker's-volume-encryption-was-paused case decribed in the
+		 * "BitLocker's-volume-encryption-was-paused case described in the
 		 * decryption function above")
 		 */
 
@@ -612,4 +612,3 @@ static void fix_write_sector_vista(dis_iodata_t* io_data,
 
 	dis_metadata_vista_vbr_ntfs2fve(io_data->metadata, output);
 }
-

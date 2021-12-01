@@ -46,4 +46,3 @@ void Init_guid(VALUE rb_mDislockerMetadata);
 
 
 #endif // GUID_H
-

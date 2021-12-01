@@ -105,4 +105,3 @@ uint16_t dis_inouts_sector_size(dis_context_t dis_ctx)
 
 	return dis_ctx->io_data.sector_size;
 }
-

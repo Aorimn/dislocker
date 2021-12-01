@@ -73,4 +73,3 @@ library : user_pass.o
 clean :
 	@$(MAKE) -C ../../ clean
 	rm -rf -- $(BIN) *.o *~ *.swp *.gcno *.gcda *.gcov
-

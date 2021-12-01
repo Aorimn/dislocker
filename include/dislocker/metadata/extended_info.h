@@ -32,6 +32,7 @@
  * This structure is new to Windows 8
  * It's the virtualization datum's payload
  */
+#pragma pack (1)
 typedef struct _extended_info {
 	uint16_t unknown1;
 	uint16_t size;
@@ -41,7 +42,12 @@ typedef struct _extended_info {
 	uint32_t convertlog_size;
 	uint32_t sector_size1;
 	uint32_t sector_size2;
+	uint32_t unknown3[6];
+	uint64_t FVE2_da392a22_addr;
+	uint32_t FVE2_da392a22_size;
+	uint32_t unknown4;
 } extended_info_t;
+#pragma pack ()
 
 
 

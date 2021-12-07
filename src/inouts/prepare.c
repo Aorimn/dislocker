@@ -109,6 +109,10 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->decrypt_region = read_decrypt_sectors;
 	io_data->encrypt_region = encrypt_write_sectors;
 	io_data->encrypted_volume_size = dis_metadata_encrypted_volume_size(io_data->metadata);
+	if (io_data->metadata->information->version == V_VISTA) {
+		io_data->encrypted_volume_size = dis_metadata_volume_size_from_vbr(dis_ctx->metadata);
+		io_data->encrypted_volume_size += io_data->sector_size;		//The volume size of Vista should include the DBR backup
+	}
 	io_data->backup_sectors_addr   = dis_metadata_ntfs_sectors_address(io_data->metadata);
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 

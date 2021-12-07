@@ -1159,7 +1159,7 @@ void dis_metadata_vista_vbr_fve2ntfs(dis_metadata_t dis_meta, void* vbr)
 	memcpy(volume_header->signature, NTFS_SIGNATURE, NTFS_SIGNATURE_SIZE);
 
 	/* And this is for the MFT Mirror field */
-	volume_header->mft_mirror = dis_meta->volume_header->mft_mirror;
+	volume_header->mft_mirror = dis_metadata_mftmirror(dis_meta);
 }
 
 

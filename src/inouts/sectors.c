@@ -309,6 +309,7 @@ static void* thread_decrypt(void* params)
 	uint16_t version      = dis_metadata_information_version(io_data->metadata);
 	uint16_t sector_size  = args->sector_size;
 	uint16_t step_size    = (uint16_t) (sector_size * step_unit);
+	uint64_t encrypted_volume_total_sectors = io_data->encrypted_volume_size / sector_size;
 
 	off_t    offset       = args->sector_start + sector_size * loop;
 	uint8_t* loop_input   = args->input + sector_size * loop;
@@ -375,12 +376,12 @@ static void* thread_decrypt(void* params)
 			);
 			memcpy(loop_output, loop_input, sector_size);
 		}
-		else if(version == V_VISTA && sector_offset < 16)
+		else if(version == V_VISTA && (sector_offset < 16 || sector_offset + 1 == encrypted_volume_total_sectors))
 		{
 			/*
 			 * The firsts sectors are not really encrypted on a Vista volume
 			 */
-			if(sector_offset < 1)
+			if(sector_offset < 1 || sector_offset + 1 == encrypted_volume_total_sectors)
 				fix_read_sector_vista(
 					io_data,
 					loop_input,
@@ -433,6 +434,7 @@ static void* thread_encrypt(void* params)
 	uint16_t version     = dis_metadata_information_version(io_data->metadata);
 	uint16_t sector_size = args->sector_size;
 	uint16_t step_size   = (uint16_t) (sector_size * step_unit);
+	uint64_t encrypted_volume_total_sectors = io_data->encrypted_volume_size / sector_size;
 
 	uint8_t* loop_input  = args->input + sector_size * loop;
 	uint8_t* loop_output = args->output + sector_size * loop;
@@ -458,12 +460,12 @@ static void* thread_encrypt(void* params)
 		 * NOTE: Seven specificities are dealt with earlier in the process
 		 * see dislocker.c:enlock()
 		 */
-		if(version == V_VISTA && sector_offset < 16)
+		if(version == V_VISTA && (sector_offset < 16 || sector_offset + 1 == encrypted_volume_total_sectors))
 		{
 			/*
 			 * The firsts sectors are not really encrypted on a Vista volume
 			 */
-			if(sector_offset < 1)
+			if(sector_offset < 1 || sector_offset + 1 == encrypted_volume_total_sectors)
 				fix_write_sector_vista(
 					io_data,
 					loop_input,

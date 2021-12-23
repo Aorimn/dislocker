@@ -221,6 +221,89 @@ int dis_initialize(dis_context_t dis_ctx)
 			return ret;
 		}
 
+/*
+		 * Example of validation
+		 */
+		unsigned int metadata_size = (unsigned int)(dis_ctx->metadata->information->version == V_SEVEN ? ((unsigned int)dis_ctx->metadata->information->size) << 4 : dis_ctx->metadata->information->size);
+		off_t validations_offset = (off_t)dis_ctx->metadata->virt_region[0].addr + metadata_size;
+		void *validation_datum = NULL;
+		datum_header_safe_t header;
+
+		dis_lseek(dis_meta_cfg->fve_fd, validations_offset + dis_meta_cfg->offset, SEEK_SET);
+		// FIXME deal with crc32 here
+		dis_lseek(dis_meta_cfg->fve_fd, sizeof(bitlocker_validations_t), SEEK_CUR); // Skip validation header
+		// Read datum header
+		dis_read(dis_meta_cfg->fve_fd, &header, sizeof(datum_header_safe_t));
+		dis_lseek(dis_meta_cfg->fve_fd, -(off_t)sizeof(datum_header_safe_t), SEEK_CUR);
+		validation_datum = dis_malloc(header.datum_size);
+		dis_read(dis_meta_cfg->fve_fd, validation_datum, header.datum_size);
+
+		printf("\n");
+		dis_printf(L_INFO, "\n");
+		dis_printf(L_INFO, "\n");
+		print_one_datum(L_INFO, validation_datum);
+		dis_printf(L_INFO, "\n");
+		dis_printf(L_INFO, "\n");
+		printf("\n");
+
+		void *validation_key_datum = NULL;
+		if (header.value_type == DATUMS_VALUE_AES_CCM)
+		{
+			datum_aes_ccm_t *validation_aes_ccm_datum = (datum_aes_ccm_t *)validation_datum;
+			void *vmk_key = NULL;
+			size_t vmk_key_size = 0;
+
+			get_payload_safe(dis_ctx->io_data.vmk, &vmk_key, &vmk_key_size);
+
+			unsigned int header_size = datum_value_types_prop[validation_aes_ccm_datum->header.value_type].size_header;
+			unsigned int payload_size = validation_aes_ccm_datum->header.datum_size - header_size;
+
+#include "dislocker/encryption/decrypt.h"
+
+			decrypt_key(
+				(unsigned char *)validation_aes_ccm_datum + header_size,
+				payload_size,
+				validation_aes_ccm_datum->mac,
+				validation_aes_ccm_datum->nonce,
+				vmk_key,
+				(unsigned int)vmk_key_size * 8,
+				&validation_key_datum);
+		}
+		else if (header.value_type == DATUMS_VALUE_KEY)
+		{
+			validation_key_datum = (datum_key_t *)validation_datum;
+		}
+		else
+		{
+			dis_printf(L_INFO, "Unknown validation datum value type: %d.\n", header.value_type);
+		}
+
+		if (validation_key_datum != NULL)
+		{
+			dis_printf(L_INFO, ">>> Validation key structure:\n");
+			print_one_datum(L_INFO, validation_key_datum);
+			printf("\n");
+
+			// Compute the SHA-256 of the information
+			void *metadata_for_hash = dis_malloc(metadata_size);
+			dis_lseek(dis_meta_cfg->fve_fd, (off_t)dis_ctx->metadata->virt_region[0].addr + dis_meta_cfg->offset, SEEK_SET);
+			dis_read(dis_meta_cfg->fve_fd, metadata_for_hash, metadata_size);
+
+			uint8_t sha256[32] = {0};
+#include "dislocker/ssl_bindings.h"
+			SHA256(metadata_for_hash, metadata_size, sha256);
+
+			dis_printf(L_INFO, ">>> Metadata SHA56:\n");
+			hexdump(L_INFO, sha256, 32);
+
+			// The key in the datum key structure is the same as the metadata sha256 structure
+
+			dis_free(metadata_for_hash);
+			dis_free(validation_key_datum);
+		}
+
+		dis_free(validation_datum);
+
 		/*
 		 * Init the crypto structure
 		 */

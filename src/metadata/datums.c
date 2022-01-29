@@ -202,8 +202,7 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 			header->entry_type, header->value_type, header->error_status);
 
 	/* Now check if the header is good */
-	if(header->datum_size < sizeof(datum_header_safe_t) ||
-	   header->value_type > NB_DATUMS_VALUE_TYPES)
+	if(header->datum_size < sizeof(datum_header_safe_t))
 		return FALSE;
 
 	return TRUE;
@@ -228,6 +227,9 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
 	uint16_t size_header = 0;
 
 	if(!get_header_safe(data, &header))
+		return FALSE;
+
+	if(header.value_type > NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	size_header = datum_value_types_prop[header.value_type].size_header;
@@ -580,7 +582,7 @@ int get_next_datum(
 	void** datum_result)
 {
 	// Check parameters
-	if(!dis_meta || value_type > NB_DATUMS_VALUE_TYPES)
+	if(!dis_meta)
 		return FALSE;
 
 	dis_printf(L_DEBUG, "Entering get_next_datum...\n");
@@ -658,6 +660,9 @@ int get_nested_datum(void* datum, void** datum_nested)
 	datum_header_safe_t header;
 
 	if(!get_header_safe(datum, &header))
+		return FALSE;
+
+	if(header.value_type > NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	if(!datum_value_types_prop[header.value_type].has_nested_datum)

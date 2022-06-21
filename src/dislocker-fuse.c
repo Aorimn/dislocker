@@ -199,6 +199,8 @@ int main(int argc, char** argv)
 	/* Get command line options */
 	dis_ctx = dis_new();
 	param_idx = dis_getopts(dis_ctx, argc, argv);
+	if (param_idx == -1)
+		exit(EXIT_FAILURE);
 
 	/*
 	 * Check we have a volume path given and if not, take the first non-argument

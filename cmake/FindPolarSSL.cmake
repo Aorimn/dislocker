@@ -49,6 +49,10 @@ if( ${POLARSSL_LIBRARIES-NOTFOUND} )
   return()
 endif()
 
+if( "${CMAKE_C_COMPILER}" STREQUAL "/Library/Developer/CommandLineTools/usr/bin/cc" )
+  set(CMAKE_C_COMPILER cc)
+endif()
+
 if( NOT CMAKE_CROSSCOMPILING )
   execute_process(
     COMMAND echo "#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"

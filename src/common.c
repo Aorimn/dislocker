@@ -159,7 +159,7 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 		return -1;
 	}
 
-	buf = dis_malloc(count * sizeof(char));
+	buf = calloc(count, sizeof(char));
 	if(buf == NULL)
 	{
 		dis_printf(
@@ -181,7 +181,7 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 #ifdef __FREEBSD
 	/* What is remaining is just to copy actual data */
 	memcpy(old_buf, (char*) buf + (offset - new_offset), old_count);
-	dis_free(buf);
+	free(buf);
 
 	if(lseek(fd, offset + (off_t)old_count, SEEK_SET) == -1)
 	{

@@ -335,7 +335,7 @@ int prompt_up(uint8_t** up)
 
 	*up = NULL;
 
-	ssize_t nb_read;
+	size_t nb_read = 0;
 
 	const char* env_pass = getenv("DISLOCKER_PASSWORD");
 
@@ -345,9 +345,16 @@ int prompt_up(uint8_t** up)
 			printf("Reading user password from the environment\n");
 			fflush(NULL);
 		#endif /* __CK_DOING_TESTS */
-		nb_read = (ssize_t)strlen(env_pass);
-		uint8_t* tmp = malloc((size_t)nb_read+2);
-		memcpy(tmp, env_pass, (size_t)nb_read);
+		nb_read = strnlen(env_pass, SHRT_MAX);
+		uint8_t* tmp = malloc(nb_read+2);
+		if (!tmp)
+		{
+			dis_printf(L_ERROR,
+				"Can't allocate %#" F_SIZE_T " bytes memory "
+				"for user password\n");
+			return FALSE;
+		}
+		memcpy(tmp, env_pass, nb_read);
 		*(tmp + nb_read) = '\n';
 		*(tmp + nb_read + 1) = '\0';
 		*up = tmp;
@@ -358,10 +365,11 @@ int prompt_up(uint8_t** up)
 			fflush(NULL);
 		#endif /* __CK_DOING_TESTS */
 
-		nb_read = my_getpass((char**) up, stdin);
+		if (my_getpass((char**) up, stdin) < 0)
+			nb_read = 0;
 	}
 
-	if(nb_read <= 0)
+	if(nb_read == 0)
 	{
 		if(*up)
 			dis_free(*up);

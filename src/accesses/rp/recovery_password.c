@@ -452,8 +452,14 @@ int prompt_rp(uint8_t** rp)
 
 
 	/* 8 = 7 hyphens separating the blocks + 1 '\0' at the end of the string */
-	*rp = malloc(NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
-	memset(*rp, 0, NB_RP_BLOCS * NB_DIGIT_BLOC + 8);
+	*rp = calloc(NB_RP_BLOCS, NB_DIGIT_BLOC + 8);
+	if (!rp)
+	{
+		fprintf(
+			stderr,
+			"Failed to allocate memory in recovery prompt\n"
+		);
+	}
 
 	blah = *rp;
 

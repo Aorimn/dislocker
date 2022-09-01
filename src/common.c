@@ -269,11 +269,11 @@ void hexdump(DIS_LOGS level, uint8_t* data, size_t data_len)
 	{
 		char s[512] = {0,};
 
-		snprintf(s, 12, "0x%.8zx ", i);
+		snprintf(s, 20, "0x%.16zx ", i);
 		max = (i+offset > data_len ? data_len : i + offset);
 
 		for(j = i; j < max; j++)
-			snprintf(&s[11 + 3*(j-i)], 4, "%.2x%s", data[j], (j-i == offset/2-1 && j+1 != max) ? "-" : " ");
+			snprintf(&s[19 + 3*(j-i)], 4, "%.2x%s", data[j], (j-i == offset/2-1 && j+1 != max) ? "-" : " ");
 
 		dis_printf(level, "%s\n", s);
 	}

@@ -608,7 +608,7 @@ int enlock(dis_context_t dis_ctx, uint8_t* buffer, off_t offset, size_t size)
 	 * In general, do not use xfunctions() but dis_printf() here.
 	 */
 
-	buf = malloc(size + sector_to_add * (size_t)sector_size);
+	buf = calloc(size + sector_to_add, sector_size);
 
 	/* If buffer could not be allocated */
 	if(!buf)

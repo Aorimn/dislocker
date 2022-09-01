@@ -220,9 +220,17 @@ int encrypt_write_sectors(
 	if(!io_data || !input)
 		return FALSE;
 
-	uint8_t* output = dis_malloc(nb_write_sector * sector_size);
-
-	memset(output , 0, nb_write_sector * sector_size);
+	uint8_t* output = calloc(nb_write_sector, sector_size);
+	if (!output)
+	{
+		dis_printf(
+			L_ERROR,
+			"Failed to allocate memory for %#" F_SIZE_T " * %#" F_OFF_T " bytes\n",
+			nb_write_sector,
+			sector_size
+		);
+		return FALSE;
+	}
 
 	/* Run threads if compiled with */
 #if NB_THREAD > 0

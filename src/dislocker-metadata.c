@@ -123,6 +123,11 @@ int main(int argc, char **argv)
 	/* Open the volume as a (big) normal file */
 	dis_printf(L_DEBUG, "Trying to open '%s'...\n", volume_path);
 	fve_fd = dis_open(volume_path, O_RDONLY|O_LARGEFILE);
+	if (fve_fd < 0)
+	{
+		fprintf(stderr, "Failed to open volume %s, exiting.\n", volume_path);
+		exit(EXIT_FAILURE);
+	}
 
 	/*
 	 * Initialize dislocker's configuration

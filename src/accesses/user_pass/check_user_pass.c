@@ -131,14 +131,14 @@ END_TEST
  */
 START_TEST (check_user_key_nullargs)
 {
-	uint8_t *uint8_notnull = malloc(4);
+	uint8_t *uint8_notnull = dis_malloc(4);
 
 
 	ck_assert_int_eq(user_key(NULL, uint8_notnull, uint8_notnull), FALSE);
 	ck_assert_int_eq(user_key(uint8_notnull, NULL, uint8_notnull), FALSE);
 	ck_assert_int_eq(user_key(uint8_notnull, uint8_notnull, NULL), FALSE);
 
-	free(uint8_notnull);
+	dis_free(uint8_notnull);
 }
 END_TEST
 

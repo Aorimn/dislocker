@@ -69,7 +69,7 @@ if(NOT DEFINED WARN_FLAGS)
 	set (WARN_FLAGS "-Wall -Wextra" CACHE STRING "" FORCE)
 endif()
 if(NOT DEFINED HARDEN_FLAGS)
-	set (HARDEN_FLAGS "-fstack-protector -fstrict-aliasing -D_FORTIFY_SOURCE=2 -O1" CACHE STRING "" FORCE)
+	set (HARDEN_FLAGS "-fstack-protector-all  -fstrict-aliasing -D_FORTIFY_SOURCE=2 -O1" CACHE STRING "" FORCE)
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")

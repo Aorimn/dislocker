@@ -215,14 +215,16 @@ ssize_t dis_read(int fd, void* buf, size_t count)
 ssize_t dis_write(int fd, void* buf, size_t count)
 {
 	ssize_t res = -1;
-
+	errno = 0;
 	dis_printf(L_DEBUG, "Writing %#" F_SIZE_T " bytes to #%d from %p\n", count, fd, buf);
-
-	if((res = write(fd, buf, count)) < 0)
-	{
-		dis_errno = errno;
-		dis_printf(L_ERROR, DIS_XWRITE_FAIL_STR " #%d: %s\n", fd, strerror(errno));
-	}
+	do {
+		if((res = write(fd, buf, count)) < 0)
+		{
+			dis_errno = errno;
+			dis_printf(L_ERROR, DIS_XWRITE_FAIL_STR
+				" #%d: %s\n", fd, strerror(errno));
+		}
+	} while (res == -1 && (errno == EINTR || errno == EAGAIN));
 
 	return res;
 }

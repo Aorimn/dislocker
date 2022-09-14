@@ -42,7 +42,7 @@
 /**
  * Here stand datums' value types stuff
  */
-#define NB_DATUMS_VALUE_TYPES 22
+#define NB_DATUMS_VALUE_TYPES 20
 
 enum value_types
 {
@@ -349,8 +349,6 @@ static const print_datum_f print_datum_tab[NB_DATUMS_VALUE_TYPES] =
 	print_datum_generic,
 	print_datum_generic,
 	print_datum_virtualization,
-	print_datum_generic,
-	print_datum_generic,
 	print_datum_generic,
 	print_datum_generic,
 	print_datum_generic,

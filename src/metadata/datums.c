@@ -229,7 +229,7 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
 	if(!get_header_safe(data, &header))
 		return FALSE;
 
-	if(header.value_type > NB_DATUMS_VALUE_TYPES)
+	if(header.value_type >= NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	size_header = datum_value_types_prop[header.value_type].size_header;
@@ -662,7 +662,7 @@ int get_nested_datum(void* datum, void** datum_nested)
 	if(!get_header_safe(datum, &header))
 		return FALSE;
 
-	if(header.value_type > NB_DATUMS_VALUE_TYPES)
+	if(header.value_type >= NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	if(!datum_value_types_prop[header.value_type].has_nested_datum)

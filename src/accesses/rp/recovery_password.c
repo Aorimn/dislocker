@@ -459,6 +459,7 @@ int prompt_rp(uint8_t** rp)
 			stderr,
 			"Failed to allocate memory in recovery prompt\n"
 		);
+		return FALSE;
 	}
 
 	blah = *rp;

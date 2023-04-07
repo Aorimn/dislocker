@@ -112,7 +112,7 @@ int read_decrypt_sectors(
 
 	size_t   nb_loop = 0;
 	size_t   size    = nb_read_sector * sector_size;
-	uint8_t* input   = malloc(size);
+	uint8_t* input   = dis_malloc(size);
 	off_t    off     = sector_start + io_data->part_off;
 
 	memset(input , 0, size);
@@ -123,7 +123,7 @@ int read_decrypt_sectors(
 
 	if(read_size <= 0)
 	{
-		free(input);
+		dis_free(input);
 		dis_printf(
 			L_ERROR,
 			"Unable to read %#" F_SIZE_T " bytes from %#" F_OFF_T "\n",
@@ -191,7 +191,7 @@ int read_decrypt_sectors(
 #endif
 
 
-	free(input);
+	dis_free(input);
 
 	return TRUE;
 }
@@ -220,7 +220,7 @@ int encrypt_write_sectors(
 	if(!io_data || !input)
 		return FALSE;
 
-	uint8_t* output = malloc(nb_write_sector * sector_size);
+	uint8_t* output = dis_malloc(nb_write_sector * sector_size);
 
 	memset(output , 0, nb_write_sector * sector_size);
 
@@ -281,7 +281,7 @@ int encrypt_write_sectors(
 		sector_start + io_data->part_off
 	);
 
-	free(output);
+	dis_free(output);
 	if(write_size <= 0)
 		return FALSE;
 
@@ -376,12 +376,12 @@ static void* thread_decrypt(void* params)
 			);
 			memcpy(loop_output, loop_input, sector_size);
 		}
-		else if(version == V_VISTA && (sector_offset < 16 || sector_offset + 1 == encrypted_volume_total_sectors))
+		else if(version == V_VISTA && (sector_offset < 16 || sector_offset + 1 == (off_t) encrypted_volume_total_sectors))
 		{
 			/*
 			 * The firsts sectors are not really encrypted on a Vista volume
 			 */
-			if(sector_offset < 1 || sector_offset + 1 == encrypted_volume_total_sectors)
+			if(sector_offset < 1 || sector_offset + 1 == (off_t) encrypted_volume_total_sectors)
 				fix_read_sector_vista(
 					io_data,
 					loop_input,
@@ -460,12 +460,12 @@ static void* thread_encrypt(void* params)
 		 * NOTE: Seven specificities are dealt with earlier in the process
 		 * see dislocker.c:enlock()
 		 */
-		if(version == V_VISTA && (sector_offset < 16 || sector_offset + 1 == encrypted_volume_total_sectors))
+		if(version == V_VISTA && (sector_offset < 16 || sector_offset + 1 == (off_t) encrypted_volume_total_sectors))
 		{
 			/*
 			 * The firsts sectors are not really encrypted on a Vista volume
 			 */
-			if(sector_offset < 1 || sector_offset + 1 == encrypted_volume_total_sectors)
+			if(sector_offset < 1 || sector_offset + 1 == (off_t) encrypted_volume_total_sectors)
 				fix_write_sector_vista(
 					io_data,
 					loop_input,

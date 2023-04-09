@@ -104,6 +104,7 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 			"VMK size too big, unsupported: %#" F_SIZE_T "\n",
 			vmk_key_size
 		);
+		dis_free(vmk_key);
 		return FALSE;
 	}
 
@@ -126,6 +127,7 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 
 		dis_printf(L_CRITICAL, "Can't decrypt correctly the FVEK. Abort.\n");
 		dis_free(*fvek_datum);
+		dis_free(vmk_key);
 		return FALSE;
 	}
 

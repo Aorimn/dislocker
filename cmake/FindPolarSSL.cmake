@@ -55,7 +55,7 @@ endif()
 
 if( NOT CMAKE_CROSSCOMPILING )
   execute_process(
-    COMMAND echo "#include <${POLARSSL_INC_FOLDER}/build_info.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"
+    COMMAND echo "#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"
     OUTPUT_FILE a.c
   )
   execute_process(
@@ -70,7 +70,7 @@ if( NOT CMAKE_CROSSCOMPILING )
   )
 else()
   execute_process(
-    COMMAND grep -w "MBEDTLS_VERSION_STRING" ${POLARSSL_INCLUDE_DIRS}/${POLARSSL_INC_FOLDER}/build_info.h
+    COMMAND grep -w "MBEDTLS_VERSION_STRING" ${POLARSSL_INCLUDE_DIRS}/${POLARSSL_INC_FOLDER}/version.h
     COMMAND sed -e "s@\s\+@ @g"
     COMMAND cut -d\  -f3
     COMMAND sed -e "s@\"@@g"

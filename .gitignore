@@ -27,3 +27,10 @@ Makefile
 cmake_install.cmake
 cmake_uninstall.cmake
 install_manifest.txt
+
+# cpack files
+CPackConfig.cmake
+CPackSourceConfig.cmake
+_CPack_Packages/
+dislocker*.rpm
+

@@ -170,10 +170,10 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	} enc_method;
 
 	memset(enc_method.multi, 0, 2);
-	char fvek_keys[64] = {0,};
-
-	off_t expected_size = sizeof(enc_method) + sizeof(fvek_keys);
-
+	char fvek_key_buffer[64] = {0,};
+	off_t expected_file_size_64bit_key = sizeof(enc_method) + 32;
+	off_t expected_file_size_128bit_key = sizeof(enc_method) + 64;
+	off_t used_key_size = 0;
 
 	file_fd = dis_open(cfg->fvek_file, O_RDONLY);
 	if(file_fd == -1)
@@ -185,16 +185,19 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	/* Check the file's size */
 	actual_size = dis_lseek(file_fd, 0, SEEK_END);
 
-	if(actual_size != expected_size)
+	if(actual_size != expected_file_size_64bit_key && actual_size != expected_file_size_128bit_key)
 	{
 		dis_printf(
 			L_ERROR,
-			"Wrong FVEK file size, expected %d but has %d\n",
-			expected_size,
+			"Wrong FVEK file size, expected %d or %d but has %d\n",
+			expected_file_size_64bit_key,
+			expected_file_size_128bit_key,
 			actual_size
 		);
 		return FALSE;
 	}
+
+	used_key_size = actual_size - sizeof(enc_method);
 
 	/* Read everything */
 	dis_lseek(file_fd, 0, SEEK_SET);
@@ -207,8 +210,8 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 		);
 		return FALSE;
 	}
-	rs = dis_read(file_fd, fvek_keys,  sizeof(fvek_keys));
-	if(rs != sizeof(fvek_keys))
+	rs = dis_read(file_fd, fvek_key_buffer, used_key_size);
+	if(rs != used_key_size)
 	{
 		dis_printf(L_ERROR, "Cannot read whole FVEK keys in the FVEK file\n");
 		return FALSE;
@@ -216,11 +219,11 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 
 
 	/* Create the FVEK datum */
-	*fvek_datum = dis_malloc(sizeof(datum_key_t) + sizeof(fvek_keys));
+	*fvek_datum = dis_malloc(sizeof(datum_key_t) + used_key_size);
 
 	/* ... create the header */
 	datum_key = *fvek_datum;
-	datum_key->header.datum_size = sizeof(datum_key_t) + sizeof(fvek_keys);
+	datum_key->header.datum_size = sizeof(datum_key_t) + used_key_size;
 	datum_key->header.entry_type = 3;
 	datum_key->header.value_type = DATUMS_VALUE_KEY;
 	datum_key->header.error_status = 1;
@@ -229,7 +232,7 @@ int build_fvek_from_file(dis_config_t* cfg, void** fvek_datum)
 	datum_key->padd = 0;
 
 	/* ... copy the keys */
-	memcpy((char*) *fvek_datum + sizeof(datum_key_t), fvek_keys, sizeof(fvek_keys));
+	memcpy((char*) *fvek_datum + sizeof(datum_key_t), fvek_key_buffer, used_key_size);
 
 
 	return TRUE;

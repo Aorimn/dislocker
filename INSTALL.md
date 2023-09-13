@@ -24,7 +24,7 @@ For Debian-like distros based on Debian Jessie or Ubuntu 14.04 or older:
 
 For Debian-like distros based on Debian Stretch or Ubuntu 16.04 or later:
 
-- `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev`
+- `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev pkgconf`
 
 For Fedora-like:
 

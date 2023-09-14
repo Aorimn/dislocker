@@ -32,3 +32,6 @@ install_manifest.txt
 .DS_Store
 *.dylib
 *.bundle
+
+# Visual Studio Code
+.vscode/

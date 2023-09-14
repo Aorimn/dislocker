@@ -26,8 +26,13 @@
 /*
  * Here stand the bindings for polarssl SHA256/SHA2/SHA-2 function for dislocker
  */
-#include "@POLARSSL_INC_FOLDER@/config.h"
 #include "@POLARSSL_INC_FOLDER@/version.h"
+#if MBEDTLS_VERSION_MAJOR >= 3
+#include "@POLARSSL_INC_FOLDER@/mbedtls_config.h"
+#include "@POLARSSL_INC_FOLDER@/compat-2.x.h"
+#else
+#include "@POLARSSL_INC_FOLDER@/config.h"
+#endif
 #include "@POLARSSL_INC_FOLDER@/aes.h"
 
 // Function's name changed

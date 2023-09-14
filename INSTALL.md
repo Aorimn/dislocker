@@ -24,7 +24,7 @@ For Debian-like distros based on Debian Jessie or Ubuntu 14.04 or older:
 
 For Debian-like distros based on Debian Stretch or Ubuntu 16.04 or later:
 
-- `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev`
+- `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev pkgconf`
 
 For Fedora-like:
 
@@ -47,6 +47,11 @@ For FreeBSD:
 For OSX: Follow the instructions in the next section.
 
 Note that the code expects at least FUSE 2.6.
+
+For macOS:
+
+Install HomeBrew https://brew.sh
+- `brew install cmake pkgconf mbedtls`
 
 # INSTALLING
 

@@ -27,3 +27,8 @@ Makefile
 cmake_install.cmake
 cmake_uninstall.cmake
 install_manifest.txt
+
+# macOS produced files
+.DS_Store
+*.dylib
+*.bundle

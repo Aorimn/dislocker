@@ -48,6 +48,11 @@ For OSX: Follow the instructions in the next section.
 
 Note that the code expects at least FUSE 2.6.
 
+For macOS:
+
+Install HomeBrew https://brew.sh
+- `brew install cmake pkgconf mbedtls`
+
 # INSTALLING
 
 Each OS type has its own section below, beware to follow yours:

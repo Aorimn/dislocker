@@ -53,6 +53,15 @@ if( "${CMAKE_C_COMPILER}" STREQUAL "/Library/Developer/CommandLineTools/usr/bin/
   set(CMAKE_C_COMPILER cc)
 endif()
 
+if(APPLE)
+  execute_process(
+    COMMAND xcrun --sdk macosx --show-sdk-path
+    OUTPUT_VARIABLE envSdkRoot
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  set(ENV{SDKROOT} "${envSdkRoot}")
+endif()
+
 if( NOT CMAKE_CROSSCOMPILING )
   execute_process(
     COMMAND echo "#include <${POLARSSL_INC_FOLDER}/version.h>\n#include <stdio.h>\nint main(){printf(${POLARSSL_REAL_NAME}_VERSION_STRING);return 0;}"

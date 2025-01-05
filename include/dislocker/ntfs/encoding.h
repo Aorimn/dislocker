@@ -38,5 +38,11 @@ int asciitoutf16(const uint8_t* ascii, uint16_t* utf16);
 
 int utf16bigtolittleendian(uint16_t* utf16, size_t utf16_length);
 
+int toutf16(const uint8_t* inbuffer, uint8_t* outbuffer);
+
+char* getlocalcharset();
+
+char** buildcharactersetslist(void);
+
 
 #endif /* ENCODING_H */

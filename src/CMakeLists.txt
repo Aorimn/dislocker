@@ -116,13 +116,9 @@ endif()
 # Libraries
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package (PolarSSL REQUIRED)
-if(POLARSSL_FOUND  AND  POLARSSL_INCLUDE_DIRS  AND  POLARSSL_LIBRARIES)
-	include_directories (${POLARSSL_INCLUDE_DIRS})
-	set (LIB ${LIB} ${POLARSSL_LIBRARIES})
-	configure_file (${PROJECT_SOURCE_DIR}/include/dislocker/ssl_bindings.h.in ${PROJECT_SOURCE_DIR}/include/dislocker/ssl_bindings.h ESCAPE_QUOTES @ONLY)
-else()
-	return ()
+find_package (MbedTLS 3 REQUIRED)
+if(MbedTLS_FOUND)
+	set (LIB ${LIB} MbedTLS::mbedcrypto)
 endif()
 
 # Ruby bindings

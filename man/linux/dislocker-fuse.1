@@ -2,7 +2,7 @@
 .\"
 .TH DISLOCKER-FUSE 1 2011-09-07 "Linux" "DISLOCKER-FUSE"
 .SH NAME
-Dislocker fuse - Read/write BitLocker encrypted volumes under Linux, OSX and FreeBSD.
+Dislocker-fuse \- Read/write BitLocker encrypted volumes under Linux, OSX and FreeBSD.
 .SH SYNOPSIS
 dislocker-fuse [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [-- \fIARGS\fR...]
 
@@ -53,7 +53,7 @@ do NOT display any information.
 This option has priority on any previous `\fB-v\fR'. One probably wants to check the return value of the program when using this option
 .TP
 .B -r, --readonly
-do not allow to write on the BitLocker volume (read only mode)
+do not allow one to write on the BitLocker volume (read only mode)
 .TP
 .B -s, --stateok
 do not check the volume's state, assume it's ok to mount it.

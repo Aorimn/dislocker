@@ -10,7 +10,7 @@ You need:
 - cmake (at least version 2.6);
 - make (or gmake, for FreeBSD);
 - pkg-config;
-- Headers for FUSE;
+- Headers for FUSE3;
 - Headers for mbedTLS (previously known as PolarSSL);
 - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
@@ -46,7 +46,7 @@ For FreeBSD:
 
 For OSX: Follow the instructions in the next section.
 
-Note that the code expects at least FUSE 2.6.
+Note that the code expects at least FUSE 3.14.
 
 For macOS:
 

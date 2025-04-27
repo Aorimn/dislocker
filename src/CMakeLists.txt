@@ -223,7 +223,7 @@ if(FUSE_FOUND)
 	set (BIN_FUSE ${PROJECT_NAME}-fuse)
 	add_executable (${BIN_FUSE} ${BIN_FUSE}.c)
 	target_link_libraries (${BIN_FUSE} ${FUSE_LIBBRARIES} ${PROJECT_NAME})
-	set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=26)
+	set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=314)
 	set_target_properties (${BIN_FUSE} PROPERTIES LINK_FLAGS "-pie -fPIE")
 	add_custom_command (TARGET ${BIN_FUSE} POST_BUILD
 		COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/

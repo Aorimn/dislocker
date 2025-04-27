@@ -54,8 +54,10 @@ dis_context_t dis_ctx;
 /**
  * Stubs used for FUSE operations.
  */
-static int fs_getattr(const char *path, struct stat *stbuf)
+static int fs_getattr(const char *path, struct stat *stbuf,
+                      struct fuse_file_info *fi)
 {
+	(void) fi;
 	int res = 0;
 
 	if(!path || !stbuf)
@@ -81,11 +83,13 @@ static int fs_getattr(const char *path, struct stat *stbuf)
 }
 
 static int fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                      off_t offset, struct fuse_file_info *fi)
+                      off_t offset, struct fuse_file_info *fi,
+                      enum fuse_readdir_flags flags)
 {
 	/* Both variables aren't used here */
 	(void) offset;
 	(void) fi;
+	(void) flags;
 
 	if(!path || !buf || !filler)
 		return -EINVAL;
@@ -93,9 +97,9 @@ static int fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	if(strcmp(path, "/") != 0)
 		return -ENOENT;
 
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-	filler(buf, NTFS_FILENAME, NULL, 0);
+	filler(buf, ".", NULL, 0, 0);
+	filler(buf, "..", NULL, 0, 0);
+	filler(buf, NTFS_FILENAME, NULL, 0, 0);
 
 	return 0;
 }

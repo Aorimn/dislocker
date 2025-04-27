@@ -12,7 +12,6 @@ src/dislocker-metadata
 src/libdislocker.so*
 
 # Configured files
-include/dislocker/ssl_bindings.h
 src/dislocker-find.rb
 
 # Unit test files

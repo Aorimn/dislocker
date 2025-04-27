@@ -2,7 +2,7 @@
 .\"
 .TH DISLOCKER 1 2011-09-07 "Linux" "DISLOCKER"
 .SH NAME
-Dislocker file - Read BitLocker encrypted volumes under Linux, OSX and FreeBSD.
+Dislocker-file \- Read BitLocker encrypted volumes under Linux, OSX and FreeBSD.
 .SH SYNOPSIS
 dislocker-file [-hqrsv] [-l \fILOG_FILE\fR] [-O \fIOFFSET\fR] [-V \fIVOLUME\fR \fIDECRYPTMETHOD\fR -F[\fIN\fR]] [--] \fINTFS_FILE\fR
 
@@ -16,7 +16,7 @@ This NTFS file won't have any link with the original BitLocker encrypted partiti
 .SH OPTIONS
 For program's options description, see dislocker-fuse(1). The only change in the command line is the last argument, which in this case is the \fINTFS_FILE\fR argument:
 .PP
-.TB
+.TP
 .B NTFS_FILE
 the newly created file where NTFS data will be put to, once decrypted from the BitLocker encrypted volume.
 .SH EXAMPLES

@@ -86,4 +86,6 @@ VALUE rb_hexdump(uint8_t* data, size_t data_len);
 
 #endif /* _HAVE_RUBY */
 
+size_t strlen_utf16(char* data, size_t max_length);
+
 #endif // COMMON_H

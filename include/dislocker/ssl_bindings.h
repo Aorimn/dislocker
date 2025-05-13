@@ -24,43 +24,12 @@
 #define SSL_BINDINGS_H
 
 /*
- * Here stand the bindings for polarssl SHA256/SHA2/SHA-2 function for dislocker
+ * Here stand the bindings for MbedTLS SHA256/SHA2/SHA-2 function for dislocker
  */
-#include "@POLARSSL_INC_FOLDER@/version.h"
-#if MBEDTLS_VERSION_MAJOR >= 3
-#include "@POLARSSL_INC_FOLDER@/mbedtls_config.h"
-#include "@POLARSSL_INC_FOLDER@/compat-2.x.h"
-#else
-#include "@POLARSSL_INC_FOLDER@/config.h"
-#endif
-#include "@POLARSSL_INC_FOLDER@/aes.h"
+#include "mbedtls/aes.h"
+#include "mbedtls/sha256.h"
 
-// Function's name changed
-#if defined(MBEDTLS_SHA256_C)
-#  include "mbedtls/sha256.h"
-#  if MBEDTLS_VERSION_NUMBER >= 0x02070000
-#    define SHA256(input, len, output)         mbedtls_sha256_ret(input, len, output, 0)
-#  else
-#    define SHA256(input, len, output)         mbedtls_sha256(input, len, output, 0)
-#  endif /* POLARSSL_VERSION_NUMBER >= 0x02070000 */
-#else /* defined(MBEDTLS_SHA256_C) */
-
-#  if defined(POLARSSL_SHA256_C)
-#    include "polarssl/sha256.h"
-#    define SHA256(input, len, output)       sha256(input, len, output, 0)
-#  else /* defined(POLARSSL_SHA256_C) */
-#    include "polarssl/sha2.h"
-
-// 0x00630500 = version 0.99.5, argument's type changed in this release
-#    if POLARSSL_VERSION_NUMBER >= 0x00630500
-#     define SHA256(input, len, output)       sha2(input, len, output, 0)
-#    else
-#     define SHA256(input, len, output)       sha2(input, (int)len, output, 0)
-#    endif /* POLARSSL_VERSION_NUMBER >= 0x00630500 */
-
-#  endif /* defined(POLARSSL_SHA256_C) */
-#endif /* defined(MBEDTLS_SHA256_C) */
-
+#define SHA256(input, len, output)        mbedtls_sha256(input, len, output, 0)
 
 /* Here stand the bindings for AES functions and contexts */
 #if defined(MBEDTLS_AES_H)

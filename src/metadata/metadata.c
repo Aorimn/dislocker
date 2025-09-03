@@ -27,6 +27,7 @@
 #include "dislocker/metadata/metadata_config.h"
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
+#include "dislocker/metadata/datums.h"   /* for datum_header_safe_t, DATUMS_VALUE_VIRTUALIZATION_INFO */
 
 #include <sys/ioctl.h>
 
@@ -86,6 +87,66 @@ static int get_eow_check_valid(
 	off_t disk_offset
 );
 
+
+
+/*
+ * Fallback helper:
+ * On some volumes the VIRTUALIZATION INFO datum (value_type 0x000F) may reside
+ * near the end of the 64 KiB metadata file such that a dataset-bounded iterator
+ * misses it. This linear scan looks through the on-disk metadata copy for a
+ * datum header with value_type == DATUMS_VALUE_VIRTUALIZATION_INFO and, if
+ * found, returns a heap-copied datum blob in *out (caller owns it).
+ */
+static int
+find_virtualization_linear_from_metafile(dis_metadata_t dis_meta,
+                                         datum_virtualization_t **out)
+{
+	if(!dis_meta || !out) return FALSE;
+	*out = NULL;
+
+	/* metadata copy #0 was already located; sizes computed in end_compute_regions() */
+	dis_regions_t *regions = dis_meta->virt_region;
+	if(!regions || regions[0].addr == 0 || regions[0].size == 0)
+		return FALSE;
+
+	const off_t start = (off_t)regions[0].addr + dis_meta->cfg->offset;
+	const size_t len  = (size_t)regions[0].size; /* typically 0x10000 */
+
+	uint8_t *buf = (uint8_t*)dis_malloc(len);
+	if(!buf) return FALSE;
+
+	dis_lseek(dis_meta->cfg->fve_fd, start, SEEK_SET);
+	ssize_t n = dis_read(dis_meta->cfg->fve_fd, buf, len);
+	if(n < (ssize_t)sizeof(datum_header_safe_t)) { dis_free(buf); return FALSE; }
+
+	const size_t limit = (size_t)n;
+
+	for(size_t off = 0; off + sizeof(datum_header_safe_t) <= limit; off += 2)
+	{
+		datum_header_safe_t h;
+		memcpy(&h, buf + off, sizeof(h));
+		/* datum_size is u16 in LE and may be stored in a wider field; mask to 16 bits */
+		size_t dsize = ((size_t)h.datum_size) & 0xffff;
+
+		if(dsize < sizeof(datum_header_safe_t) || dsize > 0x1000)
+			continue;
+		if(h.value_type != DATUMS_VALUE_VIRTUALIZATION_INFO)
+			continue;
+		if(off + dsize > limit)
+			continue;
+
+		datum_virtualization_t *cand = (datum_virtualization_t*)dis_malloc(dsize);
+		if(!cand) { dis_free(buf); return FALSE; }
+
+		memcpy(cand, buf + off, dsize);
+		dis_free(buf);
+		*out = cand;
+		return TRUE;
+	}
+
+	dis_free(buf);
+	return FALSE;
+}
 
 
 
@@ -621,17 +682,30 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		if(!get_next_datum(dis_meta, UINT16_MAX,
 		    DATUMS_VALUE_VIRTUALIZATION_INFO, NULL, (void**)&datum))
 		{
-			char* type_str = datumvaluetypestr(DATUMS_VALUE_VIRTUALIZATION_INFO);
-			dis_printf(
-				L_ERROR,
-				"Error looking for the VIRTUALIZATION datum type"
-				" %hd (%s). Internal failure, abort.\n",
-				DATUMS_VALUE_VIRTUALIZATION_INFO,
-				type_str
-			);
-			dis_free(type_str);
-			datum = NULL;
-			return DIS_RET_ERROR_VIRTUALIZATION_INFO_DATUM_NOT_FOUND;
+			/* Fallback: linear scan of the on-disk 64 KiB metadata copy to
+			 * recover a VIRTUALIZATION INFO datum that lies past the dataset
+			 * copy_size boundary. This keeps the normal path untouched. */
+			datum_virtualization_t *lin = NULL;
+			if(find_virtualization_linear_from_metafile(dis_meta, &lin))
+			{
+				datum = lin;
+				dis_printf(L_DEBUG,
+				           "Recovered VIRTUALIZATION INFO datum via linear scan fallback.\n");
+			}
+			else
+			{
+				char* type_str = datumvaluetypestr(DATUMS_VALUE_VIRTUALIZATION_INFO);
+				dis_printf(
+					L_ERROR,
+					"Error looking for the VIRTUALIZATION datum type"
+					" %hd (%s). Internal failure, abort.\n",
+					DATUMS_VALUE_VIRTUALIZATION_INFO,
+					type_str
+				);
+				dis_free(type_str);
+				datum = NULL;
+				return DIS_RET_ERROR_VIRTUALIZATION_INFO_DATUM_NOT_FOUND;
+			}
 		}
 
 		dis_meta->nb_virt_region++;

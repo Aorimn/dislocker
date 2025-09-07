@@ -32,7 +32,7 @@ def get_partitions
 	uname = nil
 	reps = %w(/bin/ /usr/bin/ /sbin/ /usr/sbin/)
 	reps.each do |rep|
-		uname = "#{rep}uname" if File.exists?("#{rep}uname")
+		uname = "#{rep}uname" if File.exist?("#{rep}uname")
 	end
 
 	if uname.nil?
@@ -138,7 +138,7 @@ end
 
 encrypted_devices = []
 devices.each do |dev|
-	next unless File.exists? dev
+	next unless File.exist? dev
 	encrypted_devices << dev if is_bitlocker_encrypted? dev
 end
 

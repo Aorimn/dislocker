@@ -425,6 +425,29 @@ void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 	);
 }
 
+int is_recvoery_key(datum_vmk_t* datum)
+{
+	int bRecvoeryKey = FALSE;
+
+	if (datum) {
+		char *pStart = ((char *)datum) + sizeof(datum_vmk_t);
+		char *pEnd = ((char *)datum) + datum->header.datum_size;
+		while (pStart < pEnd) {
+			uint32_t u32Size = *((uint32_t*)pStart);
+			if (u32Size == 0) {
+				break;
+			}
+			if (*((uint16_t *)(pStart + 4)) == 0x15) {
+				bRecvoeryKey = TRUE;
+				break;
+			}
+			pStart += u32Size;
+		}
+	}
+
+	return bRecvoeryKey;
+}
+
 void print_datum_vmk(DIS_LOGS level, void* vdatum)
 {
 	datum_vmk_t* datum = (datum_vmk_t*) vdatum;
@@ -433,7 +456,14 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 
 	format_guid(datum->guid, extkey_id);
 
-	dis_printf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
+	if (is_recvoery_key(datum))
+	{
+		dis_printf(level, "[* Recovery Key GUID *]: '%.39s'\n", extkey_id);
+	}
+	else
+	{
+		dis_printf(level, "Recovery Key GUID: '%.39s'\n", extkey_id);
+	}
 	dis_printf(level, "Nonce: \n");
 	print_nonce(level, datum->nonce);
 

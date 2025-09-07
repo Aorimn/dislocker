@@ -11,24 +11,20 @@ You need:
 - make (or gmake, for FreeBSD);
 - pkg-config;
 - Headers for FUSE3;
-- Headers for mbedTLS (previously known as PolarSSL);
+- Headers for mbedTLS 3;
 - A partition encrypted with BitLocker, from Windows Vista, 7 or 8.
 
 
 If you have Ruby headers, the library will compile with some Ruby bindings and
 another program - see the NOTE section below - will be available.
 
-For Debian-like distros based on Debian Jessie or Ubuntu 14.04 or older:
-
-- `aptitude install gcc cmake make libfuse-dev libpolarssl-dev ruby-dev`
-
-For Debian-like distros based on Debian Stretch or Ubuntu 16.04 or later:
+For Debian-like distros:
 
 - `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev pkgconf`
 
 For Fedora-like:
 
-- `dnf install gcc cmake make fuse-devel mbedtls-devel ruby-devel rubypick`
+- `dnf install gcc cmake make fuse-devel mbedtls3.6-devel ruby-devel rubypick`
 
 Alternatively, running `dnf install dislocker fuse-dislocker` to use the
 already existing RPM packages in Fedora could be a clever idea.
@@ -42,7 +38,7 @@ already existing RPM packages in EPEL could be a clever idea.
 
 For FreeBSD:
 
-- `pkg install cmake gmake fusefs-libs mbedtls`
+- `pkg install cmake gmake fusefs-libs mbedtls3`
 
 For OSX: Follow the instructions in the next section.
 
@@ -100,33 +96,6 @@ Once installed, see `dislocker(1)` for details on how to use it.
 
 I'm sure you don't want to do that. But if you're really forced by someone, just
 type `make uninstall` as super-user.
-
-# mbedTLS 2.0.0
-
-Since the version 2.0.0 of mbedTLS, the build moves "crypto" functions such
-as AES and SHA256 into a separate, libmbedcrypto, library. However, a typo
-didn't installed this library, resulting in some packagers not providing this
-library, thus breaking the dislocker compilation.
-If you have this problem, it's recommended to run the following commands (they
-have been put in the src/mbed_install.sh script, if you don't want to
-copy/paste from here):
-```
-git clone https://github.com/ARMmbed/mbedtls.git
-cd mbedtls
-git checkout mbedtls-2.0.0
-```
-Then apply the patch given by the following command:
-```
-git show 6f42417b library/CMakeLists.txt
-```
-And compile/install the library:
-```
-cmake .
-make
-sudo make install
-```
-
-You can then resume the installation where you have left it.
 
 # PORTABILITY
 

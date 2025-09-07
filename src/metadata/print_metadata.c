@@ -59,7 +59,7 @@ void print_volume_header(DIS_LOGS level, dis_metadata_t dis_meta)
 	format_guid(volume_header->guid, rec_id);
 
 
-	dis_printf(level, "=====[ Volume header informations ]=====\n");
+	dis_printf(level, "=====[ Volume header information ]=====\n");
 	dis_printf(level, "  Signature: '%.8s'\n", volume_header->signature);
 	dis_printf(level, "  Sector size: 0x%1$04x (%1$hu) bytes\n", volume_header->sector_size);
 	dis_printf(level, "  Sector per cluster: 0x%1$02x (%1$hhu) bytes\n", volume_header->sectors_per_cluster);
@@ -187,7 +187,7 @@ void print_eow_infos(DIS_LOGS level, dis_metadata_t dis_meta)
 
 	bitlocker_eow_infos_t* eow_infos = dis_meta->eow_information;
 
-	dis_printf(level, "=======================[ BitLocker EOW informations ]========================\n");
+	dis_printf(level, "=======================[ BitLocker EOW information ]========================\n");
 	dis_printf(level, "  Signature: '%.8s'\n", eow_infos->signature);
 	dis_printf(level, "  Structure size: 0x%1$04x (%1$hu)\n", eow_infos->header_size);
 	dis_printf(level, "  On-disk size: 0x%1$04x (%1$hu)\n", eow_infos->infos_size);
@@ -243,7 +243,7 @@ void print_data(DIS_LOGS level, dis_metadata_t dis_meta)
 			break;
 
 		dis_printf(level, "\n");
-		dis_printf(level, "=======[ Datum n°%d informations ]=======\n", ++loop);
+		dis_printf(level, "=======[ Datum n°%d information ]=======\n", ++loop);
 		print_one_datum(level, data);
 		dis_printf(level, "=========================================\n");
 

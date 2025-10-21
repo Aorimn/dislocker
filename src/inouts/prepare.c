@@ -23,6 +23,9 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <sys/mount.h>
+#include <sys/ioctl.h>
+#include <stdint.h>
 
 #include "dislocker/inouts/prepare.h"
 #include "dislocker/inouts/sectors.h"
@@ -98,6 +101,7 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 int prepare_crypt(dis_context_t dis_ctx)
 {
 	dis_iodata_t* io_data;
+	uint64_t part_volume_size = UINT64_MAX;
 
 	if(!dis_ctx)
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
@@ -113,6 +117,15 @@ int prepare_crypt(dis_context_t dis_ctx)
 		io_data->encrypted_volume_size = dis_metadata_volume_size_from_vbr(dis_ctx->metadata);
 		io_data->encrypted_volume_size += io_data->sector_size;		//The volume size of Vista should include the DBR backup
 	}
+
+	// Do not trust the encrypted volume size in metadata. After shrinking the volume, metadata
+	// is not updated at least by Windows 10 1909
+	if (ioctl(dis_ctx->fve_fd, BLKGETSIZE64, &part_volume_size) >= 0)
+	{
+		if (part_volume_size < io_data->encrypted_volume_size)
+			io_data->encrypted_volume_size = part_volume_size;
+	}
+
 	io_data->backup_sectors_addr   = dis_metadata_ntfs_sectors_address(io_data->metadata);
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 

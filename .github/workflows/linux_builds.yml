@@ -1,0 +1,42 @@
+name: linux
+
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+    branches:
+    - master
+    - '*-ci'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, cc: gcc-10 }
+          - { os: ubuntu-22.04, cc: gcc-11 }
+          - { os: ubuntu-24.04, cc: gcc-12 }
+          - { os: ubuntu-24.04, cc: gcc-13 }
+          - { os: ubuntu-22.04, cc: clang-16 }
+          - { os: ubuntu-22.04, cc: clang-17 }
+          - { os: ubuntu-24.04, cc: clang-18 }
+          - { os: ubuntu-24.04, cc: clang-19 }
+    steps:
+    - uses: actions/checkout@v4
+    - name: dependencies
+      run: |
+        sudo apt -q update
+        sudo apt install -q -y -qq libfuse-dev ruby-dev libmbedtls-dev
+    - name: compiler
+      env:
+        CC: ${{ matrix.cc }}
+      run: sudo apt install -q -y "${CC}"
+    - name: build
+      env:
+        CC: ${{ matrix.cc }}
+      run: |
+           cmake .
+           make VERBOSE=1

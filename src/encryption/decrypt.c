@@ -138,7 +138,7 @@ int decrypt_key(
 	);
 
 
-	memset(&ctx, 0, sizeof(AES_CONTEXT));
+	AES_FREE(&ctx);
 
 
 

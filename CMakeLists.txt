@@ -24,6 +24,9 @@ set (AUTHOR "Romain Coltel")
 
 find_program (GIT_EXE NAMES git PATHS /usr/bin /usr/local/bin)
 
+include(CTest)
+enable_testing()
+
 if(GIT_EXE)
 	execute_process (
 		COMMAND ${GIT_EXE} rev-parse --abbrev-ref HEAD
@@ -47,7 +50,9 @@ set (VERSION_RELEASE 3)
 set (VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_RELEASE}")
 
 add_subdirectory (${PROJECT_SOURCE_DIR}/src)
-
+if(BUILD_TESTING)
+	add_subdirectory (${PROJECT_SOURCE_DIR}/test)
+endif()
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"

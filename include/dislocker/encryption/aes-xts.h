@@ -23,7 +23,7 @@
 #ifndef DIS_AES_XTS_H
 #define DIS_AES_XTS_H
 
-#include "dislocker/ssl_bindings.h"
+#include "ssl_bindings.h"
 
 
 /*

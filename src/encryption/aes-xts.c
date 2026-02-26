@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "dislocker/ssl_bindings.h"
+#include "ssl_bindings.h"
 
 #ifndef GET_UINT64_LE
 #define GET_UINT64_LE(n,b,i)                            \

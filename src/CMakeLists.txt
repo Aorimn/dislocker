@@ -47,7 +47,6 @@ endif()
 if( NOT CMAKE_CROSSCOMPILING )
 	include_directories (SYSTEM /usr/local/include)
 endif()
-include_directories (${PROJECT_SOURCE_DIR}/include)
 
 set (LIB pthread)
 set (SOURCES
@@ -117,9 +116,6 @@ endif()
 
 # Libraries
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-find_package (MbedTLS 3 REQUIRED)
-set (LIB ${LIB} MbedTLS::mbedcrypto)
 
 # Ruby bindings
 set(WITH_RUBY "AUTO" CACHE STRING "Enable Ruby bindings. Valid values are ON, OFF, or AUTO")
@@ -201,7 +197,8 @@ endif()
 
 # Targets
 add_library (${PROJECT_NAME} SHARED ${SOURCES})
-target_link_libraries (${PROJECT_NAME} ${LIB})
+target_include_directories (${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries (${PROJECT_NAME} PRIVATE ${LIB})
 set_target_properties (${PROJECT_NAME} PROPERTIES VERSION "${VERSION}" SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}")
 install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${libdir}")
 
@@ -213,12 +210,45 @@ if (${APPLE})
 	install (TARGETS ${BUNDLE_NAME} DESTINATION "${libdir}")
 endif()
 
+set(CRYPTO_BACKEND "mbedtls" CACHE STRING "Crypto library backend")
+set_property(CACHE CRYPTO_BACKEND PROPERTY STRINGS "mbedtls" "openssl")
+
+add_library(dislocker_crypto_backend INTERFACE)
+
+message(STATUS "Crypto backend: ${CRYPTO_BACKEND}")
+if(CRYPTO_BACKEND STREQUAL "mbedtls")
+  find_package (MbedTLS 3 REQUIRED)
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+      MbedTLS::mbedcrypto
+  )
+  target_link_libraries(dislocker_crypto_backend INTERFACE MbedTLS::mbedcrypto)
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC
+    ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/mbedtls
+  )
+elseif(CRYPTO_BACKEND STREQUAL "openssl")
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+      OpenSSL::Crypto
+  )
+  target_link_libraries(dislocker_crypto_backend INTERFACE OpenSSL::Crypto)
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC
+    ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/openssl
+  )
+else()
+  message(FATAL_ERROR "Unknown CRYPTO_BACKEND='${CRYPTO_BACKEND}'.")
+endif()
+
+
 set (CLEAN_FILES "")
 
 if(FUSE_FOUND)
 	set (BIN_FUSE ${PROJECT_NAME}-fuse)
 	add_executable (${BIN_FUSE} ${BIN_FUSE}.c)
-	target_link_libraries (${BIN_FUSE} ${FUSE_LIBBRARIES} ${PROJECT_NAME})
+	target_link_libraries (${BIN_FUSE} PRIVATE ${FUSE_LIBBRARIES} ${LIB} ${PROJECT_NAME})
 	set_target_properties (${BIN_FUSE} PROPERTIES COMPILE_DEFINITIONS FUSE_USE_VERSION=314)
 	set_target_properties (${BIN_FUSE} PROPERTIES LINK_FLAGS "-pie -fPIE")
 	add_custom_command (TARGET ${BIN_FUSE} POST_BUILD

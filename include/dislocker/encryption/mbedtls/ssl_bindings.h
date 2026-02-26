@@ -32,7 +32,6 @@
 #define SHA256(input, len, output)        mbedtls_sha256(input, len, output, 0)
 
 /* Here stand the bindings for AES functions and contexts */
-#if defined(MBEDTLS_AES_H)
 #  define AES_CONTEXT                     mbedtls_aes_context
 #  define AES_SETENC_KEY(ctx, key, size)  mbedtls_aes_setkey_enc(ctx, key, size)
 #  define AES_SETDEC_KEY(ctx, key, size)  mbedtls_aes_setkey_dec(ctx, key, size)
@@ -41,15 +40,6 @@
                                           mbedtls_aes_crypt_cbc(ctx, mode, size, iv, in, out);
 #  define AES_ENCRYPT                     MBEDTLS_AES_ENCRYPT
 #  define AES_DECRYPT                     MBEDTLS_AES_DECRYPT
-#else
-#  define AES_CONTEXT                     aes_context
-#  define AES_SETENC_KEY(ctx, key, size)  aes_setkey_enc(ctx, key, size)
-#  define AES_SETDEC_KEY(ctx, key, size)  aes_setkey_dec(ctx, key, size)
-#  define AES_ECB_ENC(ctx, mode, in, out) aes_crypt_ecb(ctx, mode, in, out)
-#  define AES_CBC(ctx, mode, size, iv, in, out) \
-                                          aes_crypt_cbc(ctx, mode, size, iv, in, out);
-#endif /* defined(MBEDTLS_AES_H) */
-
 
 #include "dislocker/encryption/aes-xts.h"
 #if defined(MBEDTLS_CIPHER_MODE_XEX)

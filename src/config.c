@@ -86,6 +86,12 @@ static void setvmk(dis_context_t dis_ctx, char* optarg)
 	dis_setopt(dis_ctx, DIS_OPT_USE_VMK_FILE, &trueval);
 	dis_setopt(dis_ctx, DIS_OPT_SET_VMK_FILE_PATH, optarg);
 }
+static void settpmdatum(dis_context_t dis_ctx, char* optarg)
+{
+	int trueval = TRUE;
+	dis_setopt(dis_ctx, DIS_OPT_USE_TPM_PIN, &trueval);
+	dis_setopt(dis_ctx, DIS_OPT_SET_TPM_DATUM_FILE_PATH, optarg);
+}
 static void setlogfile(dis_context_t dis_ctx, char* optarg)
 {
 	dis_setopt(dis_ctx, DIS_OPT_LOG_FILE_PATH, optarg);
@@ -154,6 +160,7 @@ static struct _dis_options dis_opt[] = {
 	{ {"readonly",          no_argument,       NULL, 'r'}, setro },
 	{ {"ro",                no_argument,       NULL, 'r'}, setro },
 	{ {"stateok",           no_argument,       NULL, 's'}, setstateok },
+	{ {"tpm-datum",         required_argument, NULL, 't'}, settpmdatum },
 	{ {"user-password",     optional_argument, NULL, 'u'}, setuserpassword },
 	{ {"verbosity",         no_argument,       NULL, 'v'}, setverbosity },
 	{ {"volume",            required_argument, NULL, 'V'}, NULL }
@@ -173,7 +180,7 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
 #endif
 "\n"
 "Usage: " PROGNAME " [-hqrsv] [-l LOG_FILE] [-O OFFSET] [-V VOLUME DECRYPTMETHOD -F[N]] [-- ARGS...]\n"
-"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-K VMK_FILE|-c\n"
+"    with DECRYPTMETHOD = -p[RECOVERY_PASSWORD]|-f BEK_FILE|-u[USER_PASSWORD]|-k FVEK_FILE|-K VMK_FILE|-t TPM_DATUM_FILE [-u[PIN]]|-c\n"
 "\n"
 "Options:\n"
 "    -c, --clearkey        decrypt volume using a clear key (default)\n"
@@ -191,6 +198,8 @@ PROGNAME " by " AUTHOR ", v" VERSION " (compiled for " __OS "/" __ARCH ")\n"
 "    -q, --quiet           do NOT display anything\n"
 "    -r, --readonly        do not allow one to write on the BitLocker volume\n"
 "    -s, --stateok         do not check the volume's state, assume it's ok to mount it\n"
+"    -t, --tpm-datum TPM_DATUM_FILE\n"
+"                          decrypt volume using the TPM+PIN method (use with -u for PIN)\n"
 "    -u, --user-password=[USER_PASSWORD]\n"
 "                          decrypt volume using the user password method\n"
 "    -v, --verbosity       increase verbosity (CRITICAL errors are displayed by default)\n"
@@ -259,7 +268,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 
 
 	/* Options which could be passed as argument */
-	const char short_opts[] = "cf:F::hk:K:l:O:o:p::qrsu::vV:";
+	const char short_opts[] = "cf:F::hk:K:l:O:o:p::qrst:u::vV:";
 	struct option* long_opts;
 
 	if(!dis_ctx || !argv)
@@ -359,6 +368,12 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 			case 's':
 			{
 				dis_setopt(dis_ctx, DIS_OPT_DONT_CHECK_VOLUME_STATE, &trueval);
+				break;
+			}
+			case 't':
+			{
+				dis_setopt(dis_ctx, DIS_OPT_USE_TPM_PIN, &trueval);
+				dis_setopt(dis_ctx, DIS_OPT_SET_TPM_DATUM_FILE_PATH, optarg);
 				break;
 			}
 			case 'u':
@@ -483,6 +498,15 @@ int dis_getopt(dis_context_t dis_ctx, dis_opt_e opt_name, void** opt_value)
 			break;
 		case DIS_OPT_SET_VMK_FILE_PATH:
 			*opt_value = cfg->vmk_file;
+			break;
+		case DIS_OPT_USE_TPM_PIN:
+			if(cfg->decryption_mean & DIS_USE_TPM_PIN)
+				*opt_value = (void*) TRUE;
+			else
+				*opt_value = (void*) FALSE;
+			break;
+		case DIS_OPT_SET_TPM_DATUM_FILE_PATH:
+			*opt_value = cfg->tpm_datum_file;
 			break;
 		case DIS_OPT_VERBOSITY:
 			*opt_value = (void*) cfg->verbosity;
@@ -633,6 +657,20 @@ int dis_setopt(dis_context_t dis_ctx, dis_opt_e opt_name, const void* opt_value)
 			else
 				cfg->vmk_file = strdup((const char*) opt_value);
 			break;
+		case DIS_OPT_USE_TPM_PIN:
+			if(opt_value == NULL)
+				cfg->decryption_mean &= (unsigned) ~DIS_USE_TPM_PIN;
+			else
+				set_decryption_mean(cfg, *(int*) opt_value, DIS_USE_TPM_PIN);
+			break;
+		case DIS_OPT_SET_TPM_DATUM_FILE_PATH:
+			if(cfg->tpm_datum_file != NULL)
+				free(cfg->tpm_datum_file);
+			if(opt_value == NULL)
+				cfg->tpm_datum_file = NULL;
+			else
+				cfg->tpm_datum_file = strdup((const char*) opt_value);
+			break;
 		case DIS_OPT_VERBOSITY:
 			if(opt_value == NULL)
 				cfg->verbosity = 0;
@@ -739,6 +777,9 @@ void dis_free_args(dis_context_t dis_ctx)
 	if(cfg->vmk_file)
 		memclean(cfg->vmk_file, strlen(cfg->vmk_file) + sizeof(char));
 
+	if(cfg->tpm_datum_file)
+		memclean(cfg->tpm_datum_file, strlen(cfg->tpm_datum_file) + sizeof(char));
+
 	if(cfg->volume_path)
 		dis_free(cfg->volume_path);
 
@@ -782,6 +823,10 @@ void dis_print_args(dis_context_t dis_ctx)
 	else if(cfg->decryption_mean & DIS_USE_FVEKFILE)
 	{
 		dis_printf(L_DEBUG, "   \tusing the FVEK file at '%s'\n", cfg->fvek_file);
+	}
+	else if(cfg->decryption_mean & DIS_USE_TPM_PIN)
+	{
+		dis_printf(L_DEBUG, "   \tusing the TPM+PIN method with datum file '%s'\n", cfg->tpm_datum_file);
 	}
 	else if(cfg->decryption_mean & DIS_USE_VMKFILE)
 	{

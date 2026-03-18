@@ -60,6 +60,29 @@ int dis_get_access(dis_context_t dis_ctx)
 				break;
 			}
 		}
+		else if(dis_ctx->cfg.decryption_mean & DIS_USE_TPM_PIN)
+		{
+			if(!get_vmk_from_tpm_pin(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))
+			{
+				dis_ctx->cfg.decryption_mean &= (unsigned) ~DIS_USE_TPM_PIN;
+			}
+			else
+			{
+				dis_printf(L_INFO, "Used TPM+PIN decryption method\n");
+				dis_ctx->cfg.decryption_mean = DIS_USE_TPM_PIN;
+
+				/* We don't need the user password anymore */
+				if(dis_ctx->cfg.user_password)
+				{
+					memclean(
+						(char*) dis_ctx->cfg.user_password,
+						strlen((char*) dis_ctx->cfg.user_password)
+					);
+					dis_ctx->cfg.user_password = NULL;
+				}
+				break;
+			}
+		}
 		else if(dis_ctx->cfg.decryption_mean & DIS_USE_USER_PASSWORD)
 		{
 			if(!get_vmk_from_user_pass(dis_ctx->metadata, &dis_ctx->cfg, &vmk_datum))

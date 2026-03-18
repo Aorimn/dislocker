@@ -30,6 +30,9 @@
 #include <termios.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 /**
@@ -175,6 +178,236 @@ int get_vmk_from_user_pass2(dis_metadata_t dis_meta,
 		32,
 		(datum_key_t**) vmk_datum
 	);
+}
+
+
+/**
+ * Get the VMK datum using a TPM datum file and a user PIN
+ *
+ * The TPM datum file contains a raw AES-CCM datum (as obtained from the TPM).
+ * The PIN/user password is used together with the salt from the volume metadata
+ * to derive an intermediate key that decrypts the TPM datum. The result is then
+ * used to decrypt the actual VMK from the volume metadata.
+ *
+ * @param dis_meta The metadata structure
+ * @param cfg The configuration structure (provides tpm_datum_file and user_password)
+ * @param vmk_datum The datum_key_t found, containing the unencrypted VMK
+ * @return TRUE if result can be trusted, FALSE otherwise
+ */
+int get_vmk_from_tpm_pin(dis_metadata_t dis_meta,
+                          dis_config_t* cfg,
+                          void** vmk_datum)
+{
+	if(!dis_meta || !cfg || !cfg->tpm_datum_file)
+		return FALSE;
+
+	uint8_t user_hash[32] = {0,};
+	uint8_t salt[16]      = {0,};
+	void* vmk_key         = NULL;
+	size_t vmk_key_size   = 0;
+	int file_fd           = -1;
+	off_t file_size;
+	ssize_t rs;
+	void* tpm_aesccm      = NULL;
+
+	/* If the user password/PIN wasn't provided, ask for it */
+	if(!cfg->user_password)
+		if(!prompt_up(&cfg->user_password))
+		{
+			dis_printf(L_ERROR, "Cannot get valid user PIN. Abort.\n");
+			return FALSE;
+		}
+
+	dis_printf(
+		L_DEBUG,
+		"Using TPM+PIN method with datum file '%s'.\n",
+		cfg->tpm_datum_file
+	);
+
+	/* Read the TPM datum file */
+	file_fd = dis_open(cfg->tpm_datum_file, O_RDONLY);
+	if(file_fd == -1)
+	{
+		dis_printf(L_ERROR, "Cannot open TPM datum file (%s)\n", cfg->tpm_datum_file);
+		return FALSE;
+	}
+
+	file_size = dis_lseek(file_fd, 0, SEEK_END);
+	if(file_size < (off_t)sizeof(datum_aes_ccm_t) || file_size > 65536)
+	{
+		dis_printf(
+			L_ERROR,
+			"Invalid TPM datum file size: %d (expected at least %lu bytes)\n",
+			(int)file_size,
+			(unsigned long)sizeof(datum_aes_ccm_t)
+		);
+		dis_close(file_fd);
+		return FALSE;
+	}
+
+	tpm_aesccm = dis_malloc((size_t)file_size);
+	dis_lseek(file_fd, 0, SEEK_SET);
+	rs = dis_read(file_fd, tpm_aesccm, (size_t)file_size);
+	dis_close(file_fd);
+
+	if(rs != file_size)
+	{
+		dis_printf(L_ERROR, "Cannot read TPM datum file completely\n");
+		dis_free(tpm_aesccm);
+		return FALSE;
+	}
+
+	dis_printf(L_DEBUG, "TPM datum file read (%d bytes):\n", (int)file_size);
+	hexdump(L_DEBUG, tpm_aesccm, (size_t)file_size);
+
+	/*
+	 * Iterate over all VMK datums in the metadata, looking for one that
+	 * has both a STRETCH_KEY and an AES_CCM nested datum. For each candidate,
+	 * try to decrypt the TPM blob with the PIN-derived key, then use the
+	 * result to decrypt the actual VMK.
+	 */
+	void* current_vmk = NULL;
+
+	while(get_next_datum(
+			dis_meta,
+			DATUMS_ENTRY_VMK,
+			DATUMS_VALUE_VMK,
+			current_vmk,
+			&current_vmk
+	))
+	{
+		/* Look for a STRETCH_KEY nested datum (contains the salt) */
+		void* stretch_datum = NULL;
+		if(!get_nested_datumvaluetype(
+				current_vmk,
+				DATUMS_VALUE_STRETCH_KEY,
+				&stretch_datum
+			) ||
+		   !stretch_datum)
+		{
+			continue;
+		}
+
+		memcpy(salt, ((datum_stretch_key_t*) stretch_datum)->salt, 16);
+
+		dis_printf(L_DEBUG, "Found VMK with stretch key, salt:\n");
+		hexdump(L_DEBUG, salt, 16);
+
+		/*
+		 * Derive the intermediate key from the user PIN and the salt
+		 */
+		if(!user_key(cfg->user_password, salt, user_hash))
+		{
+			dis_printf(L_DEBUG, "Cannot stretch user PIN with this salt, trying next VMK.\n");
+			continue;
+		}
+
+		dis_printf(L_DEBUG, "Derived user hash:\n");
+		hexdump(L_DEBUG, user_hash, 32);
+
+		/*
+		 * Step 1: Decrypt the TPM datum with the PIN-derived key.
+		 * This yields an intermediate VMK key.
+		 */
+		/*
+		 * Initialize to tpm_aesccm so get_vmk's debug print has a
+		 * valid datum to display before decryption overwrites it.
+		 */
+		datum_key_t* intermediate_key = (datum_key_t*) tpm_aesccm;
+		if(!get_vmk(
+			(datum_aes_ccm_t*) tpm_aesccm,
+			user_hash,
+			32,
+			&intermediate_key
+		))
+		{
+			dis_printf(L_DEBUG, "Cannot decrypt TPM datum with this VMK's salt, trying next.\n");
+			continue;
+		}
+
+		/* Extract the raw key bytes from the intermediate key datum */
+		if(!get_payload_safe(intermediate_key, &vmk_key, &vmk_key_size))
+		{
+			dis_printf(
+				L_DEBUG,
+				"Cannot extract payload from intermediate key, trying next.\n"
+			);
+			dis_free(intermediate_key);
+			continue;
+		}
+
+		dis_printf(L_DEBUG, "Intermediate VMK key (%lu bytes):\n",
+			(unsigned long)vmk_key_size);
+		hexdump(L_DEBUG, vmk_key, vmk_key_size);
+
+		/*
+		 * Step 2: Get the AES_CCM nested datum from the metadata VMK
+		 * and decrypt it with the intermediate key to get the real VMK.
+		 */
+		void* aesccm_vmk_datum = NULL;
+		if(!get_nested_datumvaluetype(
+				current_vmk,
+				DATUMS_VALUE_AES_CCM,
+				&aesccm_vmk_datum
+			) ||
+		   !aesccm_vmk_datum)
+		{
+			dis_printf(
+				L_DEBUG,
+				"No AES_CCM datum in this VMK entry, trying next.\n"
+			);
+			dis_free(intermediate_key);
+			dis_free(vmk_key);
+			vmk_key = NULL;
+			continue;
+		}
+
+		/* Make a copy since get_vmk may modify the pointer */
+		size_t aesccm_size = ((datum_aes_ccm_t*)aesccm_vmk_datum)->header.datum_size;
+		void* aesccm_copy = dis_malloc(aesccm_size);
+		memcpy(aesccm_copy, aesccm_vmk_datum, aesccm_size);
+
+		dis_printf(L_DEBUG, "AES_CCM VMK datum (%lu bytes):\n",
+			(unsigned long)aesccm_size);
+		hexdump(L_DEBUG, aesccm_copy, aesccm_size);
+
+		datum_key_t* final_vmk = (datum_key_t*) aesccm_copy;
+		if(!get_vmk(
+			(datum_aes_ccm_t*) aesccm_copy,
+			vmk_key,
+			(vmk_key_size > 32) ? 32 : vmk_key_size,
+			&final_vmk
+		))
+		{
+			dis_printf(
+				L_DEBUG,
+				"Cannot decrypt VMK with intermediate key, trying next.\n"
+			);
+			dis_free(intermediate_key);
+			dis_free(vmk_key);
+			dis_free(aesccm_copy);
+			vmk_key = NULL;
+			continue;
+		}
+
+		/* Success! */
+		dis_printf(L_INFO, "Successfully decrypted VMK using TPM+PIN method.\n");
+		*vmk_datum = final_vmk;
+
+		dis_free(intermediate_key);
+		dis_free(vmk_key);
+		dis_free(aesccm_copy);
+		dis_free(tpm_aesccm);
+		return TRUE;
+	}
+
+	dis_printf(
+		L_ERROR,
+		"Failed to decrypt VMK using TPM+PIN method. "
+		"No matching VMK datum found or wrong PIN.\n"
+	);
+	dis_free(tpm_aesccm);
+	return FALSE;
 }
 
 

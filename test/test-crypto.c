@@ -136,6 +136,125 @@ static void test_cbc_encrypt_256(void) {
 	AES_FREE(&ctx);
 }
 
+static void test_xex_encrypt_128(void) {
+	AES_CONTEXT ctx = {0};
+	AES_CONTEXT tweak_ctx = {0};
+
+	NEW_ARRAY_FROM(unsigned char, buf, orig_16);
+
+	/* mbedtls requires a mutable IV */
+	NEW_ARRAY_FROM(unsigned char, iv, static_iv);
+
+	/* Test AES XEX 128 Encryption */
+	AES_SETENC_KEY(&ctx, key_aes_128, sizeof(key_aes_128) * 8);
+	AES_SETENC_KEY(&tweak_ctx, key_aes_tweak_128, sizeof(key_aes_tweak_128) * 8);
+
+	AES_XEX(&ctx, &tweak_ctx, AES_ENCRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, expected_xex_128);
+
+	/* Test AES XEX 128 Decryption */
+	memcpy(iv, static_iv, sizeof(iv));
+
+	AES_SETDEC_KEY(&ctx, key_aes_128, sizeof(key_aes_128) * 8);
+
+	AES_XEX(&ctx, &tweak_ctx, AES_DECRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, orig_16);
+
+	AES_FREE(&ctx);
+	AES_FREE(&tweak_ctx);
+}
+
+static void test_xex_encrypt_256(void) {
+	AES_CONTEXT ctx = {0};
+	AES_CONTEXT tweak_ctx = {0};
+
+	NEW_ARRAY_FROM(unsigned char, buf, orig_16);
+
+	/* mbedtls requires a mutable IV */
+	NEW_ARRAY_FROM(unsigned char, iv, static_iv);
+
+	/* Test AES XEX 256 Encryption */
+	AES_SETENC_KEY(&ctx, key_aes_256, sizeof(key_aes_256) * 8);
+	AES_SETENC_KEY(&tweak_ctx, key_aes_tweak_256, sizeof(key_aes_tweak_256) * 8);
+
+	AES_XEX(&ctx, &tweak_ctx, AES_ENCRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, expected_xex_256);
+
+	/* Test AES XEX 256 Decryption */
+	memcpy(iv, static_iv, sizeof(iv));
+
+	AES_SETDEC_KEY(&ctx, key_aes_256, sizeof(key_aes_256) * 8);
+
+	AES_XEX(&ctx, &tweak_ctx, AES_DECRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, orig_16);
+
+	AES_FREE(&ctx);
+	AES_FREE(&tweak_ctx);
+}
+
+static void test_xts_encrypt_128(void) {
+	AES_CONTEXT ctx = {0};
+	AES_CONTEXT tweak_ctx = {0};
+
+	NEW_ARRAY_FROM(unsigned char, buf, orig_16);
+
+	/* mbedtls requires a mutable IV */
+	NEW_ARRAY_FROM(unsigned char, iv, static_iv);
+
+	/* Test AES XTS 128 Encryption */
+	AES_SETENC_KEY(&ctx, key_aes_128, sizeof(key_aes_128) * 8);
+	AES_SETENC_KEY(&tweak_ctx, key_aes_tweak_128, sizeof(key_aes_tweak_128) * 8);
+
+	AES_XTS(&ctx, &tweak_ctx, AES_ENCRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, expected_xts_128);
+
+	/* Test AES XTS 128 Decryption */
+	memcpy(iv, static_iv, sizeof(iv));
+
+	AES_SETDEC_KEY(&ctx, key_aes_128, sizeof(key_aes_128) * 8);
+
+	AES_XTS(&ctx, &tweak_ctx, AES_DECRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, orig_16);
+
+	AES_FREE(&ctx);
+	AES_FREE(&tweak_ctx);
+}
+
+static void test_xts_encrypt_256(void) {
+	AES_CONTEXT ctx = {0};
+	AES_CONTEXT tweak_ctx = {0};
+
+	NEW_ARRAY_FROM(unsigned char, buf, orig_16);
+
+	/* mbedtls requires a mutable IV */
+	NEW_ARRAY_FROM(unsigned char, iv, static_iv);
+
+	/* Test AES XTS 256 Encryption */
+	AES_SETENC_KEY(&ctx, key_aes_256, sizeof(key_aes_256) * 8);
+	AES_SETENC_KEY(&tweak_ctx, key_aes_tweak_256, sizeof(key_aes_tweak_256) * 8);
+
+	AES_XTS(&ctx, &tweak_ctx, AES_ENCRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, expected_xts_256);
+
+	/* Test AES XTS 256 Decryption */
+	memcpy(iv, static_iv, sizeof(iv));
+
+	AES_SETDEC_KEY(&ctx, key_aes_256, sizeof(key_aes_256) * 8);
+
+	AES_XTS(&ctx, &tweak_ctx, AES_DECRYPT, sizeof(buf), iv, buf, buf);
+
+	CHECK_STATIC_BUFFERS(buf, orig_16);
+
+	AES_FREE(&ctx);
+	AES_FREE(&tweak_ctx);
+}
 
 int main(int argc, char *argv[])
 {
@@ -144,6 +263,12 @@ int main(int argc, char *argv[])
 
 	ADD_TEST(test_cbc_encrypt_128);
 	ADD_TEST(test_cbc_encrypt_256);
+
+	ADD_TEST(test_xex_encrypt_128);
+	ADD_TEST(test_xex_encrypt_256);
+
+	ADD_TEST(test_xts_encrypt_128);
+	ADD_TEST(test_xts_encrypt_256);
 
 	printf("--- Statistics ---\n");
 	printf("Total: %d\n", _tests);

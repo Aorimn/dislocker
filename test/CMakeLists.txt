@@ -23,5 +23,5 @@ add_executable(crypto_tests
 
 target_link_libraries(crypto_tests PRIVATE ${PROJECT_NAME} dislocker_crypto_backend)
 
-add_test(NAME cyrpto_tests COMMAND crypto_tests)
+add_test(NAME crypto_tests COMMAND crypto_tests)
 

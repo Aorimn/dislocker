@@ -100,20 +100,3 @@ instance, if you want to compile dislocker-fuse only, you'd simply run:
 $ cmake .
 $ make dislocker-fuse
 ```
-
-## Crypto Backends
-
-One can also change the cryptographic libraries used by using the CMake option "CRYPTO_BACKEND".
-The current options are "mbedtls" the default, and "openssl". You MUST specify those strings exactly.
-For example, to enable the openssl cryptographic backend, do this in your `cmake` command:
-```bash
-cmake -DCRYPTO_BACKEND=openssl <rest of command here>
-```
-
-## Testing
-
-You can enable (the default behavior) or disable testing using the CMake option "BUILD_TESTING".
-For example, to disable testing add `-DBUILD_TESTING=OFF` to your `cmake` command like so:
-```bash
-cmake -DBUILD_TESTING=OFF <rest of command here>
-```

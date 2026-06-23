@@ -20,7 +20,7 @@ another program - see the NOTE section below - will be available.
 
 For Debian-like distros:
 
-- `aptitude install gcc cmake make libfuse-dev libmbedtls-dev ruby-dev pkgconf`
+- `aptitude install gcc cmake make libfuse3-dev libmbedtls-dev ruby-dev pkgconf`
 
 For Fedora-like:
 

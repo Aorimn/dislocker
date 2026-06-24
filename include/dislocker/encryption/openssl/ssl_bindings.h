@@ -45,6 +45,18 @@ struct dis_ossl_aes_ctx {
 #define DIS_OSSL_CIPHER_ECB 0
 #define DIS_OSSL_CIPHER_CBC 1
 
+#if defined(EVP_CIPH_XTS_MODE)
+static inline const EVP_CIPHER *dis_ossl_get_xts_cipher(size_t key_len)
+{
+	switch (key_len)
+	{
+		case 16: return EVP_aes_128_xts();
+		case 32: return EVP_aes_256_xts();
+		default: return NULL;
+	}
+}
+#endif
+
 static inline const EVP_CIPHER *dis_ossl_get_cipher(size_t key_len, int ossl_mode)
 {
 	if (ossl_mode == DIS_OSSL_CIPHER_ECB)
@@ -114,7 +126,6 @@ static inline int dis_ossl_aes_crypt(
 	if (!ossl_cipher)
 		return 1;
 
-	/* Initialization code in AES_SETENC_KEY() or AES_SETDEC_KEY() has called EVP_CIPHER_CTX_new() */
 	EVP_CIPHER_CTX *ossl_ctx = ctx->ossl_ctx;
 	if (!ossl_ctx)
 		return 1;
@@ -130,6 +141,42 @@ static inline int dis_ossl_aes_crypt(
 	return 0;
 }
 
+#if defined(EVP_CIPH_XTS_MODE)
+static inline int dis_ossl_aes_crypt_xts(
+	AES_CONTEXT *crypt_ctx,
+	AES_CONTEXT *tweak_ctx,
+	int mode,
+	size_t size,
+	unsigned char *iv,
+	const unsigned char *input,
+	unsigned char *output)
+{
+	int out_len = 0;
+	unsigned char xts_key[DIS_OSSL_MAX_AES_KEY_BYTES] = {0};
+
+	const EVP_CIPHER *ossl_cipher = dis_ossl_get_xts_cipher(crypt_ctx->len);
+	if (!ossl_cipher)
+		return 1;
+
+	EVP_CIPHER_CTX *ossl_ctx = crypt_ctx->ossl_ctx;
+	if (!ossl_ctx)
+		return 1;
+
+	memcpy(xts_key, crypt_ctx->key, crypt_ctx->len);
+	memcpy(xts_key + crypt_ctx->len, tweak_ctx->key, tweak_ctx->len);
+
+	if (!EVP_CIPHER_CTX_reset(ossl_ctx))
+		return 1;
+
+	if (!EVP_CipherInit_ex(ossl_ctx, ossl_cipher, NULL, xts_key, iv, mode == AES_ENCRYPT)) return 1;
+	if (!EVP_CIPHER_CTX_set_padding(ossl_ctx, 0)) return 1;
+	if (!EVP_CipherUpdate(ossl_ctx, output, &out_len, input, (int)size)) return 1;
+	if (!EVP_CipherFinal_ex(ossl_ctx, &output[out_len], &out_len)) return 1;
+
+	return 0;
+}
+#endif
+
 #define AES_SETENC_KEY(ctx, key, size)  dis_ossl_set_key(ctx, key, size, AES_ENCRYPT)
 #define AES_SETDEC_KEY(ctx, key, size)  dis_ossl_set_key(ctx, key, size, AES_DECRYPT)
 #define AES_FREE(ctx)	dis_ossl_free(ctx)
@@ -144,7 +191,12 @@ static inline int dis_ossl_aes_crypt(
 #define AES_XEX(ctx1, ctx2, mode, size, iv, in, out) \
 			  dis_aes_crypt_xex(ctx1, ctx2, mode, size, iv, in, out)
 
-#define AES_XTS(ctx1, ctx2, mode, size, iv, in, out) \
+#if defined(EVP_CIPH_XTS_MODE)
+#  define AES_XTS(ctx1, ctx2, mode, size, iv, in, out) \
+			  dis_ossl_aes_crypt_xts(ctx1, ctx2, mode, size, iv, in, out)
+#else
+#  define AES_XTS(ctx1, ctx2, mode, size, iv, in, out) \
 			  dis_aes_crypt_xts(ctx1, ctx2, mode, size, iv, in, out)
+#endif
 
 #endif /* SSL_BINDINGS_H */

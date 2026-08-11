@@ -117,20 +117,17 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 
 	/*
-	 * Get volume size directly from dis_metadata_t, which is more accurate.
+	 * The volume's size is resolved lazily by dis_inouts_volume_size(): the
+	 * size found in the metadata describes the encrypted region, which isn't
+	 * necessarily the volume's size, so it's only used as a last resort there.
 	 */
-	io_data->volume_size = io_data->encrypted_volume_size;
-	if(io_data->volume_size == 0 && !dis_metadata_is_decrypted_state(io_data->metadata))
+	io_data->volume_size = 0;
+	if(io_data->encrypted_volume_size == 0 &&
+	   !dis_metadata_is_decrypted_state(io_data->metadata))
 	{
 		dis_printf(L_ERROR, "Can't initialize the volume's size\n");
 		return DIS_RET_ERROR_VOLUME_SIZE_NOT_FOUND;
 	}
-
-	dis_printf(
-		L_INFO,
-		"Found volume's size: 0x%1$" PRIx64 " (%1$" PRIu64 ") bytes\n",
-		io_data->volume_size
-	);
 
 
 	/*

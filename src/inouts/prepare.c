@@ -23,6 +23,8 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "dislocker/inouts/prepare.h"
 #include "dislocker/inouts/sectors.h"
@@ -90,6 +92,92 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 
 
 /**
+ * Get the readable size of the volume, starting at the partition's offset.
+ *
+ * @param dis_ctx The dislocker context used everywhere.
+ * @return The number of readable bytes, or 0 if it couldn't be determined
+ */
+static uint64_t get_readable_size(dis_context_t dis_ctx)
+{
+	struct stat st;
+	off_t size     = 0;
+	off_t part_off = dis_ctx->io_data.part_off;
+	int   fd       = dis_ctx->io_data.volume_fd;
+
+	if(fd < 0)
+		return 0;
+
+	if(fstat(fd, &st) == 0 && S_ISREG(st.st_mode))
+	{
+		size = st.st_size;
+	}
+	else
+	{
+		/* Block devices and the like: ask for the end of the volume */
+		off_t cur = lseek(fd, 0, SEEK_CUR);
+
+		size = lseek(fd, 0, SEEK_END);
+
+		if(cur >= 0)
+			lseek(fd, cur, SEEK_SET);
+	}
+
+	if(size <= 0 || size <= part_off)
+		return 0;
+
+	return (uint64_t)(size - part_off);
+}
+
+
+/**
+ * Get the volume's size from the filesystem's VBR, which is found decrypted at
+ * the beginning of the volume once the decryption keys are known.
+ *
+ * @param dis_ctx The dislocker context used everywhere.
+ * @return The volume's size or 0 if it couldn't be determined
+ */
+static uint64_t get_volume_size_from_fs(dis_context_t dis_ctx)
+{
+	uint64_t volume_size = 0;
+	void* old_vbr = NULL;
+	uint16_t sector_size = dis_ctx->io_data.sector_size;
+	uint8_t* vbr = NULL;
+
+	if(sector_size == 0)
+		return 0;
+
+	vbr = dis_malloc(sector_size);
+	memset(vbr, 0, sector_size);
+
+	if(!read_decrypt_sectors(&dis_ctx->io_data, 1, sector_size, 0, vbr))
+	{
+		dis_printf(
+			L_ERROR,
+			"Unable to read the filesystem's VBR to get the volume's size\n"
+		);
+		dis_free(vbr);
+		return 0;
+	}
+
+	old_vbr = dis_metadata_set_volume_header(dis_ctx->metadata, vbr);
+	volume_size = dis_metadata_volume_size_from_vbr(dis_ctx->metadata);
+	dis_metadata_set_volume_header(dis_ctx->metadata, old_vbr);
+
+	/*
+	 * NTFS doesn't count the backup boot sector, which sits at the very
+	 * end of the volume, in its number of sectors. Only add it if it's a
+	 * an NTFS filesystem 
+	 */
+	if(volume_size && memcmp(&vbr[3], "NTFS    ", 8) == 0)
+		volume_size += sector_size;
+
+	dis_free(vbr);
+
+	return volume_size;
+}
+
+
+/**
  * Prepare a structure which hold data used for decryption/encryption
  *
  * @param dis_ctx The dislocker context used everywhere.
@@ -98,6 +186,8 @@ int init_keys(bitlocker_dataset_t* dataset, datum_key_t* fvek_datum,
 int prepare_crypt(dis_context_t dis_ctx)
 {
 	dis_iodata_t* io_data;
+	uint64_t readable_size = 0;
+	uint64_t fs_volume_size = 0;
 
 	if(!dis_ctx)
 		return DIS_RET_ERROR_DISLOCKER_INVAL;
@@ -117,17 +207,59 @@ int prepare_crypt(dis_context_t dis_ctx)
 	io_data->nb_backup_sectors     = dis_metadata_backup_sectors_count(io_data->metadata);
 
 	/*
-	 * The volume's size is resolved lazily by dis_inouts_volume_size(): the
-	 * size found in the metadata describes the encrypted region, which isn't
-	 * necessarily the volume's size, so it's only used as a last resort there.
+	 * Get volume size directly from dis_metadata_t, which is more accurate.
 	 */
-	io_data->volume_size = 0;
-	if(io_data->encrypted_volume_size == 0 &&
-	   !dis_metadata_is_decrypted_state(io_data->metadata))
+	io_data->volume_size = io_data->encrypted_volume_size;
+	if(io_data->volume_size == 0 && !dis_metadata_is_decrypted_state(io_data->metadata))
 	{
 		dis_printf(L_ERROR, "Can't initialize the volume's size\n");
 		return DIS_RET_ERROR_VOLUME_SIZE_NOT_FOUND;
 	}
+
+	/*
+	 * The size found in the metadata may be bigger than the volume actually is, e. g. 
+	 * when the volume was shrunk. Compare the metadata size to the actually readable size
+	 * and if its larger, try to extract the size from the decrypted filesystem VBR.
+	 */
+	readable_size = get_readable_size(dis_ctx);
+	if(readable_size != 0 && io_data->volume_size > readable_size)
+	{
+		dis_printf(
+			L_WARNING,
+			"Volume's size from the metadata (%1$#" PRIx64 " / %1$" PRIu64
+			" bytes) is bigger than the readable size of the volume (%2$#"
+			PRIx64 " / %2$" PRIu64 " bytes), the volume may have been shrunk "
+			"after having been encrypted\n",
+			io_data->volume_size,
+			readable_size
+		);
+
+		fs_volume_size = get_volume_size_from_fs(dis_ctx);
+
+		/*
+		 * Fallback to the readable size if the filesystem VBR is also bigger.
+		 */
+		if(fs_volume_size != 0 && fs_volume_size <= readable_size)
+			io_data->volume_size = fs_volume_size;
+		else
+			dis_printf(
+				L_WARNING,
+				"Volume's size from the decrypted filesystems VBR (%1$#" PRIx64 " / %1$" PRIu64
+				" bytes) is bigger than the readable size of the volume (%2$#"
+				PRIx64 " / %2$" PRIu64 " bytes), truncating to the readable size "
+				"to prevent I/O errors\n",
+				fs_volume_size,
+				readable_size
+			);
+
+			io_data->volume_size = readable_size;
+	}
+
+	dis_printf(
+		L_INFO,
+		"Found volume's size: 0x%1$" PRIx64 " (%1$" PRIu64 ") bytes\n",
+		io_data->volume_size
+	);
 
 
 	/*

@@ -118,7 +118,7 @@ endif()
 # Libraries
 set (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package (MbedTLS 3 REQUIRED)
+find_package (MbedTLS REQUIRED)
 set (LIB ${LIB} MbedTLS::mbedcrypto)
 
 # Ruby bindings
@@ -255,6 +255,12 @@ add_executable (${BIN_BEK} ${BIN_BEK}.c)
 target_link_libraries (${BIN_BEK} ${PROJECT_NAME})
 set_target_properties (${BIN_BEK} PROPERTIES LINK_FLAGS "-pie -fPIE")
 install (TARGETS ${BIN_BEK} RUNTIME DESTINATION "${bindir}")
+
+set (BIN_RECOVERY ${PROJECT_NAME}-recovery)
+add_executable (${BIN_RECOVERY} ${BIN_RECOVERY}.c)
+target_link_libraries (${BIN_RECOVERY} ${PROJECT_NAME})
+set_target_properties (${BIN_RECOVERY} PROPERTIES LINK_FLAGS "-pie -fPIE")
+install (TARGETS ${BIN_RECOVERY} RUNTIME DESTINATION "${bindir}")
 
 if(RUBY_FOUND)
 	set (BIN_FIND ${PROJECT_NAME}-find)

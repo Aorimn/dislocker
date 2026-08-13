@@ -30,6 +30,7 @@
 
 #include "dislocker/metadata/vmk.h"
 #include "dislocker/metadata/fvek.h"
+#include "dislocker/metadata/datums.h"
 
 #include "dislocker/return_values.h"
 
@@ -171,9 +172,6 @@ int dis_get_access(dis_context_t dis_ctx)
 	 * NOTE -- We could here validate the information buffer in a more precise
 	 * way using the VMK and the validations structure (the one after the
 	 * information one, see bitlocker_validations_t in metadata/metadata.h)
-	 *
-	 * NOTE -- We could here get all of the other key a user could use
-	 * using the VMK and the reverse encrypted data
 	 */
 
 

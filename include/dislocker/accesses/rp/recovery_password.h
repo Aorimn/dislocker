@@ -45,5 +45,7 @@ int prompt_rp(uint8_t** rp);
 
 void print_intermediate_key(uint8_t *result_key);
 
+int extract_recovery_password_from_vmk(dis_metadata_t dis_meta, uint8_t* vmk, char* password);
+
 
 #endif // RECOVERY_PASSWORD_H

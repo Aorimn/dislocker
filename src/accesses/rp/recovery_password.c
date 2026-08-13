@@ -26,6 +26,8 @@
 
 #include "dislocker/accesses/rp/recovery_password.h"
 #include "dislocker/metadata/vmk.h"
+#include "dislocker/metadata/datums.h"
+#include "dislocker/encryption/decrypt.h"
 #include "dislocker/xstd/xsys_select.h"
 
 
@@ -593,4 +595,160 @@ void print_intermediate_key(uint8_t *result_key)
 		snprintf(&s[loop*3], 4, "%02hhx ", result_key[loop]);
 
 	dis_printf(L_INFO, "Intermediate recovery key:\n\t%s\n", s);
+}
+
+
+#define VMK_SIZE 32
+#define RECOVERY_KEY_SIZE 16
+
+/**
+ * Convert 16-byte recovery key material to recovery password string
+ *
+ * @param key_material 16 bytes of recovery key material
+ * @param password Output buffer (must be at least 56 bytes: 8*6 digits + 7 hyphens + null)
+ * @return TRUE on success, FALSE on failure
+ */
+static int recovery_key_to_password(const uint8_t* key_material, char* password)
+{
+	int i;
+	char* p = password;
+
+	for (i = 0; i < NB_RP_BLOCS; i++)
+	{
+		/* Extract 16-bit little-endian value */
+		uint16_t value = (uint16_t)(key_material[i * 2] | (key_material[i * 2 + 1] << 8));
+
+		/* Multiply by 11 to get the 6-digit recovery password group */
+		uint32_t digit_group = (uint32_t)value * 11;
+
+		/* Format as 6-digit group */
+		int written = snprintf(p, 7, "%06u", digit_group);
+		if (written != 6)
+		{
+			dis_printf(L_ERROR, "Error formatting recovery password block %d\n", i + 1);
+			return FALSE;
+		}
+		p += 6;
+
+		/* Add hyphen separator (except after last block) */
+		if (i < NB_RP_BLOCS - 1)
+		{
+			*p++ = '-';
+		}
+	}
+
+	*p = '\0';
+	return TRUE;
+}
+
+
+/**
+ * Extract recovery password from VMK
+ *
+ * Given a decrypted VMK, this function finds the recovery password protector
+ * datum, decrypts it using the VMK, and converts the result to the standard
+ * 8x6-digit recovery password format.
+ *
+ * @param dis_meta The metadata structure
+ * @param vmk The 32-byte Volume Master Key
+ * @param password Output buffer for recovery password (at least 56 bytes)
+ * @return TRUE on success, FALSE on failure
+ */
+int extract_recovery_password_from_vmk(dis_metadata_t dis_meta, uint8_t* vmk, char* password)
+{
+	void* vmk_datum = NULL;
+	void* stretch_datum = NULL;
+	void* aesccm_datum = NULL;
+	datum_aes_ccm_t* aesccm = NULL;
+	void* decrypted = NULL;
+	uint8_t* key_material = NULL;
+	unsigned int header_size;
+	unsigned int payload_size;
+
+	if (!dis_meta || !vmk || !password)
+		return FALSE;
+
+	/*
+	 * Find VMK datum for recovery password protector
+	 * Recovery password protectors have priority range 0x800-0xfff
+	 */
+	if (!get_vmk_datum_from_range(dis_meta, 0x800, 0xfff, &vmk_datum, NULL))
+	{
+		dis_printf(L_DEBUG, "No recovery password protector found in metadata\n");
+		return FALSE;
+	}
+
+	dis_printf(L_DEBUG, "Found VMK datum for recovery password protector\n");
+
+	/*
+	 * Get the nested STRETCH_KEY datum
+	 * This contains the salt and nested AES-CCM data
+	 */
+	if (!get_nested_datumvaluetype(vmk_datum, DATUMS_VALUE_STRETCH_KEY, &stretch_datum) ||
+	    !stretch_datum)
+	{
+		dis_printf(L_DEBUG, "Cannot find STRETCH_KEY datum in VMK datum\n");
+		return FALSE;
+	}
+
+	/*
+	 * Get the nested AES-CCM datum inside the STRETCH_KEY
+	 * This contains the recovery key material encrypted by the VMK
+	 */
+	if (!get_nested_datumvaluetype(stretch_datum, DATUMS_VALUE_AES_CCM, &aesccm_datum) ||
+	    !aesccm_datum)
+	{
+		dis_printf(L_DEBUG, "Cannot find AES-CCM datum in STRETCH_KEY datum\n");
+		return FALSE;
+	}
+
+	aesccm = (datum_aes_ccm_t*)aesccm_datum;
+
+	/* Calculate payload size */
+	header_size = datum_value_types_prop[aesccm->header.value_type].size_header;
+	payload_size = aesccm->header.datum_size - header_size;
+
+	dis_printf(L_DEBUG, "AES-CCM payload size: %u bytes\n", payload_size);
+
+	/* Decrypt the recovery key material using the VMK */
+	if (!decrypt_key(
+		(unsigned char*)aesccm_datum + header_size,
+		payload_size,
+		aesccm->mac,
+		aesccm->nonce,
+		vmk,
+		VMK_SIZE * 8, /* key size in bits */
+		&decrypted))
+	{
+		dis_printf(L_DEBUG, "Failed to decrypt recovery key material\n");
+		return FALSE;
+	}
+
+	/*
+	 * The decrypted data has the following structure:
+	 * - 4 bytes: size
+	 * - 4 bytes: type
+	 * - 4 bytes: algorithm
+	 * - 16 bytes: recovery key material
+	 */
+	if (payload_size < 12 + RECOVERY_KEY_SIZE)
+	{
+		dis_printf(L_DEBUG, "Decrypted data too small (%u bytes)\n", payload_size);
+		dis_free(decrypted);
+		return FALSE;
+	}
+
+	/* Skip the 12-byte header to get to the recovery key material */
+	key_material = (uint8_t*)decrypted + 12;
+
+	/* Convert to recovery password format */
+	if (!recovery_key_to_password(key_material, password))
+	{
+		dis_printf(L_ERROR, "Failed to convert recovery key to password format\n");
+		dis_free(decrypted);
+		return FALSE;
+	}
+
+	dis_free(decrypted);
+	return TRUE;
 }

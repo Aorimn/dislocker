@@ -100,5 +100,18 @@ int dis_destroy(dis_context_t dis_ctx);
  */
 int get_fvevol_fd(dis_context_t dis_ctx);
 
+/**
+ * Retrieve the recovery password from the VMK.
+ * This function requires the VMK to have been successfully decrypted
+ * (i.e., dis_initialize() must have been called with a valid decryption method
+ * and reached at least the DIS_STATE_AFTER_VMK state).
+ *
+ * @param dis_ctx The dislocker context with a decrypted VMK
+ * @param password Output buffer for the recovery password. Must be at least 56
+ * bytes (8 groups of 6 digits, 7 dashes, plus null terminator).
+ * @return DIS_RET_SUCCESS on success, or an error code on failure
+ */
+int dis_get_recovery_password(dis_context_t dis_ctx, char* password);
+
 
 #endif /* DISLOCKER_MAIN_H */

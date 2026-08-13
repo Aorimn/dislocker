@@ -34,6 +34,7 @@
 #include <pthread.h>
 
 #include "dislocker/accesses/accesses.h"
+#include "dislocker/accesses/rp/recovery_password.h"
 #include "dislocker/metadata/datums.h"
 #include "dislocker/metadata/metadata.h"
 #include "dislocker/metadata/print_metadata.h"
@@ -701,6 +702,32 @@ int dis_destroy(dis_context_t dis_ctx)
 int get_fvevol_fd(dis_context_t dis_ctx)
 {
 	return dis_ctx->fve_fd;
+}
+
+
+int dis_get_recovery_password(dis_context_t dis_ctx, char* password)
+{
+	if(!dis_ctx || !password)
+		return DIS_RET_ERROR_DISLOCKER_INVAL;
+
+	/* Check that we have a VMK */
+	if(!dis_ctx->io_data.vmk)
+	{
+		dis_printf(L_ERROR, "No VMK available. Cannot extract recovery password.\n");
+		return DIS_RET_ERROR_VMK_RETRIEVAL;
+	}
+
+	/* Extract VMK key from datum */
+	uint8_t* vmk_key = (uint8_t*)dis_ctx->io_data.vmk + sizeof(datum_key_t);
+
+	/* Call the extraction function */
+	if(!extract_recovery_password_from_vmk(dis_ctx->metadata, vmk_key, password))
+	{
+		dis_printf(L_ERROR, "Failed to extract recovery password from VMK.\n");
+		return DIS_RET_ERROR_RECOVERY_PASSWORD_EXTRACTION;
+	}
+
+	return DIS_RET_SUCCESS;
 }
 
 

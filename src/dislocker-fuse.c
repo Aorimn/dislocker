@@ -54,8 +54,13 @@ dis_context_t dis_ctx;
 /**
  * Stubs used for FUSE operations.
  */
+#ifdef __APPLE__
+static int fs_getattr(const char *path, struct fuse_darwin_attr *stbuf,
+                      struct fuse_file_info *fi)
+#else
 static int fs_getattr(const char *path, struct stat *stbuf,
                       struct fuse_file_info *fi)
+#endif
 {
 	(void) fi;
 	int res = 0;
@@ -63,18 +68,29 @@ static int fs_getattr(const char *path, struct stat *stbuf,
 	if(!path || !stbuf)
 		return -EINVAL;
 
-	memset(stbuf, 0, sizeof(struct stat));
+	memset(stbuf, 0, sizeof(*stbuf));
 	if(strcmp(path, "/") == 0)
 	{
+#ifdef __APPLE__
+		stbuf->mode = S_IFDIR | 0555;
+		stbuf->nlink = 2;
+#else
 		stbuf->st_mode = S_IFDIR | 0555;
 		stbuf->st_nlink = 2;
+#endif
 	}
 	else if(strcmp(path, NTFS_FILERELATIVEPATH) == 0)
 	{
 		mode_t m = dis_is_read_only(dis_ctx) ? 0444 : 0666;
+#ifdef __APPLE__
+		stbuf->mode = S_IFREG | m;
+		stbuf->nlink = 1;
+		stbuf->size = (off_t)dis_inouts_volume_size(dis_ctx);
+#else
 		stbuf->st_mode = S_IFREG | m;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = (off_t)dis_inouts_volume_size(dis_ctx);
+#endif
 	}
 	else
 		res = -ENOENT;
@@ -82,9 +98,15 @@ static int fs_getattr(const char *path, struct stat *stbuf,
 	return res;
 }
 
+#ifdef __APPLE__
+static int fs_readdir(const char *path, void *buf, fuse_darwin_fill_dir_t filler,
+                      off_t offset, struct fuse_file_info *fi,
+                      enum fuse_readdir_flags flags)
+#else
 static int fs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                       off_t offset, struct fuse_file_info *fi,
                       enum fuse_readdir_flags flags)
+#endif
 {
 	/* Both variables aren't used here */
 	(void) offset;

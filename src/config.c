@@ -269,7 +269,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 	int trueval = TRUE;
 
 
-	long_opts = malloc(nb_options * sizeof(struct option));
+	long_opts = calloc(nb_options + 1, sizeof(struct option));
 	while(nb_options--)
 	{
 		long_opts[nb_options].name    = dis_opt[nb_options].opt.name;
@@ -277,6 +277,7 @@ int dis_getopts(dis_context_t dis_ctx, int argc, char** argv)
 		long_opts[nb_options].flag    = dis_opt[nb_options].opt.flag;
 		long_opts[nb_options].val     = dis_opt[nb_options].opt.val;
 	}
+	/* long_opts[nb_options+1] is the required {NULL,0,NULL,0} sentinel, zeroed by calloc */
 
 
 	while((optchar = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)

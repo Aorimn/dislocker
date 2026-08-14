@@ -73,7 +73,7 @@ int decrypt_key(
 		return FALSE;
 
 
-	AES_CONTEXT ctx;
+	AES_CONTEXT ctx = {0};
 
 	uint8_t mac_first [AUTHENTICATOR_LENGTH];
 	uint8_t mac_second[AUTHENTICATOR_LENGTH];
@@ -138,7 +138,7 @@ int decrypt_key(
 	);
 
 
-	memset(&ctx, 0, sizeof(AES_CONTEXT));
+	AES_FREE(&ctx);
 
 
 

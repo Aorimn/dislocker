@@ -28,8 +28,8 @@
 #include "dislocker/encryption/encrypt.h"
 #include "dislocker/encryption/decrypt.h"
 #include "dislocker/encryption/encommon.priv.h"
+#include "ssl_bindings.h"
 
-#include <string.h>
 
 
 /**
@@ -115,6 +115,12 @@ int dis_crypt_set_fvekey(dis_crypt_t crypt, uint16_t algorithm, uint8_t* fvekey)
 
 void dis_crypt_destroy(dis_crypt_t crypt)
 {
-	if(crypt)
-		dis_free(crypt);
+	if (!crypt)
+		return;
+	
+	AES_FREE(&crypt->ctx.FVEK_D_ctx);
+	AES_FREE(&crypt->ctx.FVEK_E_ctx);
+	AES_FREE(&crypt->ctx.TWEAK_D_ctx);
+	AES_FREE(&crypt->ctx.TWEAK_E_ctx);
+	dis_free(crypt);
 }

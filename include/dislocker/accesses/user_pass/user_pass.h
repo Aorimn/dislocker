@@ -39,6 +39,8 @@
 int get_vmk_from_user_pass(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum);
 int get_vmk_from_user_pass2(dis_metadata_t dis_meta, uint8_t** user_password, void** vmk_datum);
 
+int get_vmk_from_tpm_pin(dis_metadata_t dis_meta, dis_config_t* cfg, void** vmk_datum);
+
 int user_key(const uint8_t *user_password, const uint8_t *salt, uint8_t *result_key);
 
 int prompt_up(uint8_t** up);

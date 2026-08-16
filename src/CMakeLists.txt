@@ -265,6 +265,9 @@ endif()
 set (BIN_FILE ${PROJECT_NAME}-file)
 add_executable (${BIN_FILE} ${BIN_FILE}.c)
 target_link_libraries (${BIN_FILE} ${PROJECT_NAME})
+if(RUBY_FOUND)
+	target_link_libraries (${BIN_FILE} ${RUBY_LIBRARY})
+endif()
 set_target_properties (${BIN_FILE} PROPERTIES LINK_FLAGS "-pie -fPIE")
 add_custom_command (TARGET ${BIN_FILE} POST_BUILD
 	COMMAND mkdir -p ${CMAKE_BINARY_DIR}/man/
@@ -277,12 +280,18 @@ install (FILES ${CMAKE_BINARY_DIR}/man/${BIN_FILE}.1.gz DESTINATION "${mandir}/m
 set (BIN_METADATA ${PROJECT_NAME}-metadata)
 add_executable (${BIN_METADATA} ${BIN_METADATA}.c)
 target_link_libraries (${BIN_METADATA} ${PROJECT_NAME})
+if(RUBY_FOUND)
+	target_link_libraries (${BIN_METADATA} ${RUBY_LIBRARY})
+endif()
 set_target_properties (${BIN_METADATA} PROPERTIES LINK_FLAGS "-pie -fPIE")
 install (TARGETS ${BIN_METADATA} RUNTIME DESTINATION "${bindir}")
 
 set (BIN_BEK ${PROJECT_NAME}-bek)
 add_executable (${BIN_BEK} ${BIN_BEK}.c)
 target_link_libraries (${BIN_BEK} ${PROJECT_NAME})
+if(RUBY_FOUND)
+	target_link_libraries (${BIN_BEK} ${RUBY_LIBRARY})
+endif()
 set_target_properties (${BIN_BEK} PROPERTIES LINK_FLAGS "-pie -fPIE")
 install (TARGETS ${BIN_BEK} RUNTIME DESTINATION "${bindir}")
 

@@ -201,9 +201,14 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 	dis_printf(L_DEBUG, "Header safe: %#x, %#x, %#x, %#x\n", header->datum_size,
 			header->entry_type, header->value_type, header->error_status);
 
-	/* Now check if the header is good */
+	/*
+	 * Now check if the header is good
+	 *
+	 * NOTE: value_type is used as an index into datum_value_types_prop[], which
+	 * holds NB_DATUMS_VALUE_TYPES entries, hence the >= comparison
+	 */
 	if(header->datum_size < sizeof(datum_header_safe_t) ||
-	   header->value_type > NB_DATUMS_VALUE_TYPES)
+	   header->value_type >= NB_DATUMS_VALUE_TYPES)
 		return FALSE;
 
 	return TRUE;
@@ -586,8 +591,26 @@ int get_next_datum(
 
 	bitlocker_dataset_t* dataset = dis_meta->dataset;
 	void* datum = NULL;
-	void* limit = (char*)dataset + dataset->size;
+	char* limit = (char*)dataset + dataset->size;
 	datum_header_safe_t header;
+
+	/*
+	 * Defense in depth: get_dataset() already bounds dataset->size against the
+	 * metadata buffer holding it, but don't take that field's word for it here.
+	 * Recompute the end of that buffer -- the very same way get_metadata()
+	 * sized it -- and never walk past it, whatever dataset->size claims.
+	 */
+	if(dis_meta->information)
+	{
+		bitlocker_information_t* information = dis_meta->information;
+		size_t metadata_size = (size_t)(information->version == V_SEVEN ?
+		                  (size_t)information->size << 4 : information->size);
+		char* metadata_end = (char*)information + metadata_size;
+
+		/* The `< dataset' case catches a pointer wrap-around */
+		if(limit > metadata_end || limit < (char*)dataset)
+			limit = metadata_end;
+	}
 
 	*datum_result = NULL;
 	memset(&header, 0, sizeof(datum_header_safe_t));
@@ -598,7 +621,7 @@ int get_next_datum(
 
 	while(1)
 	{
-		if(datum + 8 >= limit)
+		if((char*)datum + sizeof(datum_header_safe_t) >= limit)
 		{
 			dis_printf(L_DEBUG, "Hit limit, search failed.\n");
 			break;
@@ -606,6 +629,17 @@ int get_next_datum(
 
 		if(!get_header_safe(datum, &header))
 			break;
+
+		/*
+		 * A datum announcing a size which makes it overrun the dataset cannot
+		 * be trusted: every consumer of this datum (get_payload_safe(),
+		 * get_nested_datum(), get_vmk(), ...) reads datum_size bytes from it
+		 */
+		if((char*)datum + header.datum_size > limit)
+		{
+			dis_printf(L_DEBUG, "Datum overruns the dataset, search failed.\n");
+			break;
+		}
 
 		if(value_type == UINT16_MAX && entry_type == UINT16_MAX)
 		{
@@ -663,6 +697,14 @@ int get_nested_datum(void* datum, void** datum_nested)
 		return FALSE;
 
 	uint16_t size = datum_value_types_prop[header.value_type].size_header;
+
+	/*
+	 * There's only a nested datum if the enclosing datum is big enough to hold
+	 * both its own header and, at the very least, the nested datum's header
+	 */
+	if(header.datum_size < size + sizeof(datum_header_safe_t))
+		return FALSE;
+
 	*datum_nested = (char*)datum + size;
 
 	return TRUE;
@@ -696,6 +738,9 @@ int get_nested_datumvaluetype(void* datum, dis_datums_value_type_t value_type, v
 	if(!get_header_safe(*datum_nested, &nested_header))
 		return FALSE;
 
+	/* The enclosing datum's end, no nested datum may go past it */
+	char* nested_limit = (char*)datum + header.datum_size;
+
 	/* While we don't have the type we're looking for */
 	while(nested_header.value_type != value_type)
 	{
@@ -703,13 +748,17 @@ int get_nested_datumvaluetype(void* datum, dis_datums_value_type_t value_type, v
 		*datum_nested += nested_header.datum_size;
 
 		/* If we're not into the datum anymore */
-		if((char*)datum + header.datum_size <= (char*)*datum_nested)
+		if(nested_limit < (char*)*datum_nested + sizeof(datum_header_safe_t))
 			return FALSE;
 
 		if(!get_header_safe(*datum_nested, &nested_header))
 			return FALSE;
 
 	}
+
+	/* The nested datum found has to be entirely contained into its parent */
+	if(nested_limit < (char*)*datum_nested + nested_header.datum_size)
+		return FALSE;
 
 	return TRUE;
 }

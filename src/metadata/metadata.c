@@ -28,6 +28,8 @@
 #include "dislocker/metadata/print_metadata.h"
 #include "dislocker/dislocker.priv.h"
 
+#include <stddef.h>
+
 /*
  * On Darwin and FreeBSD, files are opened using 64 bits offsets/variables
  * and O_LARGEFILE isn't defined
@@ -755,14 +757,50 @@ static int get_dataset(void* metadata, bitlocker_dataset_t** dataset)
 	bitlocker_information_t* information = metadata;
 	*dataset = &information->dataset;
 
+	/*
+	 * The dataset is embedded into the metadata buffer, which get_metadata()
+	 * allocated using the very same computation as below. Therefore the dataset
+	 * cannot span further than what's left of that buffer once the information
+	 * header preceding it is taken into account.
+	 *
+	 * Without this bound, a crafted volume could announce a dataset size way
+	 * bigger than the buffer actually holding it, leading the datum-walking
+	 * code to read heap memory past the allocation.
+	 */
+	size_t metadata_size = (size_t)(information->version == V_SEVEN ?
+	                      (size_t)information->size << 4 : information->size);
+	size_t dataset_offset = offsetof(bitlocker_information_t, dataset);
+
+	if(metadata_size < dataset_offset + sizeof(bitlocker_dataset_t))
+	{
+		dis_printf(
+			L_DEBUG,
+			"Metadata size (%#zx) too small to hold a dataset\n",
+			metadata_size
+		);
+		return FALSE;
+	}
+
+	size_t max_dataset_size = metadata_size - dataset_offset;
+
 	/* Check this dataset validity */
 	if(
-		(*dataset)->copy_size < (*dataset)->header_size
+		(*dataset)->header_size < sizeof(bitlocker_dataset_t)
+		|| (*dataset)->copy_size < (*dataset)->header_size
 		|| (*dataset)->size   > (*dataset)->copy_size
+		|| (*dataset)->size   < (*dataset)->header_size
+		|| (*dataset)->size   > max_dataset_size
 		|| (*dataset)->copy_size - (*dataset)->header_size < 8
 	)
 	{
-		dis_printf(L_DEBUG, "size=%#x, copy_size=%#x, header_size=%#x\n");
+		dis_printf(
+			L_DEBUG,
+			"size=%#x, copy_size=%#x, header_size=%#x, max_size=%#zx\n",
+			(*dataset)->size,
+			(*dataset)->copy_size,
+			(*dataset)->header_size,
+			max_dataset_size
+		);
 		return FALSE;
 	}
 

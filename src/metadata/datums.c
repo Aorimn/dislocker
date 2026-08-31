@@ -216,6 +216,28 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 
 
 /**
+ * Compute the size of a datum's payload, that is what remains of the datum once
+ * its type-specific header is taken away.
+ *
+ * datum_size comes straight from the volume and get_header_safe() only
+ * guarantees it to be 8 or more, while most type-specific headers are bigger
+ * than that. Subtracting one from the other without checking would wrap around
+ * and yield a ~4GB size, hence this helper.
+ *
+ * @param datum_size The datum's announced size
+ * @param header_size The size of this datum type's header
+ * @return The payload's size, or 0 when the datum is too small to hold one
+ */
+static size_t datum_payload_size(uint16_t datum_size, size_t header_size)
+{
+	if((size_t)datum_size <= header_size)
+		return 0;
+
+	return (size_t)datum_size - header_size;
+}
+
+
+/**
  * Get the payload based on the datum's size and value type
  *
  * @param data The data to take the payload from
@@ -237,10 +259,10 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
 
 	size_header = datum_value_types_prop[header.value_type].size_header;
 
-	if(header.datum_size <= size_header)
-		return FALSE;
+	*size_payload = datum_payload_size(header.datum_size, size_header);
 
-	*size_payload = (size_t)(header.datum_size - size_header);
+	if(*size_payload == 0)
+		return FALSE;
 
 	*payload = dis_malloc(*size_payload);
 
@@ -310,7 +332,8 @@ void print_datum_generic(DIS_LOGS level, void* vdatum)
 
 	dis_printf(level, "Generic datum:\n");
 	hexdump(level, (void*)((char*)datum + sizeof(datum_generic_type_t)),
-			datum->header.datum_size - sizeof(datum_generic_type_t));
+			datum_payload_size(datum->header.datum_size,
+			                   sizeof(datum_generic_type_t)));
 }
 
 
@@ -338,7 +361,7 @@ void print_datum_key(DIS_LOGS level, void* vdatum)
 	hexdump(
 		level,
 		(void*) ((char*) datum + sizeof(datum_key_t)),
-		datum->header.datum_size - sizeof(datum_key_t)
+		datum_payload_size(datum->header.datum_size, sizeof(datum_key_t))
 	);
 
 	dis_free(cipher_str);
@@ -348,11 +371,14 @@ void print_datum_unicode(DIS_LOGS level, void* vdatum)
 {
 	datum_unicode_t* datum = (datum_unicode_t*) vdatum;
 
-	size_t utf16_length = (datum->header.datum_size - sizeof(datum_unicode_t));
-	wchar_t* wchar_s = dis_malloc(
-		((datum->header.datum_size - sizeof(datum_unicode_t)) / 2)
-		* sizeof(wchar_t)
-	);
+	size_t utf16_length = datum_payload_size(datum->header.datum_size,
+	                                         sizeof(datum_unicode_t));
+
+	/* Nothing to print if the datum can't hold a string */
+	if(utf16_length < 2)
+		return;
+
+	wchar_t* wchar_s = dis_malloc((utf16_length / 2) * sizeof(wchar_t));
 
 	/*
 	 * This datum's payload is an UTF-16 string finished by \0
@@ -410,7 +436,7 @@ void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
 	hexdump(
 		level,
 		(void*) ((char*) datum + sizeof(datum_aes_ccm_t)),
-		datum->header.datum_size - sizeof(datum_aes_ccm_t)
+		datum_payload_size(datum->header.datum_size, sizeof(datum_aes_ccm_t))
 	);
 }
 
@@ -423,7 +449,7 @@ void print_datum_tpmenc(DIS_LOGS level, void* vdatum)
 	hexdump(
 		level,
 		(void*) ((char*) datum + sizeof(datum_tpm_enc_t)),
-		datum->header.datum_size - sizeof(datum_tpm_enc_t)
+		datum_payload_size(datum->header.datum_size, sizeof(datum_tpm_enc_t))
 	);
 }
 
@@ -970,7 +996,8 @@ VALUE rb_datum_generic_to_s(VALUE self)
 
 	rb_str_concat(rb_str, rb_hexdump(
 		(uint8_t*) datum + sizeof(datum_generic_type_t),
-		datum->header.datum_size - sizeof(datum_generic_type_t)
+		datum_payload_size(datum->header.datum_size,
+		                   sizeof(datum_generic_type_t))
 	));
 
 	return rb_str;
@@ -1008,7 +1035,7 @@ VALUE rb_datum_key_to_s(VALUE self)
 	rb_str_cat2(rb_str, "Key:\n");
 	rb_str_concat(rb_str, rb_hexdump(
 		(uint8_t*) datum + sizeof(datum_key_t),
-		datum->header.datum_size - sizeof(datum_key_t)
+		datum_payload_size(datum->header.datum_size, sizeof(datum_key_t))
 	));
 
 	dis_free(cipher_str);
@@ -1026,11 +1053,14 @@ VALUE rb_datum_unicode_to_s(VALUE self)
 	if(datum == NULL)
 		return rb_str;
 
-	size_t utf16_length = (datum->header.datum_size - sizeof(datum_unicode_t));
-	wchar_t* wchar_s = dis_malloc(
-		((datum->header.datum_size - sizeof(datum_unicode_t)) / 2)
-		* sizeof(wchar_t)
-	);
+	size_t utf16_length = datum_payload_size(datum->header.datum_size,
+	                                         sizeof(datum_unicode_t));
+
+	/* Nothing to print if the datum can't hold a string */
+	if(utf16_length < 2)
+		return rb_str;
+
+	wchar_t* wchar_s = dis_malloc((utf16_length / 2) * sizeof(wchar_t));
 
 	/*
 	 * This datum's payload is an UTF-16 string finished by \0
@@ -1118,7 +1148,7 @@ VALUE rb_datum_aes_ccm_to_s(VALUE self)
 	rb_str_cat2(rb_str, "Payload:\n");
 	rb_str_concat(rb_str, rb_hexdump(
 		(uint8_t*) ((char*) datum + sizeof(datum_aes_ccm_t)),
-		datum->header.datum_size - sizeof(datum_aes_ccm_t)
+		datum_payload_size(datum->header.datum_size, sizeof(datum_aes_ccm_t))
 	));
 
 	return rb_str;
@@ -1138,7 +1168,7 @@ VALUE rb_datum_tpmenc_to_s(VALUE self)
 	rb_str_cat2(rb_str, "Payload:\n");
 	rb_str_concat(rb_str, rb_hexdump(
 		(uint8_t*) ((char*) datum + sizeof(datum_tpm_enc_t)),
-		datum->header.datum_size - sizeof(datum_tpm_enc_t)
+		datum_payload_size(datum->header.datum_size, sizeof(datum_tpm_enc_t))
 	));
 
 	return rb_str;

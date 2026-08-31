@@ -94,7 +94,38 @@ int get_fvek(dis_metadata_t dis_meta, void* vmk_datum, void** fvek_datum)
 	}
 
 	fvek = (datum_aes_ccm_t*)*fvek_datum;
+
+	if(fvek->header.value_type >= NB_DATUMS_VALUE_TYPES)
+	{
+		dis_printf(
+			L_CRITICAL,
+			"The FVEK datum's value type is out of range: %hu. Abort.\n",
+			fvek->header.value_type
+		);
+		dis_free(vmk_key);
+		return FALSE;
+	}
+
 	header_size = datum_value_types_prop[fvek->header.value_type].size_header;
+
+	/*
+	 * get_header_safe() only enforces a datum_size of at least 8 bytes, which
+	 * is less than this datum type's header. Subtracting without checking would
+	 * wrap around and hand a huge size down to decrypt_key()
+	 */
+	if(fvek->header.datum_size <= header_size)
+	{
+		dis_printf(
+			L_CRITICAL,
+			"The FVEK datum's size (%hu) is not bigger than its header's size "
+			"(%u). Abort.\n",
+			fvek->header.datum_size,
+			header_size
+		);
+		dis_free(vmk_key);
+		return FALSE;
+	}
+
 	fvek_size = fvek->header.datum_size - header_size;
 
 	if(vmk_key_size > (size_t) (UINT_MAX / 8))

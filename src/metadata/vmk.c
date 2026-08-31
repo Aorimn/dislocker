@@ -149,15 +149,47 @@ int get_vmk(datum_aes_ccm_t* vmk_datum, uint8_t* recovery_key, size_t key_size,
 	unsigned int vmk_size = 0;
 	unsigned int header_size = 0;
 
+	/*
+	 * Validate the datum's size before anything else, printing included: the
+	 * printing routines derive a payload size from it too.
+	 */
+	if(vmk_datum->header.value_type >= NB_DATUMS_VALUE_TYPES)
+	{
+		dis_printf(
+			L_ERROR,
+			"The VMK datum's value type is out of range: %hu. Abort.\n",
+			vmk_datum->header.value_type
+		);
+		return FALSE;
+	}
+
+	header_size = datum_value_types_prop[vmk_datum->header.value_type].size_header;
+
+	/*
+	 * get_header_safe() only enforces a datum_size of at least 8 bytes, which
+	 * is less than this datum type's header. Subtracting without checking would
+	 * wrap around and hand a huge size down to decrypt_key()
+	 */
+	if(vmk_datum->header.datum_size <= header_size)
+	{
+		dis_printf(
+			L_ERROR,
+			"The VMK datum's size (%hu) is not bigger than its header's size "
+			"(%u). Abort.\n",
+			vmk_datum->header.datum_size,
+			header_size
+		);
+		return FALSE;
+	}
+
+	vmk_size = vmk_datum->header.datum_size - header_size;
+
 	dis_printf(L_DEBUG, "=====================[ ENCRYPTED VMK ]====================\n");
 	print_one_datum(L_DEBUG, *vmk);
 	dis_printf(L_DEBUG, "==========================================================\n");
 	dis_printf(L_DEBUG, "=====================[ RECOVERY KEY ]=====================\n");
 	hexdump(L_DEBUG, recovery_key, key_size);
 	dis_printf(L_DEBUG, "==========================================================\n");
-
-	header_size = datum_value_types_prop[vmk_datum->header.value_type].size_header;
-	vmk_size = vmk_datum->header.datum_size - header_size;
 
 	if(key_size > (size_t) (UINT_MAX / 8))
 	{

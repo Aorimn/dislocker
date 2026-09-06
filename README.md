@@ -1,4 +1,4 @@
-# Dislocker [![Build Status](https://travis-ci.org/Aorimn/dislocker.svg?branch=develop)](https://travis-ci.org/Aorimn/dislocker)
+# Dislocker
 
 ## Introduction and explanations
 

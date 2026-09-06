@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 26.04 / GCC
+            os: ubuntu-26.04
+            compiler: gcc
+            cc: gcc
+            cmake_args: ""
+
+          - name: Ubuntu 26.04 / Clang
+            os: ubuntu-26.04
+            compiler: clang
+            cc: clang
+            cmake_args: ""
+
+          - name: Ubuntu 26.04 / Clang / noruby
+            os: ubuntu-26.04
+            compiler: clang
+            cc: clang
+            cmake_args: -DWITH_RUBY=OFF
+
+          - name: macOS 15 / Clang
+            os: macos-15
+            compiler: clang
+            cc: /usr/bin/clang
+            cmake_args: -DCMAKE_C_COMPILER=/usr/bin/clang
+
+          - name: macOS 26 / Clang
+            os: macos-26
+            compiler: clang
+            cc: /usr/bin/clang
+            cmake_args: -DCMAKE_C_COMPILER=/usr/bin/clang
+
+    env:
+      CC: ${{ matrix.cc }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            make \
+            pkg-config \
+            libfuse3-dev \
+            libmbedtls-dev \
+            ruby-dev
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake pkg-config ruby
+          brew install --cask macfuse
+          brew install mbedtls@3
+          echo "$(brew --prefix ruby)/bin" >> "$GITHUB_PATH"
+
+      - name: Configure
+        run: cmake . ${{ matrix.cmake_args }}
+
+      - name: Build
+        run: make VERBOSE=1
+
+      - name: Install
+        run: sudo make install
+
+      - name: Test
+        run: |
+          make github-test
+          make test
+

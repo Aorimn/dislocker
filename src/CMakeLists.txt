@@ -205,6 +205,7 @@ install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${libdir}")
 if (${APPLE})
 	set (BUNDLE_NAME ${PROJECT_NAME}_bundle)
 	add_library (${BUNDLE_NAME} MODULE ${SOURCES})
+	target_include_directories (${BUNDLE_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 	target_link_libraries (${BUNDLE_NAME} ${LIB})
 	set_target_properties (${BUNDLE_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} SUFFIX .bundle)
 	install (TARGETS ${BUNDLE_NAME} DESTINATION "${libdir}")
@@ -227,6 +228,10 @@ if(CRYPTO_BACKEND STREQUAL "mbedtls")
     PUBLIC
     ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/mbedtls
   )
+  if (${APPLE})
+    target_link_libraries(${BUNDLE_NAME} MbedTLS::mbedcrypto)
+    target_include_directories(${BUNDLE_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/mbedtls)
+  endif()
 elseif(CRYPTO_BACKEND STREQUAL "openssl")
   find_package(OpenSSL 1.1.0 REQUIRED)
   target_link_libraries(${PROJECT_NAME}
@@ -317,8 +322,8 @@ endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
 
-# Travis' test target
-add_custom_target(travis-test
+# GitHub test target
+add_custom_target(github-test
 	COMMAND ${BIN_FUSE} -h
 	COMMAND ${BIN_FILE} -h
 	COMMAND ${BIN_METADATA} -h

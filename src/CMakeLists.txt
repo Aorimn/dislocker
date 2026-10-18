@@ -198,14 +198,15 @@ endif()
 # Targets
 add_library (${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories (${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries (${PROJECT_NAME} PRIVATE ${LIB})
+target_link_libraries (${PROJECT_NAME} PRIVATE ${LIB} dislocker_crypto_backend)
 set_target_properties (${PROJECT_NAME} PROPERTIES VERSION "${VERSION}" SOVERSION "${VERSION_MAJOR}.${VERSION_MINOR}")
 install (TARGETS ${PROJECT_NAME} LIBRARY DESTINATION "${libdir}")
 
 if (${APPLE})
 	set (BUNDLE_NAME ${PROJECT_NAME}_bundle)
 	add_library (${BUNDLE_NAME} MODULE ${SOURCES})
-	target_link_libraries (${BUNDLE_NAME} ${LIB})
+	target_include_directories (${BUNDLE_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
+	target_link_libraries (${BUNDLE_NAME} PRIVATE ${LIB} dislocker_crypto_backend)
 	set_target_properties (${BUNDLE_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME} SUFFIX .bundle)
 	install (TARGETS ${BUNDLE_NAME} DESTINATION "${libdir}")
 endif()
@@ -218,25 +219,17 @@ add_library(dislocker_crypto_backend INTERFACE)
 message(STATUS "Crypto backend: ${CRYPTO_BACKEND}")
 if(CRYPTO_BACKEND STREQUAL "mbedtls")
   find_package (MbedTLS 3 REQUIRED)
-  target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-      MbedTLS::mbedcrypto
-  )
   target_link_libraries(dislocker_crypto_backend INTERFACE MbedTLS::mbedcrypto)
-  target_include_directories(${PROJECT_NAME}
-    PUBLIC
-    ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/mbedtls
+  target_include_directories(dislocker_crypto_backend
+    INTERFACE
+    ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/mbedtls
   )
 elseif(CRYPTO_BACKEND STREQUAL "openssl")
   find_package(OpenSSL 1.1.0 REQUIRED)
-  target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-      OpenSSL::Crypto
-  )
   target_link_libraries(dislocker_crypto_backend INTERFACE OpenSSL::Crypto)
-  target_include_directories(${PROJECT_NAME}
-    PUBLIC
-    ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/openssl
+  target_include_directories(dislocker_crypto_backend
+    INTERFACE
+    ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/encryption/openssl
   )
 else()
   message(FATAL_ERROR "Unknown CRYPTO_BACKEND='${CRYPTO_BACKEND}'.")

@@ -1,0 +1,84 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux (${{ matrix.cc }}, ${{ matrix.crypto }})
+    runs-on: ubuntu-latest
+    # Ubuntu runners ship mbedTLS 2.28, while dislocker requires mbedTLS 3
+    container: debian:trixie
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+        crypto: [mbedtls, openssl]
+    env:
+      CC: ${{ matrix.cc }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          CRYPTO_PKG=${{ matrix.crypto == 'mbedtls' && 'libmbedtls-dev' || 'libssl-dev' }}
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            ${{ matrix.cc }} make cmake pkgconf libfuse3-dev ruby-dev "$CRYPTO_PKG"
+
+      - name: Configure
+        run: cmake -S . -B build -DCRYPTO_BACKEND=${{ matrix.crypto }} -DWITH_RUBY=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  macos:
+    name: macOS (${{ matrix.crypto }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crypto: [mbedtls, openssl]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install pkgconf
+          brew install --cask macfuse
+          if [ "${{ matrix.crypto }}" = "mbedtls" ]; then
+            # dislocker needs mbedTLS 3; the unversioned formula may be newer
+            if brew info mbedtls@3 >/dev/null 2>&1; then
+              CRYPTO_FORMULA=mbedtls@3
+            else
+              CRYPTO_FORMULA=mbedtls
+            fi
+          else
+            CRYPTO_FORMULA=openssl@3
+          fi
+          brew install "$CRYPTO_FORMULA"
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix "$CRYPTO_FORMULA")" >> "$GITHUB_ENV"
+          # macFUSE installs fuse3.pc outside of Homebrew's prefix
+          echo "PKG_CONFIG_PATH=/usr/local/lib/pkgconfig" >> "$GITHUB_ENV"
+
+      - name: Configure
+        run: cmake -S . -B build -DCRYPTO_BACKEND=${{ matrix.crypto }} -DWITH_RUBY=OFF
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure

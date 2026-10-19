@@ -1,4 +1,4 @@
-# Dislocker [![Build Status](https://travis-ci.org/Aorimn/dislocker.svg?branch=develop)](https://travis-ci.org/Aorimn/dislocker)
+# Dislocker [![Tests](https://github.com/Aorimn/dislocker/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Aorimn/dislocker/actions/workflows/tests.yml)
 
 ## Introduction and explanations
 

@@ -34,7 +34,7 @@ jobs:
           CRYPTO_PKG=${{ matrix.crypto == 'mbedtls' && 'libmbedtls-dev' || 'libssl-dev' }}
           apt-get update -qq
           apt-get install -y --no-install-recommends \
-            ${{ matrix.cc }} make cmake pkgconf libfuse3-dev ruby-dev "$CRYPTO_PKG"
+            ${{ matrix.cc }} make cmake pkgconf libfuse3-dev ruby-dev man-db "$CRYPTO_PKG"
 
       - name: Configure
         run: cmake -S . -B build -DCRYPTO_BACKEND=${{ matrix.crypto }} -DWITH_RUBY=ON
@@ -44,6 +44,20 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: Install
+        run: |
+          cmake --install build
+          ldconfig
+
+      - name: Check installed binaries and man pages
+        run: |
+          for bin in dislocker dislocker-fuse dislocker-file dislocker-metadata dislocker-bek dislocker-find; do
+            "$bin" -h
+          done
+          for page in dislocker dislocker-fuse dislocker-file dislocker-find; do
+            man -w "$page"
+          done
 
   macos:
     name: macOS (${{ matrix.crypto }})
@@ -82,3 +96,16 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: Install
+        run: sudo cmake --install build
+
+      # dislocker-find needs the Ruby bindings, which are disabled on macOS
+      - name: Check installed binaries and man pages
+        run: |
+          for bin in dislocker dislocker-fuse dislocker-file dislocker-metadata dislocker-bek; do
+            "$bin" -h
+          done
+          for page in dislocker dislocker-fuse dislocker-file; do
+            man -w "$page"
+          done

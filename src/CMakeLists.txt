@@ -309,13 +309,3 @@ else()
 endif()
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_FILES}")
-
-# Travis' test target
-add_custom_target(travis-test
-	COMMAND ${BIN_FUSE} -h
-	COMMAND ${BIN_FILE} -h
-	COMMAND ${BIN_METADATA} -h
-	COMMAND ${BIN_BEK} -h
-	COMMAND ${BIN_FIND} -h
-	COMMAND man -w dislocker
-)

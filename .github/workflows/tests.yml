@@ -59,6 +59,39 @@ jobs:
             man -w "$page"
           done
 
+  freebsd:
+    name: FreeBSD (${{ matrix.crypto }})
+    # GitHub has no FreeBSD runners, so the job runs inside a VM on Linux
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crypto: [mbedtls, openssl]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build, test and install in a FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.3"
+          usesh: true
+          prepare: |
+            # OpenSSL ships with the base system; mbedTLS 3 comes from ports
+            CRYPTO_PKG=${{ matrix.crypto == 'mbedtls' && 'mbedtls3' || '' }}
+            pkg install -y cmake pkgconf fusefs-libs3 ruby $CRYPTO_PKG
+          run: |
+            set -e
+            cmake -S . -B build -DCRYPTO_BACKEND=${{ matrix.crypto }} -DWITH_RUBY=ON
+            cmake --build build --parallel
+            ctest --test-dir build --output-on-failure
+            cmake --install build
+            for bin in dislocker dislocker-fuse dislocker-file dislocker-metadata dislocker-bek dislocker-find; do
+              "$bin" -h
+            done
+            for page in dislocker dislocker-fuse dislocker-file dislocker-find; do
+              man -w "$page"
+            done
+
   macos:
     name: macOS (${{ matrix.crypto }})
     runs-on: macos-latest

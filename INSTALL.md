@@ -38,7 +38,7 @@ already existing RPM packages in EPEL could be a clever idea.
 
 For FreeBSD:
 
-- `pkg install cmake gmake fusefs-libs mbedtls3`
+- `pkg install cmake gmake pkgconf fusefs-libs3 mbedtls3`
 
 For OSX: Follow the instructions in the next section.
 

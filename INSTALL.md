@@ -8,7 +8,7 @@ You need:
 
 - Compiler, gcc or clang;
 - cmake (at least version 2.6);
-- make (or gmake, for FreeBSD);
+- make;
 - pkg-config;
 - Headers for FUSE3;
 - Headers for mbedTLS 3;
@@ -38,7 +38,7 @@ already existing RPM packages in EPEL could be a clever idea.
 
 For FreeBSD:
 
-- `pkg install cmake gmake pkgconf fusefs-libs3 mbedtls3`
+- `pkg install cmake pkgconf fusefs-libs3 mbedtls3`
 
 For OSX: Follow the instructions in the next section.
 
@@ -62,10 +62,6 @@ brew install Caskroom/cask/macfuse
 brew install src/dislocker.rb
 ```
 This will install dislocker.
-
-## If you're on FreeBSD...
-
-Follow the instructions below (next subsection) by replacing 'make' with 'gmake'.
 
 ## If you are NOT on MacOSX...
 

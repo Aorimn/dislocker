@@ -40,7 +40,7 @@ For FreeBSD:
 
 - `pkg install cmake pkgconf fusefs-libs3 mbedtls3`
 
-For OSX: Follow the instructions in the next section.
+For macOS: Follow the instructions in the next section.
 
 Note that the code expects at least FUSE 3.14.
 
@@ -51,19 +51,23 @@ Install HomeBrew https://brew.sh
 
 # INSTALLING
 
-Each OS type has its own section below, beware to follow yours:
+## With Homebrew
 
-## If you are on MacOSX...
+Prebuilt packages are maintained outside of this repository. Install Homebrew
+(https://brew.sh) and run the following commands.
 
-Just install Homebrew (http://brew.sh/) and run the following commands:
+On macOS, which needs the closed-source macFUSE:
 ```
-brew update
-brew install Caskroom/cask/macfuse
-brew install src/dislocker.rb
+brew install --cask macfuse
+brew install gromgit/fuse/dislocker-mac
 ```
-This will install dislocker.
 
-## If you are NOT on MacOSX...
+On Linux:
+```
+brew install dislocker
+```
+
+## From source
 
 If you already have installed the dependencies (see REQUIREMENTS section above),
 you have to type the following commands to install the binaries on your system:

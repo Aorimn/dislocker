@@ -1,3 +1,33 @@
+# v0.7.4
+- Security fixes:
+    - The metadata parser is now bounded to the allocated metadata buffer
+    - Datums smaller than their own type header are now rejected
+    - Fix out-of-bounds reads on datum value types
+
+- Bugfixes:
+    - Fix possible NULL dereference on failed allocations and a memory leak
+    - Fix the virtualization datum structure alignment and Windows Vista support
+    - Fix reading EOW information and incorrect CRC checks
+    - Volume size now prefers the BitLocker metadata and only falls back to the
+    decrypted filesystem's VBR when it is bigger than the readable data range
+    - Fix macOS build and a crash when parsing arguments
+    - Fix build with Ruby 3.x and recent binutils
+
+- Feature improvement:
+    - Add an OpenSSL crypto backend, including AES-XTS support
+    - Add `--fvek` support for 128-bit keys
+    - Support multibyte characters in passwords
+    - Try additional recovery passwords when the first one fails
+    - Decrypted volumes can now be mounted
+    - The BitLocker recovery key identifier is now clearly highlighted
+
+- Compatibility improvement:
+    - Switch to FUSE 3 (at least 3.14), including the latest FUSE on macOS
+    - Require mbedTLS 3, older versions are no longer supported
+    - Require CMake 3.5 or later
+    - FUSE and Ruby bindings can now be explicitly disabled
+    - Remove the in-repo Homebrew formula and BitBake recipe, see `INSTALL.md`
+
 # v0.7.3
 This version is only used to update dislocker's brew file and the BitBake recipe
 for OSX's and BitBake's users to be able to download v0.7.2. If you're not an OSX

@@ -82,7 +82,8 @@ jobs:
           run: |
             set -e
             cmake -S . -B build -DCRYPTO_BACKEND=${{ matrix.crypto }} -DWITH_RUBY=ON
-            cmake --build build --parallel
+            # BSD make rejects a bare -j, so give --parallel an explicit job count
+            cmake --build build --parallel "$(sysctl -n hw.ncpu)"
             ctest --test-dir build --output-on-failure
             cmake --install build
             for bin in dislocker dislocker-fuse dislocker-file dislocker-metadata dislocker-bek dislocker-find; do

@@ -35,11 +35,12 @@ typedef enum {
 	DIS_USE_RECOVERY_PASSWORD = (1 << 2),
 	DIS_USE_BEKFILE           = (1 << 3),
 	DIS_USE_FVEKFILE          = (1 << 4),
+	DIS_USE_TPM_PIN           = (1 << 5),
 	DIS_USE_VMKFILE           = (1 << 8)
 } DIS_DECRYPT_MEAN;
 
 /* Don't use this as a decryption mean, but as the last one */
-#define LAST_MEAN (1 << 5)
+#define LAST_MEAN (1 << 6)
 
 
 /**
@@ -80,6 +81,8 @@ typedef struct _dis_cfg {
 	char*         fvek_file;
 	/* Use directly the VMK file DECRYPT_MEAN */
 	char*         vmk_file;
+	/* Path to the TPM datum file for TPM+PIN DECRYPT_MEAN */
+	char*         tpm_datum_file;
 
 	/* Output verbosity */
 	DIS_LOGS      verbosity;

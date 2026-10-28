@@ -128,10 +128,14 @@ int dis_initialize(dis_context_t dis_ctx)
 
 	/* Open the volume as a (big) normal file */
 	dis_printf(L_DEBUG, "Trying to open '%s'...\n", dis_ctx->cfg.volume_path);
-	dis_ctx->fve_fd = dis_open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
+	/* With -r, never hold a writable descriptor on the volume */
+	if(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY)
+		dis_ctx->fve_fd = -1;
+	else
+		dis_ctx->fve_fd = dis_open(dis_ctx->cfg.volume_path, O_RDWR|O_LARGEFILE);
 	if(dis_ctx->fve_fd < 0)
 	{
-		/* Trying to open it in read-only if O_RDWR doesn't work */
+		/* Trying to open it in read-only if O_RDWR doesn't work or with -r */
 		dis_ctx->fve_fd = dis_open(
 			dis_ctx->cfg.volume_path,
 			O_RDONLY|O_LARGEFILE
@@ -148,12 +152,15 @@ int dis_initialize(dis_context_t dis_ctx)
 			return DIS_RET_ERROR_FILE_OPEN;
 		}
 
-		dis_ctx->cfg.flags |= DIS_FLAG_READ_ONLY;
-		dis_printf(
-			L_WARNING,
-			"Failed to open %s for writing. Falling back to read-only.\n",
-			dis_ctx->cfg.volume_path
-		);
+		if(!(dis_ctx->cfg.flags & DIS_FLAG_READ_ONLY))
+		{
+			dis_ctx->cfg.flags |= DIS_FLAG_READ_ONLY;
+			dis_printf(
+				L_WARNING,
+				"Failed to open %s for writing. Falling back to read-only.\n",
+				dis_ctx->cfg.volume_path
+			);
+		}
 	}
 
 	dis_printf(L_DEBUG, "Opened (fd #%d).\n", dis_ctx->fve_fd);

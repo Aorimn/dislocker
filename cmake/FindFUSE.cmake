@@ -10,6 +10,12 @@ IF (FUSE_INCLUDE_DIRS)
 ENDIF (FUSE_INCLUDE_DIRS)
 
 FIND_PACKAGE (PkgConfig REQUIRED)
-pkg_check_modules (FUSE REQUIRED fuse3)
+pkg_check_modules (FUSE fuse3)
+SET (FUSE_API_VERSION 314)
+IF (NOT FUSE_FOUND)
+        # FUSE-T (macOS, no kernel extension) only provides the FUSE 2 API
+        pkg_check_modules (FUSE REQUIRED fuse-t)
+        SET (FUSE_API_VERSION 26)
+ENDIF (NOT FUSE_FOUND)
 
 mark_as_advanced (FUSE_INCLUDE_DIRS FUSE_LIBRARIES FUSE_LIBRARY_DIRS)

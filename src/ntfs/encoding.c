@@ -29,7 +29,7 @@
 /**
  * Convert an UTF-16 string into a wchar_t string. wchar_t may be defined as
  * UTF-16 or UTF-32, this function doesn't care.
- * The UTF-32 string is supposed to be, at least, utf16_length*2 long.
+ * The wchar_t string is supposed to hold, at least, utf16_length/2 wchar_t.
  *
  * @param utf16 An UTF-16 string
  * @param utf16_length The UTF-16 string length
@@ -41,10 +41,10 @@ int utf16towchars(uint16_t* utf16, size_t utf16_length, wchar_t* utf32)
 	if(!utf16 || !utf32)
 		return FALSE;
 
-	memset(utf32, 0, utf16_length*2);
-
 	size_t loop = 0;
 	size_t nb_iter = utf16_length/2;
+
+	memset(utf32, 0, nb_iter * sizeof(wchar_t));
 
 	for(loop = 0; loop < nb_iter; ++loop)
 		utf32[loop] = utf16[loop];

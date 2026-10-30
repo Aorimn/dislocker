@@ -1016,7 +1016,7 @@ static int get_metadata_lazy_checked(
 		return TRUE;
 	}
 
-	while(current < 3)
+	for(current = 0; current <= 2; current++)
 	{
 		/* Get the metadata */
 		if(!get_metadata((off_t)regions[current].addr + disk_offset, metadata, fd))
@@ -1025,7 +1025,7 @@ static int get_metadata_lazy_checked(
 			dis_printf(L_ERROR, "Can't get metadata (n°%d)\n", current+1);
 			return FALSE;
 			*/
-			if (++current >= 3)			//Consider metadata corruption
+			if (current >= 2)			//Consider metadata corruption
 				return FALSE;
 			continue;
 		}
@@ -1062,7 +1062,7 @@ static int get_metadata_lazy_checked(
 			dis_printf(L_ERROR, "Error, can't read all validations data.\n");
 			return FALSE;
 			*/
-			if (++current >= 3)		//Consider bad sectors
+			if (current >= 2)		//Consider bad sectors
 				return FALSE;
 			continue;
 		}
@@ -1078,17 +1078,20 @@ static int get_metadata_lazy_checked(
 		dis_printf(L_DEBUG, "Looking if %#x == %#x for metadata validation\n",
 		        metadata_crc32, validations.crc32);
 
-		++current;
 		if(metadata_crc32 == validations.crc32)
 		{
-			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", current);
+			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", current + 1);
 			break;
 		}
 		else
+		{
 			dis_free(*metadata);
+			if (current >= 2)		//Consider CRC mismatch
+				return FALSE;
+		}
 	}
 
-	if(current > 3)
+	if(current >= 3)
 		return FALSE;
 
 	return TRUE;

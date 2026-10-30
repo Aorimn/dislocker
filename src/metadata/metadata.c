@@ -1122,17 +1122,16 @@ static int get_eow_check_valid(
 
 	unsigned char* crc_temp_buffer;
 
-	while(current < 2)
+	for(current = 0; current < 2; current++)
 	{
 		/* Compute the on-disk offset */
 		curr_offset = (off_t)volume_header->eow_information_off[current]
 		            + disk_offset;
-		++current;
 
 		/* Get the EOW information */
 		if(!get_eow_information(curr_offset, eow_infos, fd))
 		{
-			dis_printf(L_ERROR, "Can't get EOW information (n°%d)\n", current);
+			dis_printf(L_ERROR, "Can't get EOW information (n°%d)\n", current + 1);
 			return FALSE;
 		}
 
@@ -1171,7 +1170,7 @@ static int get_eow_check_valid(
 
 		if(computed_crc32 == eow_infos_hdr->crc32)
 		{
-			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", current);
+			dis_printf(L_DEBUG, "We have a winner (n°%d)!\n", current + 1);
 			break;
 		}
 		else

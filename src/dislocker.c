@@ -689,9 +689,9 @@ int dis_destroy(dis_context_t dis_ctx)
 
 	dis_close(dis_ctx->io_data.volume_fd);
 
-	dis_stdio_end();
-
 	dis_free(dis_ctx);
+
+	dis_stdio_end();
 
 	return EXIT_SUCCESS;
 }

@@ -128,7 +128,6 @@ int main (int argc, char **argv)
 	dis_free(bek_dataset);
 	dis_metadata_destroy(dis_metadata);
 	dis_destroy(dis_ctx);
-	dis_stdio_end();
 
 	return EXIT_SUCCESS;
 }

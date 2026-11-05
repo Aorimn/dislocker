@@ -242,6 +242,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 		if(fs_volume_size != 0 && fs_volume_size <= readable_size)
 			io_data->volume_size = fs_volume_size;
 		else
+		{
 			dis_printf(
 				L_WARNING,
 				"Volume's size from the decrypted filesystems VBR (%1$#" PRIx64 " / %1$" PRIu64
@@ -253,6 +254,7 @@ int prepare_crypt(dis_context_t dis_ctx)
 			);
 
 			io_data->volume_size = readable_size;
+		}
 	}
 
 	dis_printf(

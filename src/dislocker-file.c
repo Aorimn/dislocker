@@ -33,6 +33,7 @@
 
 #include "dislocker/xstd/xstdio.h"
 #include "dislocker/xstd/xstdlib.h"
+#include "dislocker/return_values.h"
 #include "dislocker/inouts/inouts.h"
 #include "dislocker/config.h"
 #include "dislocker/common.h"
@@ -162,16 +163,18 @@ int main(int argc, char** argv)
 	}
 
 	int param_idx = 0;
-	int ret       = 0;
+	int ret       = EXIT_SUCCESS;
 
 	dis_context_t dis_ctx = dis_new();
 
 
 	/* Get command line options */
 	param_idx = dis_getopts(dis_ctx, argc, argv);
+	if (param_idx == -1)
+		exit(EXIT_FAILURE);
 
 	/* Initialize dislocker */
-	if(dis_initialize(dis_ctx) == EXIT_FAILURE)
+	if(dis_initialize(dis_ctx) != DIS_RET_SUCCESS)
 	{
 		dis_printf(L_CRITICAL, "Can't initialize dislocker. Abort.\n");
 		return EXIT_FAILURE;

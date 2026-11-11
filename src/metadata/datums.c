@@ -192,7 +192,7 @@ char* datumvaluetypestr(dis_datums_value_type_t value_type)
 int get_header_safe(void* data, datum_header_safe_t* header)
 {
 	// Check parameters
-	if(!data)
+	if(!data || !header)
 		return FALSE;
 
 	/* Too easy, boring */
@@ -203,6 +203,10 @@ int get_header_safe(void* data, datum_header_safe_t* header)
 
 	/* Now check if the header is good */
 	if(header->datum_size < sizeof(datum_header_safe_t))
+		return FALSE;
+
+	if(header->value_type < NB_DATUMS_VALUE_TYPES &&
+	   header->datum_size < datum_value_types_prop[header->value_type].size_header)
 		return FALSE;
 
 	return TRUE;
@@ -278,10 +282,14 @@ int get_payload_safe(void* data, void** payload, size_t* size_payload)
  */
 void print_one_datum(DIS_LOGS level, void* datum)
 {
-	datum_header_safe_t* header = (datum_header_safe_t*) datum;
-	print_header(level, header);
+	datum_header_safe_t header;
 
-	dis_datums_value_type_t value_type = header->value_type;
+	if(!get_header_safe(datum, &header))
+		return;
+
+	print_header(level, &header);
+
+	dis_datums_value_type_t value_type = header.value_type;
 
 	if (value_type < NB_DATUMS_VALUE_TYPES)
 		print_datum_tab[value_type](level, datum);
@@ -395,6 +403,7 @@ void print_datum_unicode(DIS_LOGS level, void* vdatum)
 void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 {
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) vdatum;
+	datum_header_safe_t nested_header;
 
 	dis_printf(level, "Unknown: \n");
 	hexdump(level, (void*) &datum->padd, 2);
@@ -403,23 +412,34 @@ void print_datum_stretch_key(DIS_LOGS level, void* vdatum)
 	print_mac(level, datum->salt);
 
 	/* This datum's payload seems to be another datum, so print it */
-	dis_printf(level, "   ------ Nested datum ------\n");
-	print_one_datum(level, (char*) datum + sizeof(datum_stretch_key_t));
-	dis_printf(level, "   ---------------------------\n");
+	if(datum->header.datum_size >= sizeof(datum_stretch_key_t) + sizeof(datum_header_safe_t) &&
+	   get_header_safe((char*) datum + sizeof(datum_stretch_key_t), &nested_header) &&
+	   sizeof(datum_stretch_key_t) + nested_header.datum_size <= datum->header.datum_size)
+	{
+		dis_printf(level, "   ------ Nested datum ------\n");
+		print_one_datum(level, (char*) datum + sizeof(datum_stretch_key_t));
+		dis_printf(level, "   ---------------------------\n");
+	}
 }
 
 void print_datum_use_key(DIS_LOGS level, void* vdatum)
 {
 	datum_use_key_t* datum = (datum_use_key_t*) vdatum;
+	datum_header_safe_t nested_header;
 
 	dis_printf(level, "Algo: %#hx\n", datum->algo);
 	dis_printf(level, "Unknown: \n");
 	hexdump(level, (void*) &datum->padd, 2);
 
 	/* This datum's payload seems to be another datum, so print it */
-	dis_printf(level, "   ------ Nested datum ------\n");
-	print_one_datum(level, (char*) datum + sizeof(datum_use_key_t));
-	dis_printf(level, "   ---------------------------\n");
+	if(datum->header.datum_size >= sizeof(datum_use_key_t) + sizeof(datum_header_safe_t) &&
+	   get_header_safe((char*) datum + sizeof(datum_use_key_t), &nested_header) &&
+	   sizeof(datum_use_key_t) + nested_header.datum_size <= datum->header.datum_size)
+	{
+		dis_printf(level, "   ------ Nested datum ------\n");
+		print_one_datum(level, (char*) datum + sizeof(datum_use_key_t));
+		dis_printf(level, "   ---------------------------\n");
+	}
 }
 
 void print_datum_aes_ccm(DIS_LOGS level, void* vdatum)
@@ -455,19 +475,22 @@ int is_recvoery_key(datum_vmk_t* datum)
 {
 	int bRecvoeryKey = FALSE;
 
-	if (datum) {
+	if (datum && datum->header.datum_size >= sizeof(datum_vmk_t)) {
 		char *pStart = ((char *)datum) + sizeof(datum_vmk_t);
 		char *pEnd = ((char *)datum) + datum->header.datum_size;
-		while (pStart < pEnd) {
-			uint32_t u32Size = *((uint32_t*)pStart);
-			if (u32Size == 0) {
+		while ((size_t)(pEnd - pStart) >= sizeof(datum_header_safe_t)) {
+			datum_header_safe_t header;
+			if (!get_header_safe(pStart, &header)) {
 				break;
 			}
-			if (*((uint16_t *)(pStart + 4)) == 0x15) {
+			if (header.datum_size > (size_t)(pEnd - pStart)) {
+				break;
+			}
+			if (header.value_type == 0x15) {
 				bRecvoeryKey = TRUE;
 				break;
 			}
-			pStart += u32Size;
+			pStart += header.datum_size;
 		}
 	}
 
@@ -478,7 +501,7 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 {
 	datum_vmk_t* datum = (datum_vmk_t*) vdatum;
 	char extkey_id[37];
-	int computed_size = 0;
+	size_t computed_size = 0;
 
 	format_guid(datum->guid, extkey_id);
 
@@ -497,16 +520,17 @@ void print_datum_vmk(DIS_LOGS level, void* vdatum)
 
 	/* This datum's payload seems to be another datum, so print it */
 	dis_printf(level, "   ------ Nested datum(s) ------\n");
-	while(computed_size < datum->header.datum_size)
+	while(computed_size + sizeof(datum_header_safe_t) <= datum->header.datum_size)
 	{
-		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-		print_one_datum(level, (char*) datum + computed_size);
-
 		datum_header_safe_t header;
 		memset(&header, 0, sizeof(datum_header_safe_t));
 
-		get_header_safe((char*) datum + computed_size, &header);
+		if(!get_header_safe((char*) datum + computed_size, &header) ||
+		   computed_size + header.datum_size > datum->header.datum_size)
+			break;
 
+		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		print_one_datum(level, (char*) datum + computed_size);
 		computed_size += header.datum_size;
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	}
@@ -520,7 +544,7 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 	char extkey_id[37];
 	time_t ts;
 	char* date = NULL;
-	int computed_size = 0;
+	size_t computed_size = 0;
 
 	format_guid(datum->guid, extkey_id);
 	ntfs2utc(datum->timestamp, &ts);
@@ -539,16 +563,17 @@ void print_datum_external(DIS_LOGS level, void* vdatum)
 
 	/* This datum's payload seems to be another datum, so print it */
 	dis_printf(level, "   ------ Nested datum ------\n");
-	while(computed_size < datum->header.datum_size)
+	while(computed_size + sizeof(datum_header_safe_t) <= datum->header.datum_size)
 	{
-		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-		print_one_datum(level, (char*) datum + computed_size);
-
 		datum_header_safe_t header;
 		memset(&header, 0, sizeof(datum_header_safe_t));
 
-		get_header_safe((char*) datum + computed_size, &header);
+		if(!get_header_safe((char*) datum + computed_size, &header) ||
+		   computed_size + header.datum_size > datum->header.datum_size)
+			break;
 
+		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		print_one_datum(level, (char*) datum + computed_size);
 		computed_size += header.datum_size;
 		dis_printf(level, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 	}
@@ -576,7 +601,7 @@ void print_datum_virtualization(DIS_LOGS level, void* vdatum)
 	/* For Windows 8 encrypted volumes */
 	size_t win7_size   = datum_value_types_prop[value_type].size_header;
 	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
-	if(actual_size > win7_size)
+	if(actual_size >= win7_size + sizeof(extended_info_t))
 	{
 		print_extended_info(level, &datum->xinfo);
 	}
@@ -638,7 +663,7 @@ int get_next_datum(
 	void** datum_result)
 {
 	// Check parameters
-	if(!dis_meta)
+	if(!dis_meta || !dis_meta->dataset || !datum_result)
 		return FALSE;
 
 	dis_printf(L_DEBUG, "Entering get_next_datum...\n");
@@ -653,6 +678,10 @@ int get_next_datum(
 	 * metadata buffer holding it, but don't take that field's word for it here.
 	 * Recompute the end of that buffer -- the very same way get_metadata()
 	 * sized it -- and never walk past it, whatever dataset->size claims.
+	 *
+	 * Note: get_vmk_from_bekfile2() temporarily swaps dis_meta->dataset to an
+	 * external BEK dataset allocation via dis_metadata_set_dataset(), so only
+	 * clamp against dis_meta->information when dataset lives inside it.
 	 */
 	if(dis_meta->information)
 	{
@@ -661,17 +690,30 @@ int get_next_datum(
 		                  (size_t)information->size << 4 : information->size);
 		char* metadata_end = (char*)information + metadata_size;
 
-		/* The `< dataset' case catches a pointer wrap-around */
-		if(limit > metadata_end || limit < (char*)dataset)
-			limit = metadata_end;
+		if((char*)dataset >= (char*)information &&
+		   (char*)dataset < metadata_end)
+		{
+			/* The `< dataset' case catches a pointer wrap-around */
+			if(limit > metadata_end || limit < (char*)dataset)
+				limit = metadata_end;
+		}
 	}
 
 	*datum_result = NULL;
 	memset(&header, 0, sizeof(datum_header_safe_t));
 	if(datum_begin)
-		datum = datum_begin + *(uint16_t*)datum_begin;
+	{
+		if(!get_header_safe(datum_begin, &header))
+			return FALSE;
+
+		datum = (char*)datum_begin + header.datum_size;
+		memset(&header, 0, sizeof(datum_header_safe_t));
+	}
 	else
 		datum = (char*)dataset + dataset->header_size;
+
+	if((char*)datum < (char*)dataset + sizeof(bitlocker_dataset_t))
+		return FALSE;
 
 	while(1)
 	{
@@ -1113,6 +1155,7 @@ VALUE rb_datum_stretch_key_to_s(VALUE self)
 {
 	rb_dis_datum_t rb_datum = DATA_PTR(self);
 	datum_stretch_key_t* datum = (datum_stretch_key_t*) rb_datum->datum;
+	datum_header_safe_t nested_header;
 
 	VALUE rb_str = rb_str_new("", 0);
 
@@ -1125,15 +1168,20 @@ VALUE rb_datum_stretch_key_to_s(VALUE self)
 	rb_str_concat(rb_str, rb_format_mac(datum->salt));
 
 	/* This datum's payload seems to be another datum, so print it */
-	rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
+	if(datum->header.datum_size >= sizeof(datum_stretch_key_t) + sizeof(datum_header_safe_t) &&
+	   get_header_safe((char*) datum + sizeof(datum_stretch_key_t), &nested_header) &&
+	   sizeof(datum_stretch_key_t) + nested_header.datum_size <= datum->header.datum_size)
+	{
+		rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
 
-	rb_datum->datum = (datum_generic_type_t*)
-	                  datum + sizeof(datum_stretch_key_t);
-	rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
+		rb_datum->datum = (datum_generic_type_t*)
+		                  ((char*) datum + sizeof(datum_stretch_key_t));
+		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
 
-	rb_str_cat2(rb_str, "   ---------------------------\n");
+		rb_str_cat2(rb_str, "   ---------------------------\n");
 
-	rb_datum->datum = (datum_generic_type_t*) datum;
+		rb_datum->datum = (datum_generic_type_t*) datum;
+	}
 
 	return rb_str;
 }
@@ -1142,6 +1190,7 @@ VALUE rb_datum_use_key_to_s(VALUE self)
 {
 	rb_dis_datum_t rb_datum = DATA_PTR(self);
 	datum_use_key_t* datum = (datum_use_key_t*) rb_datum->datum;
+	datum_header_safe_t nested_header;
 
 	VALUE rb_str = rb_str_new("", 0);
 
@@ -1152,12 +1201,18 @@ VALUE rb_datum_use_key_to_s(VALUE self)
 	rb_str_catf(rb_str, "Unknown: 0x%04hx\n", datum->padd);
 
 	/* This datum's payload seems to be another datum, so print it */
-	rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
-	rb_datum->datum = (datum_generic_type_t*) datum + sizeof(datum_use_key_t);
-	rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
-	rb_str_cat2(rb_str, "   ---------------------------\n");
+	if(datum->header.datum_size >= sizeof(datum_use_key_t) + sizeof(datum_header_safe_t) &&
+	   get_header_safe((char*) datum + sizeof(datum_use_key_t), &nested_header) &&
+	   sizeof(datum_use_key_t) + nested_header.datum_size <= datum->header.datum_size)
+	{
+		rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
+		rb_datum->datum = (datum_generic_type_t*)
+		                  ((char*) datum + sizeof(datum_use_key_t));
+		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
+		rb_str_cat2(rb_str, "   ---------------------------\n");
 
-	rb_datum->datum = (datum_generic_type_t*) datum;
+		rb_datum->datum = (datum_generic_type_t*) datum;
+	}
 
 	return rb_str;
 }
@@ -1210,7 +1265,7 @@ VALUE rb_datum_vmk_to_s(VALUE self)
 	rb_dis_datum_t rb_datum = DATA_PTR(self);
 	datum_vmk_t* datum = (datum_vmk_t*) rb_datum->datum;
 	char extkey_id[37];
-	int computed_size = 0;
+	size_t computed_size = 0;
 
 	VALUE rb_str = rb_str_new("", 0);
 
@@ -1226,16 +1281,18 @@ VALUE rb_datum_vmk_to_s(VALUE self)
 	computed_size = sizeof(datum_vmk_t);
 
 	/* This datum's payload seems to be another datum, so print it */
-	while(computed_size < datum->header.datum_size)
+	while(computed_size + sizeof(datum_header_safe_t) <= datum->header.datum_size)
 	{
-		rb_str_cat2(rb_str, "   ------ Nested datum(s) ------\n");
-		rb_datum->datum = (datum_generic_type_t*) datum + computed_size;
-		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
-
 		datum_header_safe_t header;
 		memset(&header, 0, sizeof(datum_header_safe_t));
 
-		get_header_safe((char*) datum + computed_size, &header);
+		if(!get_header_safe((char*) datum + computed_size, &header) ||
+		   computed_size + header.datum_size > datum->header.datum_size)
+			break;
+
+		rb_str_cat2(rb_str, "   ------ Nested datum(s) ------\n");
+		rb_datum->datum = (datum_generic_type_t*) ((char*) datum + computed_size);
+		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
 
 		computed_size += header.datum_size;
 		rb_str_cat2(rb_str, "   ------------------------------\n");
@@ -1259,7 +1316,7 @@ VALUE rb_datum_external_to_s(VALUE self)
 	char extkey_id[37];
 	time_t ts;
 	char* date = NULL;
-	int computed_size = 0;
+	size_t computed_size = 0;
 
 	format_guid(datum->guid, extkey_id);
 	ntfs2utc(datum->timestamp, &ts);
@@ -1277,16 +1334,18 @@ VALUE rb_datum_external_to_s(VALUE self)
 	computed_size = sizeof(datum_external_t);
 
 	/* This datum's payload seems to be another datum, so print it */
-	while(computed_size < datum->header.datum_size)
+	while(computed_size + sizeof(datum_header_safe_t) <= datum->header.datum_size)
 	{
-		rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
-		rb_datum->datum = (datum_generic_type_t*) datum + computed_size;
-		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
-
 		datum_header_safe_t header;
 		memset(&header, 0, sizeof(datum_header_safe_t));
 
-		get_header_safe((char*) datum + computed_size, &header);
+		if(!get_header_safe((char*) datum + computed_size, &header) ||
+		   computed_size + header.datum_size > datum->header.datum_size)
+			break;
+
+		rb_str_cat2(rb_str, "   ------ Nested datum ------\n");
+		rb_datum->datum = (datum_generic_type_t*) ((char*) datum + computed_size);
+		rb_str_concat(rb_str, rb_cDislockerMetadataDatum_to_s(self));
 
 		computed_size += header.datum_size;
 		rb_str_cat2(rb_str, "   ---------------------------\n");
@@ -1325,7 +1384,7 @@ VALUE rb_datum_virtualization_to_s(VALUE self)
 	/* For Windows 8 encrypted volumes */
 	size_t win7_size   = datum_value_types_prop[value_type].size_header;
 	size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
-	if(actual_size > win7_size)
+	if(actual_size >= win7_size + sizeof(extended_info_t))
 	{
 		rb_str_concat(
 			rb_str,

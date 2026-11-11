@@ -285,11 +285,18 @@ int get_bek_dataset(int fd, void** bek_dataset)
 		return FALSE;
 	}
 
-	if(dataset.size <= sizeof(bitlocker_dataset_t))
+	if(dataset.header_size < sizeof(bitlocker_dataset_t)
+	   || dataset.copy_size < dataset.header_size
+	   || dataset.size > dataset.copy_size
+	   || dataset.size <= dataset.header_size)
 	{
 		dis_printf(
 			L_ERROR,
-			"get_bek_dataset::Error, dataset size < dataset header size.\n"
+			"get_bek_dataset::Error, invalid dataset sizes "
+			"(size=%#x, copy_size=%#x, header_size=%#x).\n",
+			dataset.size,
+			dataset.copy_size,
+			dataset.header_size
 		);
 		return FALSE;
 	}

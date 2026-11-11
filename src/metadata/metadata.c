@@ -123,6 +123,8 @@ find_virtualization_linear_from_metafile(dis_metadata_t dis_meta,
 
 	const size_t limit = (size_t)n;
 
+	const size_t min_size = datum_value_types_prop[DATUMS_VALUE_VIRTUALIZATION_INFO].size_header;
+
 	for(size_t off = 0; off + sizeof(datum_header_safe_t) <= limit; off += 2)
 	{
 		datum_header_safe_t h;
@@ -130,7 +132,7 @@ find_virtualization_linear_from_metafile(dis_metadata_t dis_meta,
 		/* datum_size is u16 in LE and may be stored in a wider field; mask to 16 bits */
 		size_t dsize = ((size_t)h.datum_size) & 0xffff;
 
-		if(dsize < sizeof(datum_header_safe_t) || dsize > 0x1000)
+		if(dsize < min_size || dsize > 0x1000)
 			continue;
 		if(h.value_type != DATUMS_VALUE_VIRTUALIZATION_INFO)
 			continue;
@@ -734,7 +736,7 @@ static int end_compute_regions(dis_metadata_t dis_meta)
 		/* Extended info is new to Windows 8 */
 		size_t win7_size   = datum_value_types_prop[datum->header.value_type].size_header;
 		size_t actual_size = ((size_t)datum->header.datum_size) & 0xffff;
-		if(actual_size > win7_size)
+		if(actual_size >= win7_size + sizeof(extended_info_t))
 		{
 			dis_meta->xinfo = &datum->xinfo;
 			dis_printf(L_DEBUG, "Got extended info\n");

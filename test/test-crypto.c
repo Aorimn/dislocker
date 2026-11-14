@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "dislocker/accesses/stretch_key.h"
 #include "ssl_bindings.h"
 
 #include "test.h"
@@ -256,8 +257,27 @@ static void test_xts_encrypt_256(void) {
 	AES_FREE(&tweak_ctx);
 }
 
+static void test_stretch_recovery_key(void) {
+	uint8_t out[32] = {0};
+
+	stretch_recovery_key((const uint8_t *)key_aes_128, (const uint8_t *)static_iv, out);
+
+	CHECK_STATIC_BUFFERS(out, expected_stretch_recovery_key);
+}
+
+static void test_stretch_user_key(void) {
+	uint8_t out[32] = {0};
+
+	stretch_user_key((const uint8_t *)key_aes_256, (const uint8_t *)static_iv, out);
+
+	CHECK_STATIC_BUFFERS(out, expected_stretch_user_key);
+}
+
 int main(int argc, char *argv[])
 {
+	(void)argc;
+	(void)argv;
+
 	ADD_TEST(test_ecb_encrypt_128);
 	ADD_TEST(test_ecb_encrypt_256);
 
@@ -269,6 +289,9 @@ int main(int argc, char *argv[])
 
 	ADD_TEST(test_xts_encrypt_128);
 	ADD_TEST(test_xts_encrypt_256);
+
+	ADD_TEST(test_stretch_recovery_key);
+	ADD_TEST(test_stretch_user_key);
 
 	printf("--- Statistics ---\n");
 	printf("Total: %d\n", _tests);
